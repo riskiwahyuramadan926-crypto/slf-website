@@ -988,3 +988,6 @@ footer {
     animation: none !important;
   }
 }
+
+/* WIKI A — Tombol menuju pusat Wiki terpisah */
+.wiki-directory-link{margin:0 0 18px}
