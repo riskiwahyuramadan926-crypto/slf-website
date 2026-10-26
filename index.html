@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#120e20">
+  <meta name="description" content="Survival Legacy Frontier — dunia Minecraft survival fantasy dengan ras, petualangan, ekonomi pemain, dan komunitas lintas Java dan Bedrock.">
+  <title>Survival Legacy Frontier — Dunia Menantimu</title>
+  <style>
+    :root{--bg:#100d19;--bg2:#171126;--panel:#1c1630;--panel2:#231a39;--text:#f6f0ff;--muted:#b8adc9;--gold:#f3c879;--gold2:#ffdf9a;--purple:#9b75f7;--line:rgba(225,207,255,.14);--green:#83d7a1;--red:#f68c9a;--yellow:#f6cf76;--max:1160px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:86px}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.6}a{color:inherit;text-decoration:none}button{font:inherit}.wrap{width:min(var(--max),calc(100% - 40px));margin:auto}.eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--gold);text-transform:uppercase;letter-spacing:.16em;font-size:.72rem;font-weight:800}.eyebrow:before{content:"";width:24px;height:1px;background:var(--gold)}.section{padding:86px 0}.section-head{max-width:700px;margin-bottom:34px}.section-head h2{margin:12px 0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(2rem,4vw,3.15rem);line-height:1.1;letter-spacing:-.035em}.section-head p{margin:0;color:var(--muted);font-size:1rem}.topline{background:#211832;border-bottom:1px solid var(--line);color:#e8dcff;font-size:.77rem;text-align:center;padding:8px 12px;letter-spacing:.04em}.topline strong{color:var(--gold2)}
+    header{position:sticky;top:0;z-index:20;background:rgba(16,13,25,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}.nav{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{display:flex;align-items:center;gap:11px;min-width:0}.brand-mark{width:42px;height:42px;display:grid;place-items:center;flex-shrink:0;border:1px solid rgba(243,200,121,.6);background:linear-gradient(145deg,#49316c,#1c1430);clip-path:polygon(50% 0,92% 20%,92% 78%,50% 100%,8% 78%,8% 20%);color:var(--gold2);font-size:22px}.brand-name{font-family:Georgia,"Times New Roman",serif;font-size:.97rem;line-height:1.15;font-weight:700;letter-spacing:.015em}.brand-name small{display:block;color:var(--muted);font:700 .58rem system-ui,sans-serif;letter-spacing:.19em;margin-top:4px}.nav-links{display:flex;align-items:center;gap:25px;color:#d1c7df;font-size:.86rem}.nav-links a:hover{color:var(--gold2)}.nav-cta,.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:12px 18px;border-radius:7px;font-weight:800;font-size:.86rem;transition:transform .2s,background .2s,border-color .2s}.nav-cta,.btn-primary{background:linear-gradient(135deg,#f5d38d,#d9a94e);color:#24182e;box-shadow:0 8px 30px rgba(224,177,86,.13)}.nav-cta:hover,.btn:hover{transform:translateY(-2px)}.menu-toggle{display:none;background:transparent;border:1px solid var(--line);color:var(--text);border-radius:7px;padding:8px 10px}
+    .hero{position:relative;overflow:hidden;min-height:620px;display:flex;align-items:center;border-bottom:1px solid var(--line);background:radial-gradient(ellipse at 75% 30%,rgba(107,65,168,.32),transparent 38%),radial-gradient(ellipse at 20% 100%,rgba(73,44,111,.26),transparent 35%),linear-gradient(120deg,#120e20,#171128 58%,#100d19)}.hero:before{content:"";position:absolute;inset:0;opacity:.16;background-image:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,black,transparent 90%)}.hero:after{content:"✦     ·     ✧        ·          ✦     ·       ✧     ·";position:absolute;top:8%;left:48%;width:52%;color:#c9a6ff;letter-spacing:1.5rem;line-height:5rem;opacity:.45;pointer-events:none}.hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:1.02fr .98fr;gap:28px;align-items:center;padding:78px 0 86px}.hero-copy{max-width:600px}.hero h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(3rem,6.4vw,5.5rem);line-height:.98;letter-spacing:-.055em;margin:18px 0 23px}.hero h1 span{display:block;color:var(--gold2);text-shadow:0 0 35px rgba(238,193,112,.14)}.hero-copy>p{color:#c8bdd8;max-width:535px;font-size:1.05rem;margin:0 0 29px}.hero-actions{display:flex;gap:12px;flex-wrap:wrap}.btn-secondary{border:1px solid rgba(225,207,255,.27);background:rgba(255,255,255,.035);color:#f1e9fc}.btn-secondary:hover{border-color:var(--gold)}.hero-note{display:flex;gap:14px;flex-wrap:wrap;margin-top:28px;color:#b7a9ca;font-size:.78rem}.hero-note span{display:flex;align-items:center;gap:7px}.dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 10px rgba(131,215,161,.6)}.fantasy-art{position:relative;min-height:420px;display:grid;place-items:center}.moon{position:absolute;top:23px;right:12%;width:118px;height:118px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff1ca,#d3b4fa 50%,rgba(135,94,182,.14) 74%);box-shadow:0 0 75px rgba(190,153,255,.25);opacity:.9}.orbital{position:absolute;width:min(430px,100%);aspect-ratio:1;border:1px solid rgba(218,189,255,.12);border-radius:50%;transform:rotate(-23deg) scaleY(.45)}.orbital.two{transform:rotate(35deg) scaleY(.52);width:min(500px,110%)}.castle{position:relative;z-index:2;width:100%;max-width:520px;filter:drop-shadow(0 25px 35px rgba(0,0,0,.45))}.hero-plaque{position:absolute;bottom:18px;left:3%;right:3%;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 18px;border:1px solid rgba(225,207,255,.2);border-radius:9px;background:rgba(19,14,31,.8);backdrop-filter:blur(14px)}.hero-plaque strong{font-family:Georgia,serif;color:var(--gold2);font-size:1rem}.hero-plaque small{display:block;color:var(--muted);font-size:.72rem}.plaque-symbol{font-size:1.65rem;color:var(--gold)}
+    .ticker{border-bottom:1px solid var(--line);background:#151020}.ticker-inner{display:grid;grid-template-columns:repeat(3,1fr)}.ticker-item{padding:23px 20px;display:flex;align-items:center;justify-content:center;gap:12px;border-right:1px solid var(--line)}.ticker-item:last-child{border:0}.ticker-icon{color:var(--gold);font-size:1.25rem}.ticker-item b{display:block;font-size:.92rem}.ticker-item small{display:block;color:var(--muted);font-size:.74rem}
+    .zones{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.zone-card{position:relative;overflow:hidden;min-height:255px;padding:25px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.012));transition:transform .2s,border-color .2s}.zone-card:hover{transform:translateY(-4px);border-color:rgba(243,200,121,.4)}.zone-card:after{content:"";position:absolute;width:180px;height:180px;border:1px solid rgba(255,255,255,.06);border-radius:50%;right:-78px;top:-70px;box-shadow:0 0 0 20px rgba(255,255,255,.015),0 0 0 42px rgba(255,255,255,.012)}.zone-label{font-size:.69rem;text-transform:uppercase;letter-spacing:.15em;font-weight:900}.zone-card h3{font-family:Georgia,serif;font-size:1.7rem;margin:16px 0 8px}.zone-card p{color:var(--muted);font-size:.88rem;max-width:290px;margin:0}.zone-card.green .zone-label{color:var(--green)}.zone-card.yellow .zone-label{color:var(--yellow)}.zone-card.red .zone-label{color:var(--red)}.zone-symbol{font-size:1.6rem;margin-top:23px;display:inline-block}.zone-card.green{background:radial-gradient(ellipse at right top,rgba(73,153,112,.12),transparent 55%),#191527}.zone-card.yellow{background:radial-gradient(ellipse at right top,rgba(211,164,66,.12),transparent 55%),#191527}.zone-card.red{background:radial-gradient(ellipse at right top,rgba(198,76,108,.14),transparent 55%),#191527}
+    .systems{background:linear-gradient(180deg,transparent,rgba(89,57,129,.1),transparent);border-top:1px solid rgba(255,255,255,.02);border-bottom:1px solid rgba(255,255,255,.02)}.system-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.system-card{padding:23px 19px;border:1px solid var(--line);background:rgba(28,22,48,.65);border-radius:10px}.sys-icon{display:grid;place-items:center;width:43px;height:43px;border:1px solid rgba(243,200,121,.25);border-radius:10px;background:rgba(243,200,121,.07);color:var(--gold2);font-size:1.2rem}.system-card h3{font-size:1rem;margin:17px 0 7px}.system-card p{color:var(--muted);font-size:.82rem;margin:0}
+    .join-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:30px;align-items:start}.join-aside{padding:27px;border-radius:12px;border:1px solid rgba(243,200,121,.2);background:radial-gradient(ellipse at top right,rgba(123,78,176,.17),transparent 50%),#191426}.join-aside h3{font-family:Georgia,serif;font-size:1.6rem;margin:0 0 10px}.join-aside p{color:var(--muted);font-size:.9rem}.join-aside .btn{width:100%;margin-top:10px}.steps{display:grid;gap:13px}.step{display:grid;grid-template-columns:45px 1fr;gap:15px;padding:18px 0;border-bottom:1px solid var(--line)}.step:last-child{border:0}.step-number{width:40px;height:40px;display:grid;place-items:center;border:1px solid rgba(243,200,121,.32);border-radius:8px;color:var(--gold2);font-family:Georgia,serif;font-size:1.2rem}.step h3{margin:0 0 4px;font-size:.98rem}.step p{margin:0;color:var(--muted);font-size:.85rem}.address-box{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:rgba(0,0,0,.19);border:1px dashed rgba(225,207,255,.24);border-radius:8px;color:#dfd4f0;font-size:.83rem;margin:18px 0}.address-box em{color:var(--gold2);font-style:normal}
+    .community{padding-top:70px}.community-panel{display:grid;grid-template-columns:1fr auto;gap:25px;align-items:center;padding:34px;border:1px solid rgba(195,166,255,.22);border-radius:14px;background:radial-gradient(ellipse at 90% 10%,rgba(129,87,190,.25),transparent 40%),linear-gradient(125deg,#211732,#171126)}.community-panel h2{font-family:Georgia,serif;font-size:clamp(1.9rem,4vw,2.7rem);line-height:1.1;margin:10px 0}.community-panel p{max-width:620px;color:var(--muted);margin:0}.community-links{display:flex;flex-direction:column;gap:9px;min-width:190px}.social-link{display:flex;align-items:center;gap:10px;padding:10px 13px;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.035);font-size:.83rem;font-weight:700}.social-link span{color:var(--gold2);width:19px;text-align:center}.social-link small{margin-left:auto;color:var(--muted);font-size:.67rem;font-weight:500}
+    footer{padding:30px 0 35px;border-top:1px solid var(--line);background:#0d0a14}.footer-inner{display:flex;align-items:center;justify-content:space-between;gap:22px}.footer-copy{color:var(--muted);font-size:.75rem}.footer-links{display:flex;gap:18px;flex-wrap:wrap;color:#c4b8d5;font-size:.77rem}.footer-links a:hover{color:var(--gold2)}
+    @media(max-width:900px){.nav-links{gap:15px}.nav-links a{font-size:.8rem}.nav-cta{display:none}.hero-grid{grid-template-columns:1fr 1fr;gap:12px}.hero h1{font-size:clamp(2.8rem,6vw,4.4rem)}.fantasy-art{min-height:360px}.system-grid{grid-template-columns:repeat(2,1fr)}.community-panel{grid-template-columns:1fr}.community-links{flex-direction:row;flex-wrap:wrap}.social-link{flex:1;min-width:145px}}
+    @media(max-width:650px){.wrap{width:min(var(--max),calc(100% - 30px))}.topline{font-size:.68rem}.nav{min-height:67px}.brand-mark{width:37px;height:37px}.brand-name{font-size:.84rem}.brand-name small{font-size:.53rem}.menu-toggle{display:block}.nav-links{display:none;position:absolute;top:67px;left:0;right:0;padding:18px 20px 22px;background:#151020;border-bottom:1px solid var(--line);flex-direction:column;align-items:stretch;gap:0}.nav-links.open{display:flex}.nav-links a{padding:12px 4px;border-bottom:1px solid var(--line);font-size:.9rem}.nav-links a:last-child{border:0}.hero{min-height:0}.hero-grid{grid-template-columns:1fr;padding:66px 0 46px}.hero h1{font-size:clamp(3rem,13vw,4.4rem)}.hero-copy>p{font-size:.94rem}.fantasy-art{min-height:280px;margin-top:2px}.moon{width:83px;height:83px}.hero-plaque{bottom:0;left:2%;right:2%;padding:11px 13px}.hero-plaque strong{font-size:.85rem}.hero-plaque small{font-size:.65rem}.plaque-symbol{font-size:1.3rem}.ticker-inner{grid-template-columns:1fr}.ticker-item{justify-content:flex-start;padding:15px 6px;border-right:0;border-bottom:1px solid var(--line)}.ticker-item:last-child{border-bottom:0}.section{padding:62px 0}.section-head{margin-bottom:25px}.zones{grid-template-columns:1fr}.zone-card{min-height:220px}.system-grid{grid-template-columns:1fr 1fr;gap:10px}.system-card{padding:18px 14px}.system-card h3{font-size:.92rem}.system-card p{font-size:.78rem}.join-grid{grid-template-columns:1fr;gap:22px}.community-panel{padding:25px 20px}.community-links{display:grid;grid-template-columns:1fr 1fr}.social-link{min-width:0;font-size:.77rem;padding:10px}.social-link small{display:none}.footer-inner{align-items:flex-start;flex-direction:column}.footer-links{gap:14px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
+  </style>
+</head>
+<body>
+  <div class="topline"><strong>JAVA + BEDROCK</strong> <span aria-hidden="true">✦</span> Petualangan baru menantimu di Survival Legacy Frontier</div>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="#beranda" aria-label="Survival Legacy Frontier beranda">
+        <span class="brand-mark" aria-hidden="true">✦</span>
+        <span class="brand-name">SURVIVAL LEGACY FRONTIER<small>SEBUAH DUNIA, BANYAK KISAH</small></span>
+      </a>
+      <button class="menu-toggle" id="menuToggle" aria-expanded="false" aria-controls="navLinks">☰ Menu</button>
+      <nav class="nav-links" id="navLinks" aria-label="Navigasi utama">
+        <a href="#beranda">Beranda</a><a href="#dunia">Dunia SLF</a><a href="#fitur">Fitur</a><a href="#gabung">Cara Bermain</a><a href="#komunitas">Komunitas</a>
+      </nav>
+      <a class="nav-cta" href="#gabung">Mulai Petualangan <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="beranda">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <div class="eyebrow">Dunia survival fantasy</div>
+          <h1>Warisan lama.<span>Petualangan baru.</span></h1>
+          <p>Masuki dunia Minecraft yang dibangun untuk dijelajahi, diperjuangkan, dan dikenang. Pilih jalanmu, bangun kisahmu, lalu temukan siapa yang akan berjalan bersamamu.</p>
+          <div class="hero-actions"><a class="btn btn-primary" href="#gabung">✦ Cara Bergabung</a><a class="btn btn-secondary" href="#dunia">Jelajahi Dunia <span aria-hidden="true">↓</span></a></div>
+          <div class="hero-note"><span><i class="dot"></i> Java &amp; Bedrock</span><span>✧ Survival Roleplay</span><span>✧ Dunia Fantasy</span></div>
+        </div>
+        <div class="fantasy-art" aria-label="Ilustrasi kastil fantasi di bawah bulan ungu" role="img">
+          <div class="moon"></div><div class="orbital"></div><div class="orbital two"></div>
+          <svg class="castle" viewBox="0 0 520 430" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs><linearGradient id="skyGlow" x1="0" y1="0" x2="0.8" y2="1"><stop stop-color="#9e78de" stop-opacity=".62"/><stop offset="1" stop-color="#38264f" stop-opacity="0"/></linearGradient><linearGradient id="stone" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b49bcf"/><stop offset=".55" stop-color="#655378"/><stop offset="1" stop-color="#30243e"/></linearGradient><linearGradient id="darkstone" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#59466c"/><stop offset="1" stop-color="#20192d"/></linearGradient><linearGradient id="window" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffe6a4"/><stop offset="1" stop-color="#d18c60"/></linearGradient></defs>
+            <ellipse cx="264" cy="355" rx="225" ry="42" fill="#07060e" opacity=".58"/><ellipse cx="264" cy="345" rx="190" ry="45" fill="url(#skyGlow)" opacity=".7"/>
+            <path d="M54 322 96 290 126 302 165 270 205 291 249 264 286 291 329 263 369 287 407 271 463 319 451 354 69 354Z" fill="#382947"/><path d="M92 326 130 304 168 324 198 291 238 316 276 288 315 317 347 294 390 320 429 305 450 337 439 360 82 360Z" fill="#59456c"/>
+            <path d="M139 329V213H185V329Z" fill="url(#darkstone)"/><path d="M132 217 162 163 192 217Z" fill="#a68bbd"/><path d="M151 185 162 163 173 185Z" fill="#e7cf9d"/><path d="M143 212H181V222H143Z" fill="#d9bf91"/>
+            <path d="M192 337V190H330V337Z" fill="url(#stone)"/><path d="M181 196 211 164 211 179 239 151 258 174 280 151 304 178 321 164 341 196Z" fill="#a88fbe"/><path d="M213 164V124H240V164Z" fill="url(#darkstone)"/><path d="M208 126 226 91 245 126Z" fill="#c4a6d5"/><path d="M216 104 226 91 235 104Z" fill="#f1d49d"/><path d="M270 164V112H296V164Z" fill="url(#darkstone)"/><path d="M265 114 283 77 301 114Z" fill="#c4a6d5"/><path d="M273 93 283 77 293 93Z" fill="#f1d49d"/>
+            <path d="M330 337V218H370V337Z" fill="url(#darkstone)"/><path d="M323 222 350 169 377 222Z" fill="#b49acb"/><path d="M339 190 350 169 361 190Z" fill="#f1d49d"/><path d="M198 217H327V227H198Z" fill="#d4b58b"/><path d="M203 245H320V253H203Z" fill="#796389"/>
+            <g fill="url(#window)"><path d="M218 231q9-15 18 0v23h-18Z"/><path d="M250 231q9-15 18 0v23h-18Z"/><path d="M282 231q9-15 18 0v23h-18Z"/><path d="M218 274q9-15 18 0v23h-18Z"/><path d="M282 274q9-15 18 0v23h-18Z"/><path d="M150 239q7-12 14 0v19h-14Z"/><path d="M344 239q7-12 14 0v19h-14Z"/></g>
+            <path d="M239 337V293Q260 260 281 293V337Z" fill="#171020"/><path d="M234 338V292Q260 252 286 292V338" stroke="#c6a4dc" stroke-width="3" fill="none"/><path d="M260 271V337" stroke="#8f719f" stroke-width="1.5"/>
+            <path d="M226 126V90M283 112V75M162 163V136M350 169V142" stroke="#f0ce8d" stroke-width="2"/><path d="M226 91 242 99 226 107 210 99Z" fill="#dcb76c"/><path d="M283 76 299 84 283 92 267 84Z" fill="#dcb76c"/><path d="M162 137 175 144 162 151 149 144Z" fill="#dcb76c"/><path d="M350 143 363 150 350 157 337 150Z" fill="#dcb76c"/>
+            <g fill="#e9d7ff" opacity=".8"><circle cx="103" cy="120" r="2"/><circle cx="178" cy="66" r="1.8"/><circle cx="336" cy="87" r="2"/><circle cx="411" cy="161" r="1.5"/><circle cx="389" cy="78" r="2"/><circle cx="123" cy="195" r="1.4"/><circle cx="445" cy="221" r="1.8"/><circle cx="78" cy="244" r="1.5"/></g>
+          </svg>
+          <div class="hero-plaque"><div><strong>Survival Legacy Frontier</strong><small>Temukan takdirmu di perbatasan dunia.</small></div><span class="plaque-symbol" aria-hidden="true">✦</span></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="ticker"><div class="wrap ticker-inner">
+      <div class="ticker-item"><span class="ticker-icon">◇</span><div><b>Ras dan kemampuan</b><small>Temukan gaya bermainmu</small></div></div>
+      <div class="ticker-item"><span class="ticker-icon">⚒</span><div><b>Ekonomi dan perdagangan</b><small>Bangun nilai dari usahamu</small></div></div>
+      <div class="ticker-item"><span class="ticker-icon">♜</span><div><b>Petualangan berisiko</b><small>Persiapkan diri sebelum melangkah</small></div></div>
+    </div></div>
+
+    <section class="section" id="dunia"><div class="wrap">
+      <div class="section-head"><div class="eyebrow">Kenali perbatasan</div><h2>Tiga wilayah.<br>Satu dunia yang terus hidup.</h2><p>Setiap wilayah punya tujuan dan tingkat risiko yang berbeda. Persiapkan perlengkapanmu, kenali aturan, lalu tentukan sejauh mana kamu berani melangkah.</p></div>
+      <div class="zones">
+        <article class="zone-card green"><div class="zone-label">Wilayah I · Aman</div><h3>Green Zone</h3><p>Tempat membangun permukiman, bertemu pemain lain, dan menyiapkan perjalanan berikutnya.</p><span class="zone-symbol" aria-hidden="true">♧</span></article>
+        <article class="zone-card yellow"><div class="zone-label">Wilayah II · Menantang</div><h3>Yellow Zone</h3><p>Area untuk menambang, berburu, dan mencari sumber daya dengan ancaman yang lebih besar.</p><span class="zone-symbol" aria-hidden="true">⚒</span></article>
+        <article class="zone-card red"><div class="zone-label">Wilayah III · Berbahaya</div><h3>Red Zone</h3><p>Perbatasan berisiko tinggi untuk pemain yang sudah siap menghadapi tantangan berat.</p><span class="zone-symbol" aria-hidden="true">⚔</span></article>
+      </div>
+    </div></section>
+
+    <section class="section systems" id="fitur"><div class="wrap">
+      <div class="section-head"><div class="eyebrow">Lebih dari sekadar bertahan hidup</div><h2>Kisahmu dibentuk oleh pilihanmu.</h2><p>SLF memadukan survival, unsur fantasy, dan interaksi antarpemain. Pelajari aturan setiap sistem sebelum mengambil keputusan besar.</p></div>
+      <div class="system-grid">
+        <article class="system-card"><div class="sys-icon" aria-hidden="true">✧</div><h3>Ras Fantasy</h3><p>Pilih ras dengan karakteristik dan kemampuan yang memberi gaya bermain berbeda.</p></article>
+        <article class="system-card"><div class="sys-icon" aria-hidden="true">♥</div><h3>Sistem Nyawa</h3><p>Petualangan memiliki konsekuensi. Pahami sistem nyawa dan aturan masuk kembali.</p></article>
+        <article class="system-card"><div class="sys-icon" aria-hidden="true">◈</div><h3>Ekonomi Pemain</h3><p>Berdagang, mengumpulkan sumber daya, dan berinteraksi dengan pasar serta NPC.</p></article>
+        <article class="system-card"><div class="sys-icon" aria-hidden="true">⌂</div><h3>Kehidupan Komunitas</h3><p>Bangun tempat tinggal, temukan rekan, dan ciptakan kisah bersama pemain lain.</p></article>
+      </div>
+    </div></section>
+
+    <section class="section" id="gabung"><div class="wrap">
+      <div class="section-head"><div class="eyebrow">Langkah pertama</div><h2>Siapkan perlengkapanmu.</h2><p>Belum pernah masuk ke SLF? Ikuti panduan ini sebelum bergabung.</p></div>
+      <div class="join-grid">
+        <aside class="join-aside"><h3>Siap melangkah ke frontier?</h3><p>SLF dirancang untuk pemain Java dan Bedrock. Detail alamat server dan port akan ditampilkan setelah informasi koneksi resmi dimasukkan.</p><div class="address-box"><span>Alamat server</span><em>Segera diumumkan</em></div><a class="btn btn-primary" href="#komunitas">Ikuti Pengumuman <span aria-hidden="true">↗</span></a></aside>
+        <div class="steps">
+          <article class="step"><div class="step-number">01</div><div><h3>Gunakan edisi yang didukung</h3><p>Siapkan Minecraft Java atau Bedrock dan pastikan versi yang kamu gunakan sesuai dengan pengumuman server.</p></div></article>
+          <article class="step"><div class="step-number">02</div><div><h3>Periksa panduan pemain baru</h3><p>Baca peraturan, sistem nyawa, zona, dan ketentuan komunitas supaya tidak salah langkah.</p></div></article>
+          <article class="step"><div class="step-number">03</div><div><h3>Masuk dan mulai bertualang</h3><p>Gunakan alamat resmi yang diumumkan di website ini atau kanal komunitas SLF setelah informasinya tersedia.</p></div></article>
+        </div>
+      </div>
+    </div></section>
+
+    <section class="section community" id="komunitas"><div class="wrap"><div class="community-panel"><div><div class="eyebrow">Tempat para petualang berkumpul</div><h2>Kisah yang hebat tidak dibangun sendirian.</h2><p>Ikuti kanal resmi SLF untuk pengumuman, pembaruan, kegiatan komunitas, dan informasi pembukaan server.</p></div><div class="community-links"><a class="social-link" href="#komunitas" aria-label="Discord, tautan segera ditambahkan"><span>◉</span> Discord <small>Segera hadir</small></a><a class="social-link" href="#komunitas" aria-label="WhatsApp, tautan segera ditambahkan"><span>◌</span> WhatsApp <small>Segera hadir</small></a><a class="social-link" href="#komunitas" aria-label="TikTok, tautan segera ditambahkan"><span>♪</span> TikTok <small>Segera hadir</small></a><a class="social-link" href="#komunitas" aria-label="YouTube, tautan segera ditambahkan"><span>▶</span> YouTube <small>Segera hadir</small></a></div></div></div></section>
+  </main>
+
+  <footer><div class="wrap footer-inner"><div><a class="brand" href="#beranda"><span class="brand-mark" aria-hidden="true">✦</span><span class="brand-name">SURVIVAL LEGACY FRONTIER<small>SEBUAH DUNIA, BANYAK KISAH</small></span></a><div class="footer-copy" style="margin-top:12px">© <span id="year"></span> Survival Legacy Frontier. Dibuat untuk komunitas.</div></div><nav class="footer-links" aria-label="Tautan tambahan"><a href="#dunia">Dunia</a><a href="#fitur">Fitur</a><a href="#gabung">Panduan</a><a href="#komunitas">Komunitas</a></nav></div></footer>
+  <script>
+    const menuToggle = document.getElementById('menuToggle');
+    const navLinks = document.getElementById('navLinks');
+    menuToggle.addEventListener('click', () => {
+      const open = navLinks.classList.toggle('open');
+      menuToggle.setAttribute('aria-expanded', String(open));
+      menuToggle.textContent = open ? '✕ Tutup' : '☰ Menu';
+    });
+    navLinks.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
+      navLinks.classList.remove('open');
+      menuToggle.setAttribute('aria-expanded', 'false');
+      menuToggle.textContent = '☰ Menu';
+    }));
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
