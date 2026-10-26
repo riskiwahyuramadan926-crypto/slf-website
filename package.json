@@ -1,0 +1,8 @@
+{
+  "name": "slf-store",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "pages:dev": "wrangler pages dev ."
+  }
+}

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#100c18"><meta name="description" content="Store resmi Survival Legacy Frontier. Pilih VIP+, Custom Rank, atau tiket masuk kembali.">
+  <title>Store | Survival Legacy Frontier</title>
+  <link rel="stylesheet" href="/assets/css/store.css">
+  <script src="/assets/js/store-config.js" defer></script><script src="/assets/js/store.js" defer></script>
+</head>
+<body>
+  <div class="topline"><b>SURVIVAL LEGACY FRONTIER</b> · STORE RESMI · TRANSAKSI TERCATAT</div>
+  <header><div class="wrap nav">
+    <a class="brand" href="/"><span class="mark">✦</span><span><strong>SURVIVAL LEGACY FRONTIER</strong><small>SEBUAH DUNIA, BANYAK KISAH</small></span></a>
+    <nav class="navlinks"><a href="/">Beranda</a><a href="#produk">Produk</a><a href="#pesan">Cara membeli</a><a href="#ulasan">Ulasan</a></nav>
+    <a class="btn btn-primary" href="#produk">Pilih Produk ↓</a>
+  </div></header>
+  <main>
+    <section class="hero"><div class="wrap hero-grid">
+      <div><div class="eyebrow">Perlengkapan perjalananmu</div><h1>Store resmi.<span>Transaksi jelas.</span></h1>
+        <p>Pilih produk, isi identitas pemain dengan benar, lalu bayar melalui QRIS dinamis DANA setelah layanan pembayaran diaktifkan. Item atau rank tetap diberikan admin secara manual setelah pembayaran terverifikasi.</p>
+        <div class="hero-actions"><a class="btn btn-primary" href="#produk">Lihat produk</a><a class="btn btn-quiet" href="https://saweria.co/LegacyFrontier" target="_blank" rel="noopener noreferrer">Donasi di Saweria ↗</a></div>
+      </div>
+      <div class="hero-art" aria-label="Ilustrasi portal fantasi ungu"><div class="orb"></div><div class="ruin"></div><div class="art-label"><b>Survival Legacy Frontier</b>Pilih dengan teliti. Simpan nomor pesanan. Mainkan kisahmu.</div></div>
+    </div></section>
+    <div class="wrap"><div class="notice"><strong>Catatan sebelum checkout:</strong> pembayaran dinamis dan notifikasi otomatis baru aktif setelah konfigurasi API DANA Bisnis, database Cloudflare, dan WhatsApp Business API selesai. Halaman ini tidak pernah menandai pembayaran berhasil hanya berdasarkan screenshot/bukti transfer.</div></div>
+    <section class="section" id="produk"><div class="wrap">
+      <div class="section-head"><div class="eyebrow">Katalog</div><h2>Pilih produk Store SLF.</h2><p>Harga dihitung ulang di server saat pesanan dibuat. Pilih satu produk per pesanan agar status pembayaran dan pemberian produk mudah dilacak.</p></div>
+      <div id="products" class="products" aria-live="polite"></div>
+    </div></section>
+    <section class="section" id="pesan"><div class="wrap">
+      <div class="section-head"><div class="eyebrow">Alur pembelian</div><h2>Dari pesanan sampai selesai.</h2><p>Status pesanan dan rating tersambung ke nomor pesanan. Simpan tautan status setelah checkout.</p></div>
+      <div class="steps">
+        <div class="step"><span class="step-num">1</span><b>Isi formulir</b><p>WhatsApp, nama Minecraft, dan detail produk wajib sesuai.</p></div>
+        <div class="step"><span class="step-num">2</span><b>Bayar QRIS</b><p>Nominal QR dibuat sesuai total pesanan oleh API DANA.</p></div>
+        <div class="step"><span class="step-num">3</span><b>Admin memproses</b><p>Status pembayaran otomatis; pemberian rank/tiket tetap manual.</p></div>
+        <div class="step"><span class="step-num">4</span><b>Nilai toko</b><p>Form rating baru terbuka setelah admin menyelesaikan pesanan.</p></div>
+      </div>
+      <div class="checkout">
+        <aside class="panel"><h3>Ringkasan pesanan</h3><p class="panel-lede">Pilih kartu produk untuk melihat ringkasan.</p>
+          <div class="summary-row"><span>Produk</span><strong id="summary-product">Belum dipilih</strong></div>
+          <div class="summary-row"><span>Harga produk</span><strong id="summary-price">Rp0</strong></div>
+          <div class="summary-row"><span>Kode promo</span><strong id="summary-promo">—</strong></div>
+          <div class="summary-row total"><span>Estimasi total</span><strong id="summary-total">Rp0</strong></div>
+          <p class="payment-note">Kode promo diverifikasi server saat checkout. Nominal final yang ditagih akan ditampilkan di halaman QRIS; jangan membayar nominal berbeda.</p>
+          <div class="divider"></div><p class="subtle">Donasi sukarela terpisah dari pembelian produk. <a href="https://saweria.co/LegacyFrontier" target="_blank" rel="noopener noreferrer">Dukung SLF di Saweria ↗</a></p>
+        </aside>
+        <form class="panel" id="order-form">
+          <h3>Data pembeli</h3><p class="panel-lede">Isi data yang bisa dihubungi admin jika ada kendala. Jangan masukkan password atau OTP.</p>
+          <div class="form-grid">
+            <div class="field full"><label for="minecraft-name">Nama Minecraft *</label><input id="minecraft-name" name="minecraftName" required minlength="2" maxlength="32" autocomplete="off" placeholder="Contoh: .NamaBedrock"><small>Bedrock: gunakan awalan titik (.) bila memang format akunmu di SLF memakai titik.</small></div>
+            <div class="field"><label for="platform">Platform *</label><select id="platform" name="platform" required><option value="">Pilih platform</option><option value="Java">Java Edition</option><option value="Bedrock">Bedrock Edition</option></select></div>
+            <div class="field"><label for="whatsapp">Nomor WhatsApp *</label><input id="whatsapp" name="whatsapp" required inputmode="tel" autocomplete="tel" minlength="8" maxlength="20" placeholder="Contoh: 62812xxxxxxx"><small>Gunakan kode negara, contoh Indonesia 62.</small></div>
+            <div class="field full"><label for="email">Email (opsional)</label><input id="email" name="email" type="email" autocomplete="email" placeholder="nama@email.com"><small>Opsional, dipakai hanya untuk komunikasi pesanan.</small></div>
+            <div class="field full"><label for="promo">Kode promo (opsional)</label><input id="promo" name="promoCode" maxlength="32" autocomplete="off" placeholder="Masukkan kode jika punya"></div>
+          </div>
+          <div class="detail-fields" id="custom-rank-fields" hidden>
+            <h3>Detail Custom Rank</h3><p class="panel-lede">Tulis nama dan pilihan tampilan. Admin akan mengecek apakah format tersebut didukung server.</p>
+            <div class="form-grid">
+              <div class="field full"><label for="rank-name">Nama rank yang diinginkan *</label><input id="rank-name" name="rankName" minlength="2" maxlength="16" placeholder="Contoh: STARLIGHT"><small>2–16 karakter. Hindari simbol yang bisa rusak di chat atau tablist.</small></div>
+              <div class="field"><label for="rank-color">Warna *</label><select id="rank-color" name="rankColor"></select></div>
+              <div class="field"><label for="rank-style">Gaya tulisan *</label><select id="rank-style" name="rankStyle"></select></div>
+              <div class="field full"><label>Pratinjau rank</label><div style="border:1px solid var(--line);border-radius:10px;background:#100c17;padding:14px"><span id="rank-preview" style="font-weight:800;color:#B98CF4">[STARLIGHT] NamaPemain</span></div><small>Pratinjau tidak menjamin efek yang sama di semua plugin atau tampilan Bedrock.</small></div>
+            </div>
+          </div>
+          <div class="detail-fields" id="vip-fields" hidden><h3>Catatan VIP+</h3><p class="panel-lede">Sebelum mengaktifkan penjualan publik, isi benefit dan masa aktif VIP+ yang sudah disahkan di dokumen konfigurasi. Detail final harus terlihat jelas untuk pembeli.</p><div class="field"><label for="vip-note">Catatan tambahan (opsional)</label><textarea id="vip-note" name="buyerNote" maxlength="400" placeholder="Pertanyaan atau catatan untuk admin"></textarea></div></div>
+          <div class="detail-fields" id="ticket-fields" hidden><h3>Ketentuan tiket</h3><p class="panel-lede" id="ticket-note">Tiket diproses manual mengikuti aturan season aktif. Baca ketentuan re-entry sebelum membayar.</p><div class="field"><label for="ticket-note-input">Catatan tambahan (opsional)</label><textarea id="ticket-note-input" name="buyerNote" maxlength="400" placeholder="Pertanyaan mengenai penggunaan tiket"></textarea></div></div>
+          <input type="hidden" id="product-id" name="productId" value="">
+          <label class="checkboxline"><input id="agree" type="checkbox" required><span>Saya sudah memeriksa nama Minecraft, produk, harga, dan ketentuan. Saya paham rank/tiket diberikan manual oleh admin setelah pembayaran terverifikasi.</span></label>
+          <div class="form-error" id="form-error" role="alert"></div>
+          <button class="btn btn-primary btnwide" id="submit-order" type="submit" disabled>Buat pesanan &amp; QRIS ↗</button>
+          <p class="payment-note">Jangan membayar sebelum QRIS dibuat oleh sistem. Bila checkout belum aktif, hubungi CS resmi SLF.</p>
+        </form>
+      </div>
+    </div></section>
+    <section class="section" id="ulasan"><div class="wrap">
+      <div class="section-head"><div class="eyebrow">Ulasan pemain</div><h2>Pengalaman pembeli.</h2><p>Rating hanya dapat dikirim oleh pembeli dengan pesanan yang sudah ditandai selesai oleh admin.</p></div>
+      <div class="rating-summary"><strong id="review-average">—</strong><div><div class="stars" id="review-stars">☆☆☆☆☆</div><div class="subtle" id="review-count">Belum ada ulasan</div></div></div>
+      <div class="reviews" id="reviews-list"><div class="empty">Ulasan akan tampil di sini setelah pembeli menyelesaikan pesanan dan memberi rating.</div></div>
+    </div></section>
+  </main>
+  <footer><div class="wrap footer-inner"><div>© <span id="year"></span> Survival Legacy Frontier · Store resmi.<br>Minecraft adalah merek dagang Mojang/Microsoft; SLF bukan produk resmi mereka.</div><div class="footer-links"><a href="/">Portal SLF</a><a href="https://saweria.co/LegacyFrontier" target="_blank" rel="noopener noreferrer">Saweria</a><a href="/admin/">Admin</a></div></div></footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body></html>
