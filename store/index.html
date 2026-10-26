@@ -54,7 +54,7 @@
             <div class="field full"><label for="promo">Kode promo (opsional)</label><input id="promo" name="promoCode" maxlength="32" autocomplete="off" placeholder="Masukkan kode jika punya"></div>
           </div>
           <div class="detail-fields" id="custom-rank-fields" hidden>
-            <h3>Detail Custom Rank</h3><p class="panel-lede">Tulis nama dan pilihan tampilan. Admin akan mengecek apakah format tersebut didukung server.</p>
+            <h3>Pengaturan Custom Rank</h3><p class="panel-lede">Wajib diisi untuk Custom Rank maupun VIP+. Pembelian VIP+ Rp55.000 sudah termasuk Custom Rank permanen. Admin akan memasang nama, warna, dan gaya pilihan ini setelah pembayaran terverifikasi.</p>
             <div class="form-grid">
               <div class="field full"><label for="rank-name">Nama rank yang diinginkan *</label><input id="rank-name" name="rankName" minlength="2" maxlength="16" placeholder="Contoh: STARLIGHT"><small>2–16 karakter. Hindari simbol yang bisa rusak di chat atau tablist.</small></div>
               <div class="field"><label for="rank-color">Warna *</label><select id="rank-color" name="rankColor"></select></div>
@@ -62,7 +62,7 @@
               <div class="field full"><label>Pratinjau rank</label><div style="border:1px solid var(--line);border-radius:10px;background:#100c17;padding:14px"><span id="rank-preview" style="font-weight:800;color:#B98CF4">[STARLIGHT] NamaPemain</span></div><small>Pratinjau tidak menjamin efek yang sama di semua plugin atau tampilan Bedrock.</small></div>
             </div>
           </div>
-          <div class="detail-fields" id="vip-fields" hidden><h3>Catatan VIP+</h3><p class="panel-lede">Sebelum mengaktifkan penjualan publik, isi benefit dan masa aktif VIP+ yang sudah disahkan di dokumen konfigurasi. Detail final harus terlihat jelas untuk pembeli.</p><div class="field"><label for="vip-note">Catatan tambahan (opsional)</label><textarea id="vip-note" name="buyerNote" maxlength="400" placeholder="Pertanyaan atau catatan untuk admin"></textarea></div></div>
+          <div class="detail-fields" id="vip-fields" hidden><h3>Catatan VIP+</h3><p class="panel-lede">VIP+ seharga Rp55.000 termasuk Custom Rank permanen. Catatan ini opsional dan akan ikut tersimpan pada pesanan.</p><div class="field"><label for="vip-note">Catatan tambahan (opsional)</label><textarea id="vip-note" name="buyerNote" maxlength="400" placeholder="Pertanyaan atau catatan untuk admin"></textarea></div></div>
           <div class="detail-fields" id="ticket-fields" hidden><h3>Ketentuan tiket</h3><p class="panel-lede" id="ticket-note">Tiket diproses manual mengikuti aturan season aktif. Baca ketentuan re-entry sebelum membayar.</p><div class="field"><label for="ticket-note-input">Catatan tambahan (opsional)</label><textarea id="ticket-note-input" name="buyerNote" maxlength="400" placeholder="Pertanyaan mengenai penggunaan tiket"></textarea></div></div>
           <input type="hidden" id="product-id" name="productId" value="">
           <label class="checkboxline"><input id="agree" type="checkbox" required><span>Saya sudah memeriksa nama Minecraft, produk, harga, dan ketentuan. Saya paham rank/tiket diberikan manual oleh admin setelah pembayaran terverifikasi.</span></label>

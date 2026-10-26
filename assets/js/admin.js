@@ -38,7 +38,12 @@
       const title=document.createElement('div'); const h=document.createElement('h3');h.textContent=`${o.product_name} · ${o.id}`;const p=document.createElement('p');p.className='subtle';p.textContent=new Date(o.created_at).toLocaleString('id-ID');title.append(h,p);
       const badge=document.createElement('span');badge.className='status-pill '+(['PAID','PROCESSING','COMPLETED'].includes(o.status)?'paid':o.status==='EXPIRED'?'expired':'');badge.textContent=statusName(o.status);head.append(title,badge);card.appendChild(head);
       const dl=document.createElement('dl');
-      const entries=[['Pemain',`${o.minecraft_name} (${o.platform})`],['WhatsApp',o.whatsapp],['Email',o.email||'—'],['Harga',idr(o.subtotal)],['Diskon',idr(o.discount)],['Total',idr(o.total)],['Status',statusName(o.status)],['Detail produk',JSON.stringify(o.details||{})]];
+      const detail=o.details||{};
+      const entries=[['Pemain',`${o.minecraft_name} (${o.platform})`],['WhatsApp',o.whatsapp],['Email',o.email||'—'],['Harga',idr(o.subtotal)],['Diskon',idr(o.discount)],['Total',idr(o.total)],['Status',statusName(o.status)]];
+      if (['VIP_PLUS','CUSTOM_RANK'].includes(o.product_id)) {
+        entries.push(['Nama Custom Rank',detail.rankName||'—'],['Warna Custom Rank',detail.rankColor||'—'],['Gaya tulisan',({normal:'Normal',bold:'Tebal',italic:'Miring',bold_italic:'Tebal + Miring'})[detail.rankStyle]||detail.rankStyle||'—']);
+        if (o.product_id==='VIP_PLUS') entries.push(['Catatan VIP+',detail.buyerNote||'—']);
+      } else { entries.push(['Catatan pembeli',detail.buyerNote||'—']); }
       entries.forEach(([k,v])=>{const dt=document.createElement('dt');dt.textContent=k;const dd=document.createElement('dd');dd.textContent=String(v);dl.append(dt,dd);});card.appendChild(dl);
       const actions=document.createElement('div');actions.style.display='flex';actions.style.gap='8px';actions.style.flexWrap='wrap';actions.style.marginTop='14px';
       const copy=document.createElement('button');copy.className='btn btn-quiet';copy.type='button';copy.textContent='Salin nomor';copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(o.id);copy.textContent='Tersalin';}catch{prompt('Salin nomor pesanan:',o.id);}});actions.appendChild(copy);

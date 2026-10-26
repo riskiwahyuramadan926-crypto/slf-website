@@ -50,18 +50,10 @@ export async function onRequestPost({ request, env, waitUntil }) {
     if (!/^\+?[0-9]{8,16}$/.test(whatsapp)) return fail('Nomor WhatsApp tidak valid. Gunakan kode negara, contoh 62812xxxxxxx.');
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail('Format email tidak valid.');
     if (['CUSTOM_RANK', 'VIP_PLUS'].includes(data.productId)) {
-  const d = data.details || {};
-  const rankName = safeText(d.rankName, 16);
-
-  if (!/^[A-Za-z0-9_ -]{2,16}$/.test(rankName))
-    return fail('Nama Custom Rank wajib 2–16 karakter.');
-
-  if (!RANK_COLORS.has(String(d.rankColor || '').toUpperCase()))
-    return fail('Warna rank tidak valid.');
-
-  if (!RANK_STYLES.has(d.rankStyle))
-    return fail('Gaya tulisan tidak valid.');
-}
+      const d = data.details || {};
+      if (!/^[A-Za-z0-9_ -]{2,16}$/.test(safeText(d.rankName, 16))) return fail('Nama Custom Rank harus 2–16 karakter dan hanya memakai huruf, angka, spasi, garis bawah, atau tanda hubung.');
+      if (!RANK_COLORS.has(String(d.rankColor || '').toUpperCase())) return fail('Warna rank tidak termasuk pilihan yang tersedia.');
+      if (!RANK_STYLES.has(d.rankStyle)) return fail('Gaya tulisan tidak valid.');
     }
     let pricing;
     try { pricing = calculatePrice(data.productId, promoCode, env); } catch (e) { return fail(e.message || 'Produk/promo tidak valid.'); }
@@ -72,17 +64,8 @@ export async function onRequestPost({ request, env, waitUntil }) {
     const token = randomHex(40) + randomHex(24);
     const tokenHash = await sha256Hex(token);
     const details = ['CUSTOM_RANK', 'VIP_PLUS'].includes(data.productId)
-  ? {
-      rankName: safeText(data.details?.rankName, 16),
-      rankColor: String(data.details?.rankColor || '').toUpperCase(),
-      rankStyle: safeText(data.details?.rankStyle, 20),
-      buyerNote: data.productId === 'VIP_PLUS'
-        ? safeText(data.details?.buyerNote, 400)
-        : ''
-    }
-  : {
-      buyerNote: safeText(data.details?.buyerNote, 400)
-    };
+      ? { rankName: safeText(data.details?.rankName, 16), rankColor: String(data.details?.rankColor || '').toUpperCase(), rankStyle: safeText(data.details?.rankStyle, 20), buyerNote: data.productId === 'VIP_PLUS' ? safeText(data.details?.buyerNote, 400) : '' }
+      : { buyerNote: safeText(data.details?.buyerNote, 400) };
     const qr = await createDanaQr(env, partnerReferenceNo, pricing.total, now);
     await env.DB.prepare(`INSERT INTO orders (id, access_key_hash, minecraft_name, platform, whatsapp, email, product_id, product_name, details_json, promo_code, subtotal, discount, total, status, partner_reference_no, dana_reference_no, qr_content, qr_image, qr_url, expires_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING_PAYMENT', ?, ?, ?, ?, ?, ?, ?, ?)`)
       .bind(id, tokenHash, minecraftName, platform, whatsapp, email || null, data.productId, pricing.product.name, JSON.stringify(details), promoCode || null, pricing.subtotal, pricing.discount, pricing.total, partnerReferenceNo, qr.danaReferenceNo, qr.qrContent, qr.qrImage, qr.qrUrl, qr.expiresAt, now, now).run();
