@@ -12,8 +12,8 @@ ISI PAKET
 - schema.sql                 Struktur database Cloudflare D1.
 
 HARGA DEFAULT
-VIP+ Rp55.000
-Custom Rank Rp20.000
+VIP+ Rp55.000 — fitur Custom Rank permanen
+Custom Rank Rp20.000 — pembelian Custom Rank terpisah
 Tiket masuk kembali 1 Rp15.000
 Tiket masuk kembali 2 Rp28.000
 Tiket masuk kembali 3 Rp35.000
@@ -79,5 +79,5 @@ G. STATUS DAN BATAS IMPLEMENTASI
 - Manual: admin memberi rank/tiket di server Minecraft.
 - WhatsApp otomatis membutuhkan WhatsApp Business Cloud API aktif + token/nomor, serta lebih baik memakai template pesan yang telah disetujui Meta.
 - Verifikasi signature callback DANA perlu dites di Sandbox akun kamu; dokumentasi/credential acquirer yang kamu dapatkan dari DANA adalah sumber final. Jangan gunakan ke produksi sebelum seluruh tes berhasil.
-- VIP+ benefit/masa aktif belum dipastikan dalam brief. Publikasikan benefit serta masa aktif final di kartu produk sebelum mulai menerima uang; jangan jual dengan ketentuan yang masih ambigu.
+- VIP+ Rp55.000 mencakup fitur Custom Rank permanen sesuai keputusan pemilik SLF. Nama rank, warna, dan gaya tulisan tetap dibatasi kemampuan plugin/format teks yang dipakai server. Benefit VIP+ lain dan masa aktif rank VIP+ harus dijelaskan terpisah sebelum checkout produksi.
 - Kompensasi keterlambatan admin 1 jam belum dimasukkan karena jenis/nominal bonus belum ditetapkan.

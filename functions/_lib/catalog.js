@@ -1,6 +1,6 @@
 // Authoritative prices. Keep in sync with assets/js/store-config.js; server prices always win.
 export const PRODUCTS = {
-  VIP_PLUS: { name: 'VIP+', price: 55000, description: 'Rank VIP+' },
+  VIP_PLUS: { name: 'VIP+', price: 55000, description: 'Rank VIP+ dengan fitur Custom Rank permanen' },
   CUSTOM_RANK: { name: 'Custom Rank', price: 20000, description: 'Rank dengan nama dan tampilan pilihan pembeli' },
   REENTRY_1: { name: 'Tiket Masuk Kembali · 1', price: 15000, description: 'Paket satu tiket masuk kembali' },
   REENTRY_2: { name: 'Tiket Masuk Kembali · 2', price: 28000, description: 'Paket dua tiket masuk kembali' },
