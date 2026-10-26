@@ -23,11 +23,16 @@
   cfg.rankStyles.forEach(s => $('rank-style').add(new Option(s.label, s.value)));
 
   function chooseProduct(id, scrollToForm) {
-    selected = cfg.products.find(p => p.id === id) || null;
-    document.querySelectorAll('.product').forEach(el => el.classList.toggle('selected', el.dataset.product === id));
-    $('product-id').value = selected ? selected.id : '';
-    $('summary-product').textContent = selected ? selected.name : 'Belum dipilih';
-    $('summary-price').textContent = rupiah(selected ? selected.price : 0);
+    const needsRank = !!selected &&
+  ['CUSTOM_RANK', 'VIP_PLUS'].includes(selected.id);
+
+$('custom-rank-fields').hidden = !needsRank;
+$('vip-fields').hidden = !selected || selected.id !== 'VIP_PLUS';
+$('ticket-fields').hidden = !selected || !selected.id.startsWith('REENTRY_');
+
+$('rank-name').required = needsRank;
+$('rank-color').required = needsRank;
+$('rank-style').required = needsRank;
     const promo = $('promo').value.trim();
     $('summary-promo').textContent = promo ? 'Dicek saat checkout' : '—';
     $('summary-total').textContent = rupiah(selected ? selected.price : 0);
@@ -61,9 +66,16 @@
       minecraftName: $('minecraft-name').value.trim(), platform: $('platform').value,
       whatsapp: $('whatsapp').value.trim(), email: $('email').value.trim(), promoCode: $('promo').value.trim().toUpperCase(),
       productId: selected.id, agree: $('agree').checked,
-      details: selected.id === 'CUSTOM_RANK' ? {
-        rankName: $('rank-name').value.trim(), rankColor: $('rank-color').value, rankStyle: $('rank-style').value
-      } : selected.id === 'VIP_PLUS' ? { buyerNote: $('vip-note').value.trim() } : { buyerNote: $('ticket-note-input').value.trim() }
+      details: ['CUSTOM_RANK', 'VIP_PLUS'].includes(selected.id)
+  ? {
+      rankName: $('rank-name').value.trim(),
+      rankColor: $('rank-color').value,
+      rankStyle: $('rank-style').value,
+      buyerNote: selected.id === 'VIP_PLUS'
+        ? $('vip-note').value.trim()
+        : ''
+    }
+  : { buyerNote: $('ticket-note-input').value.trim() }
     };
     try {
       const response = await fetch('/api/orders/create', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
