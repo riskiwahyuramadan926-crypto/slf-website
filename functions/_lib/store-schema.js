@@ -147,11 +147,15 @@ export async function ensureStoreSchema(db) {
         await db.prepare('INSERT OR IGNORE INTO store_products (id,name,price,description,icon,tag,note,active,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)')
           .bind(...p,1,now,now).run();
       }
-      // Refresh canonical product copy without overwriting prices or active flags edited by the Owner.
-      for (const p of products) {
-        await db.prepare('UPDATE store_products SET name=?,description=?,icon=?,tag=?,note=?,updated_at=? WHERE id=?')
-          .bind(p[1],p[3],p[4],p[5],p[6],now,p[0]).run();
-      }
+      // Migrate only the older default copy. Do not overwrite product descriptions edited later in the Owner panel.
+      const vip = products.find(p => p[0] === 'VIP_PLUS');
+      await db.prepare(`UPDATE store_products SET description=?,tag=?,note=?,updated_at=?
+        WHERE id='VIP_PLUS' AND (description LIKE 'Rank VIP+ dan Custom Rank permanen%' OR note LIKE '%claim 15 chunk/3 claim%')`)
+        .bind(vip[3],vip[5],vip[6],now).run();
+      const ticket = products.find(p => p[0] === 'REENTRY_1');
+      await db.prepare(`UPDATE store_products SET description=?,note=?,updated_at=?
+        WHERE id='REENTRY_1' AND description LIKE 'Satu tiket re-entry:%'`)
+        .bind(ticket[3],ticket[6],now).run();
       await db.prepare("INSERT OR IGNORE INTO investment_plans (id,unit_price,total_units,profit_share_pct,lock_months,start_date,status,notes,updated_by,created_at,updated_at) VALUES ('main-draft',500000,20,40,4,NULL,'DRAFT','Draft internal only. Belum menjadi penawaran publik atau penerimaan pembayaran.','owner',?,?)")
         .bind(now,now).run();
     })();
