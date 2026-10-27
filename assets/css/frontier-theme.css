@@ -177,3 +177,17 @@ footer .brand-mark{flex-shrink:0}
 .hero-board-footer{padding-top:15px;margin-top:15px;border-top:1px solid rgba(151,183,233,.12);font-size:.58rem}.hero-board-footer span:last-child{color:#c2d0e5}
 @media(max-width:900px){.hero-grid{grid-template-columns:1fr!important}.hero-character-board{max-width:680px}}
 @media(max-width:600px){.hero-grid{padding:44px 0 45px!important}.hero-character-board{padding:17px;border-radius:17px}.hero-board-heading{margin:16px 0}.slf-sigil{height:155px}.world-stat-row{gap:6px}.world-stat-row>div{padding:9px 7px}.world-stat-row b{font-size:.75rem}.world-stat-row small{font-size:.61rem}.hero-board-footer{font-size:.53rem}}
+
+/* ===== CHARACTER REFERENCE CHIPS — minimal and easy on the eyes ===== */
+.inspiration-character{
+  display:inline-flex;align-items:center;gap:7px;max-width:100%;
+  margin-top:13px;padding:6px 9px;border:1px solid rgba(126,230,246,.16);
+  border-radius:999px;background:rgba(126,230,246,.045);
+  color:#b9d0e9;font-size:.66rem;line-height:1.35;letter-spacing:.025em;
+}
+.inspiration-character:before{
+  content:"✦";color:var(--gold2);font-size:.65rem;flex-shrink:0;
+}
+.inspiration-card:nth-child(2) .inspiration-character{border-color:rgba(155,141,255,.2);background:rgba(155,141,255,.055)}
+.inspiration-card:nth-child(3) .inspiration-character{border-color:rgba(255,119,166,.17);background:rgba(255,119,166,.04)}
+.inspiration-card:nth-child(4) .inspiration-character{border-color:rgba(233,214,146,.17);background:rgba(233,214,146,.04)}
