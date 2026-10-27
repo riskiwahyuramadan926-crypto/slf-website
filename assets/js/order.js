@@ -47,9 +47,15 @@
       const card = document.createElement('article'); card.className = 'ticket-card';
       const heading = document.createElement('h3'); heading.textContent = 'Tiket ' + ticket.id;
       const status = document.createElement('p'); status.textContent = 'Status: ' + (ticketLabels[ticket.status] || ticket.status);
-      const link = document.createElement('a'); link.className = 'btn btn-primary'; link.href = ticket.url; link.textContent = 'Buka tiket pribadi ↗';
       const note = document.createElement('p'); note.className = 'admin-muted'; note.textContent = ticket.status === 'WAITING_PAYMENT' ? 'Tiket belum bisa digunakan sebelum transaksi selesai.' : ticket.status === 'ACTIVE' ? 'Simpan tautan ini. Saat siap, tekan “Ajukan tiket” di halaman tiket.' : 'Lihat detail dan status terbaru melalui tautan tiket pribadi.';
-      card.append(heading, status, link, note); ticketRoot.append(card);
+      if (ticket.url) {
+        const link = document.createElement('a'); link.className = 'btn btn-primary'; link.href = ticket.url; link.textContent = 'Buka tiket pribadi ↗';
+        card.append(heading, status, link, note);
+      } else {
+        const unavailable = document.createElement('p'); unavailable.className = 'form-error'; unavailable.textContent = 'Tautan pribadi tidak tersedia. Jangan membayar ulang; hubungi admin melalui kanal resmi dengan nomor pesanan ini.';
+        card.append(heading, status, unavailable, note);
+      }
+      ticketRoot.append(card);
     });
     $('payment-section').hidden=o.status!=='PENDING_PAYMENT';
     $('review-link-section').hidden=!(o.status==='COMPLETED'&&!o.rated&&o.reviewUrl);
