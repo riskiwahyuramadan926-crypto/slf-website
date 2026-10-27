@@ -1,4 +1,4 @@
-import { json, fail, readJson, requireAdmin } from '../../_lib/common.js';
+import { json, fail, readJson, requireAdmin, logAdminActivity } from '../../_lib/common.js';
 export async function onRequestPost({ request, env }) {
   if (!(await requireAdmin(request, env))) return fail('Akses admin ditolak. Periksa ADMIN_SECRET.', 401);
   if (!env.DB) return fail('Database belum tersambung.', 503);
@@ -12,5 +12,6 @@ export async function onRequestPost({ request, env }) {
     if (row.status === 'PROCESSING') return json({ ok: true, status: 'PROCESSING' });
     return fail('Pesanan hanya dapat mulai diproses setelah pembayaran terverifikasi.', 409);
   }
+  await logAdminActivity(env.DB, 'order_processing', 'order', id, { status: 'PROCESSING' });
   return json({ ok: true, status: 'PROCESSING' });
 }
