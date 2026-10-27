@@ -7,8 +7,8 @@ export async function onRequestPost({ request, env }) {
     const data = await readJson(request);
     if (!data.agree) return fail('Centang persetujuan sebelum membuat pesanan.');
     const isReentryProduct = ['REENTRY_1','REENTRY_2','REENTRY_3'].includes(data.productId);
-    if (isReentryProduct && (typeof env.TICKET_LINK_SECRET !== 'string' || env.TICKET_LINK_SECRET.length < 32)) {
-      return fail('Checkout tiket sementara dinonaktifkan demi keamanan tautan pribadi. Owner perlu mengatur Cloudflare Secret TICKET_LINK_SECRET minimal 32 karakter acak sebelum tiket dapat dibeli.', 503);
+    if (isReentryProduct && (typeof env.TICKET_LINK_SECRET !== 'string' || env.TICKET_LINK_SECRET.length < 32 || env.TICKET_LINK_SECRET === env.OWNER_SECRET || env.TICKET_LINK_SECRET === env.ADMIN_SECRET)) {
+      return fail('Checkout tiket sementara dinonaktifkan demi keamanan tautan pribadi. Owner perlu mengatur Cloudflare Secret TICKET_LINK_SECRET minimal 32 karakter acak dan berbeda dari OWNER_SECRET/ADMIN_SECRET sebelum tiket dapat dibeli.', 503);
     }
     const minecraftName = safeText(data.minecraftName, 32);
     const platform = ['Java', 'Bedrock'].includes(data.platform) ? data.platform : '';
