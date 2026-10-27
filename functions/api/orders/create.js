@@ -21,7 +21,7 @@ export async function onRequestPost({ request, env }) {
       if (!RANK_STYLES.has(d.rankStyle)) return fail('Gaya tulisan rank tidak valid.');
     }
     let price;
-    try { price = calculatePrice(data.productId, promoCode, env); }
+    try { price = await calculatePrice(data.productId, promoCode, env); }
     catch (e) { return fail(e.message || 'Produk/promo tidak valid.'); }
     const now = new Date().toISOString();
     const date = now.slice(2,10).replaceAll('-','');
