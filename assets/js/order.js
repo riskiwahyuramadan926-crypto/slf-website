@@ -33,7 +33,7 @@
     ticketSection.hidden = tickets.length === 0;
     const ticketLabels = {WAITING_PAYMENT:'Menunggu transaksi selesai',ACTIVE:'Aktif · siap diajukan',PENDING:'Pending · menunggu admin',COMPLETED:'Selesai · terpakai',CANCELLED:'Dibatalkan'};
     tickets.forEach(ticket => {
-      const card = document.createElement('article'); card.className = 'admin-list-card';
+      const card = document.createElement('article'); card.className = 'ticket-card';
       const heading = document.createElement('h3'); heading.textContent = 'Tiket ' + ticket.id;
       const status = document.createElement('p'); status.textContent = 'Status: ' + (ticketLabels[ticket.status] || ticket.status);
       const link = document.createElement('a'); link.className = 'btn btn-primary'; link.href = ticket.url; link.textContent = 'Buka tiket pribadi ↗';
