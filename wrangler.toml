@@ -5,5 +5,5 @@ compatibility_date = "2026-10-25"
 # D1 Store: binding ini digunakan oleh semua endpoint /api/*
 [[d1_databases]]
 binding = "DB"
-database_name = "slf-website"
+database_name = "slf-store-db"
 database_id = "a5d20f54-37fe-495b-8608-dd7afa1a5a05"
