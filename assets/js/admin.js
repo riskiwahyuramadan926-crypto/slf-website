@@ -305,7 +305,7 @@
       d.activities.forEach(a=>{
         const card=document.createElement('article');card.className='admin-list-card';
         const h=document.createElement('h3');h.textContent=a.action+' · '+(a.entity_type||'');
-        const meta=document.createElement('p');meta.className='admin-muted';meta.textContent=new Date(a.created_at).toLocaleString('id-ID')+' · '+(a.entity_id||'—');
+        const meta=document.createElement('p');meta.className='admin-muted';meta.textContent=new Date(a.created_at).toLocaleString('id-ID')+' · Oleh: '+(a.actor==='owner'?'Owner':'Admin')+' · '+(a.entity_id||'—');
         const details=document.createElement('p');details.textContent=JSON.stringify(a.details||{});
         card.append(h,meta,details);root.append(card);
       });
