@@ -20,7 +20,7 @@ export async function onRequestPost({ request, env }) {
   const note = safeText(d.note, 300);
   const active = d.active === false || d.active === 0 || d.active === '0' ? 0 : 1;
   if (!/^[A-Z0-9_]{2,32}$/.test(id)) return fail('ID produk hanya boleh huruf besar, angka, dan garis bawah.');
-  if (!name || !Number.isSafeInteger(price) || price < 0 || price > 2000000000) return fail('Nama atau harga produk tidak valid.');
+  if (!name || !Number.isSafeInteger(price) || price < 1 || price > 2000000000) return fail('Nama atau harga produk tidak valid.');
   const now = new Date().toISOString();
   const previous = await env.DB.prepare('SELECT id FROM store_products WHERE id = ?').bind(id).first();
   await env.DB.prepare(`INSERT INTO store_products (id,name,price,description,icon,tag,note,active,created_at,updated_at)
