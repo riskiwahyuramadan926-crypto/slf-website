@@ -137,7 +137,7 @@ export async function ensureStoreSchema(db) {
       catch (error) { if (!/duplicate column/i.test(String(error?.message || error))) throw error; }
       const now = new Date().toISOString();
       const products = [
-        ['VIP_PLUS','VIP+',55000,'Rank VIP+ tetap dimiliki setelah langganan fitur berakhir; benefit aktif mengikuti masa langganan pada paket','♜','Rank tetap + fitur berlangganan','Saat langganan berakhir, rank VIP+ tetap ada tetapi benefit langganan berhenti. Saat aktif: 20 chunk/2 claim, /shop jarak jauh, dan 5 nyawa per tiket re-entry.'],
+        ['VIP_PLUS','VIP+',55000,'Rank VIP+ permanen dengan fitur tambahan berlangganan 60 hari; fitur berhenti saat langganan berakhir, rank tetap','♜','Rank tetap + fitur berlangganan','Fitur tambahan VIP+ aktif selama langganan 60 hari: 20 chunk/2 claim, /shop jarak jauh, dan 5 nyawa per tiket re-entry. Saat langganan berakhir, rank VIP+ dan Custom Rank tetap permanen, tetapi fitur tambahan berhenti.'],
         ['CUSTOM_RANK','Custom Rank',20000,'Rank dengan nama dan tampilan pilihan pembeli','✧','Personalisasi','Gaya final mengikuti kemampuan plugin dan format teks server SLF.'],
         ['REENTRY_1','Tiket Masuk Kembali · 1',15000,'Satu tiket re-entry memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ yang langganan fiturnya aktif','♥','Paket 1 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan fitur aktif. Pengajuan diproses manual oleh admin.'],
         ['REENTRY_2','Tiket Masuk Kembali · 2',28000,'Paket dua tiket re-entry; jumlah nyawa per tiket mengikuti rank dan status langganan VIP+','♥','Paket 2 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan fitur aktif. Pengajuan diproses manual oleh admin.'],
@@ -150,7 +150,7 @@ export async function ensureStoreSchema(db) {
       // Migrate only the older default copy. Do not overwrite product descriptions edited later in the Owner panel.
       const vip = products.find(p => p[0] === 'VIP_PLUS');
       await db.prepare(`UPDATE store_products SET description=?,tag=?,note=?,updated_at=?
-        WHERE id='VIP_PLUS' AND (description LIKE 'Rank VIP+ dan Custom Rank permanen%' OR note LIKE '%claim 15 chunk/3 claim%')`)
+        WHERE id='VIP_PLUS' AND (description LIKE 'Rank VIP+ dan Custom Rank permanen%' OR note LIKE '%claim 15 chunk/3 claim%' OR (description='Rank VIP+ tetap dimiliki setelah langganan fitur berakhir; benefit aktif mengikuti masa langganan pada paket' AND note LIKE 'Saat langganan berakhir, rank VIP+ tetap ada%'))`)
         .bind(vip[3],vip[5],vip[6],now).run();
       const ticket = products.find(p => p[0] === 'REENTRY_1');
       await db.prepare(`UPDATE store_products SET description=?,note=?,updated_at=?
