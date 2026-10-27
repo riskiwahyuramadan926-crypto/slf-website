@@ -2,7 +2,7 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const secretKey = 'slf_admin_secret_session';
-  let allOrders = [], allReviews = [], knownOrderIds = new Set(), firstLoad = true, activeTab = 'orders';
+  let allOrders = [], allReviews = [], allProducts = [], allPromos = [], allCustomers = [], allTickets = [], allAnnouncements = [], knownOrderIds = new Set(), firstLoad = true, activeTab = 'orders';
   const statusLabels = {PENDING_PAYMENT:'Menunggu pembayaran',PAID:'Pembayaran berhasil',PROCESSING:'Sedang diproses',COMPLETED:'Selesai',EXPIRED:'Kedaluwarsa',CANCELLED:'Dibatalkan'};
   const idr = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -10,6 +10,17 @@
   $('login-form').addEventListener('submit',async e=>{e.preventDefault();sessionStorage.setItem(secretKey,$('admin-secret').value);firstLoad=true;await loadOrders();});
   $('reload').addEventListener('click',()=>loadOrders(true));
   $('reload-reviews').addEventListener('click',loadReviews);
+  $('reload-customers').addEventListener('click',loadCustomers);
+  $('run-report').addEventListener('click',loadReports);
+  $('reload-activity').addEventListener('click',loadActivity);
+  $('reload-support').addEventListener('click',loadSupport);
+  $('customer-search').addEventListener('input',renderCustomers);
+  $('product-reset').addEventListener('click',resetProductForm);
+  $('promo-reset').addEventListener('click',resetPromoForm);
+  $('announcement-reset').addEventListener('click',resetAnnouncementForm);
+  $('product-form').addEventListener('submit',saveProduct);
+  $('promo-form').addEventListener('submit',savePromo);
+  $('announcement-form').addEventListener('submit',saveAnnouncement);
   $('order-search').addEventListener('input',renderOrders);
   $('status-filter').addEventListener('change',renderOrders);
   $('export-csv').addEventListener('click',exportCsv);
@@ -22,8 +33,10 @@
   document.querySelectorAll('[data-tab]').forEach(btn=>btn.addEventListener('click',()=>{
     activeTab=btn.dataset.tab;
     document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b===btn));
-    $('orders-tab').hidden=activeTab!=='orders';$('reviews-tab').hidden=activeTab!=='reviews';
-    if(activeTab==='reviews'&&!allReviews.length)loadReviews();
+    ['orders','reviews','products','promos','customers','reports','activity','support','announcements'].forEach(name=>{
+      const section=$(name+'-tab'); if(section) section.hidden=name!==activeTab;
+    });
+    if(activeTab!=='orders')loadTab(activeTab);
   }));
   async function api(path,init={}) {
     const secret=sessionStorage.getItem(secretKey)||'';
@@ -31,7 +44,7 @@
     if(init.body)headers['content-type']='application/json';
     const res=await fetch(path,{...init,headers,cache:'no-store'});
     const data=await res.json().catch(()=>({}));
-    if(!res.ok)throw new Error(data.error||'Permintaan gagal ('+res.status+').');
+    if(!res.ok){if(res.status===401){sessionStorage.removeItem(secretKey);$('login-panel').hidden=false;$('dashboard').hidden=true;}throw new Error(data.error||'Permintaan gagal ('+res.status+').');}
     return data;
   }
   async function loadOrders(manual=false){
@@ -127,6 +140,185 @@
   async function copyText(text,message){try{await navigator.clipboard.writeText(text);showToast(message);}catch{prompt('Salin teks berikut:',text);}}
   function showAdminError(message){$('admin-error').textContent=message;$('admin-error').classList.add('show');}
   function showToast(message){const t=$('toast');if(!t)return;t.textContent=message;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
+
+  function loadTab(name){
+    const jobs={products:loadProducts,promos:loadPromos,customers:loadCustomers,reports:loadReports,activity:loadActivity,support:loadSupport,announcements:loadAnnouncements};
+    if(name==='reviews'){loadReviews();return;}
+    if(jobs[name])jobs[name]();
+  }
+  function setError(id,message){const el=$(id);if(!el)return;el.textContent=message||'';el.classList.toggle('show',Boolean(message));}
+  function makeTable(headers,rows){
+    if(!rows.length)return '<div class="empty">Belum ada data untuk ditampilkan.</div>';
+    return '<div class="admin-table-wrap"><table class="admin-data-table"><thead><tr>'+headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map(v=>'<td>'+esc(v??'—')+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+  }
+  async function loadProducts(){
+    setError('products-error','');
+    try{const d=await api('/api/admin/products');allProducts=d.products||[];renderProducts();}
+    catch(e){setError('products-error',e.message);}
+  }
+  function renderProducts(){
+    const root=$('products-list');root.replaceChildren();
+    if(!allProducts.length){root.innerHTML='<div class="empty">Belum ada produk.</div>';return;}
+    allProducts.forEach(p=>{
+      const card=document.createElement('article');card.className='admin-list-card';
+      const h=document.createElement('h3');h.textContent=(p.icon||'✦')+' '+p.name;
+      const meta=document.createElement('p');meta.textContent=idr(p.price)+' · '+(p.active?'Aktif':'Nonaktif')+' · ID: '+p.id;
+      const desc=document.createElement('p');desc.textContent=p.description||'Tanpa deskripsi';
+      const note=document.createElement('p');note.className='admin-muted';note.textContent=p.note||'—';
+      const actions=document.createElement('div');actions.className='admin-inline-actions';
+      const edit=document.createElement('button');edit.type='button';edit.className='btn';edit.textContent='Edit produk';edit.addEventListener('click',()=>editProduct(p.id));
+      actions.append(edit);card.append(h,meta,desc,note,actions);root.append(card);
+    });
+  }
+  function resetProductForm(){
+    $('product-form').reset();$('product-id').readOnly=false;$('product-active').value='1';$('product-icon').value='✦';$('product-tag').value='Store';$('product-form-title').textContent='Tambah produk';setError('products-error','');
+  }
+  function editProduct(id){
+    const p=allProducts.find(x=>x.id===id);if(!p)return;
+    $('product-id').value=p.id;$('product-id').readOnly=true;$('product-name').value=p.name;$('product-price').value=p.price;
+    $('product-icon').value=p.icon||'✦';$('product-tag').value=p.tag||'Store';$('product-description').value=p.description||'';
+    $('product-note').value=p.note||'';$('product-active').value=p.active?'1':'0';$('product-form-title').textContent='Edit '+p.name;
+    $('product-form').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  async function saveProduct(e){
+    e.preventDefault();setError('products-error','');
+    const payload={id:$('product-id').value.trim().toUpperCase(),name:$('product-name').value.trim(),price:Number($('product-price').value),icon:$('product-icon').value.trim(),tag:$('product-tag').value.trim(),description:$('product-description').value.trim(),note:$('product-note').value.trim(),active:$('product-active').value==='1'};
+    const btn=$('product-form').querySelector('[type=submit]');btn.disabled=true;
+    try{await api('/api/admin/products',{method:'POST',body:JSON.stringify(payload)});await loadProducts();resetProductForm();showToast('Produk tersimpan. Harga berlaku untuk checkout baru.');}
+    catch(err){setError('products-error',err.message);}finally{btn.disabled=false;}
+  }
+  async function loadPromos(){
+    setError('promos-error','');
+    try{const d=await api('/api/admin/promos');allPromos=d.promos||[];renderPromos();}
+    catch(e){setError('promos-error',e.message);}
+  }
+  function renderPromos(){
+    const root=$('promos-list');root.replaceChildren();
+    if(!allPromos.length){root.innerHTML='<div class="empty">Belum ada kode promo yang dibuat melalui panel admin.</div>';return;}
+    allPromos.forEach(p=>{
+      const card=document.createElement('article');card.className='admin-list-card';
+      const h=document.createElement('h3');h.textContent=p.code;
+      const meta=document.createElement('p');meta.textContent=(p.type==='percent'?p.value+'%':'Rp'+Number(p.value).toLocaleString('id-ID'))+' potongan · '+(p.active?'Aktif':'Nonaktif');
+      const limits=document.createElement('p');limits.textContent='Terpakai '+p.uses+' kali'+(p.max_uses===null?'':' dari '+p.max_uses)+' · Kedaluwarsa: '+(p.expires_at||'tidak diatur');
+      const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='Edit promo';b.addEventListener('click',()=>editPromo(p.code));
+      card.append(h,meta,limits,b);root.append(card);
+    });
+  }
+  function resetPromoForm(){
+    $('promo-form').reset();$('promo-code-admin').readOnly=false;$('promo-type').value='percent';$('promo-active').value='1';$('promo-form-title').textContent='Buat kode promo';setError('promos-error','');
+  }
+  function editPromo(code){
+    const p=allPromos.find(x=>x.code===code);if(!p)return;
+    $('promo-code-admin').value=p.code;$('promo-code-admin').readOnly=true;$('promo-type').value=p.type;$('promo-value').value=p.value;
+    $('promo-active').value=p.active?'1':'0';$('promo-max-uses').value=p.max_uses??'';
+    $('promo-expiry').value=p.expires_at?new Date(p.expires_at).toISOString().slice(0,16):'';$('promo-form-title').textContent='Edit '+p.code;
+    $('promo-form').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  async function savePromo(e){
+    e.preventDefault();setError('promos-error','');
+    const expiry=$('promo-expiry').value;
+    const payload={code:$('promo-code-admin').value.trim().toUpperCase(),type:$('promo-type').value,value:Number($('promo-value').value),active:$('promo-active').value==='1',maxUses:$('promo-max-uses').value===''?null:Number($('promo-max-uses').value),expiresAt:expiry?new Date(expiry).toISOString():null};
+    const btn=$('promo-form').querySelector('[type=submit]');btn.disabled=true;
+    try{await api('/api/admin/promos',{method:'POST',body:JSON.stringify(payload)});await loadPromos();resetPromoForm();showToast('Kode promo tersimpan.');}
+    catch(err){setError('promos-error',err.message);}finally{btn.disabled=false;}
+  }
+  async function loadCustomers(){setError('customers-error','');try{const d=await api('/api/admin/customers');allCustomers=d.customers||[];renderCustomers();}catch(e){setError('customers-error',e.message);}}
+  function renderCustomers(){
+    const q=$('customer-search').value.trim().toLowerCase();
+    const rows=allCustomers.filter(c=>[c.minecraft_name,c.platform,c.whatsapp,c.email].join(' ').toLowerCase().includes(q))
+      .map(c=>[c.minecraft_name,c.platform,c.whatsapp,c.email||'—',c.order_count,c.paid_orders,idr(c.verified_spend),c.last_order?new Date(c.last_order).toLocaleString('id-ID'):'—']);
+    $('customers-list').innerHTML=makeTable(['Pemain','Platform','WhatsApp','Email','Jumlah order','Order terbayar','Total belanja terverifikasi','Order terakhir'],rows);
+  }
+  async function loadReports(){
+    setError('reports-error','');
+    const from=$('report-from').value,to=$('report-to').value;
+    const params=new URLSearchParams();if(from)params.set('from',from);if(to)params.set('to',to);
+    try{
+      const d=await api('/api/admin/reports'+(params.size?'?'+params.toString():''));
+      const s=d.summary||{};
+      $('report-stats').innerHTML=[['Periode',d.from+' s.d. '+d.to],['Jumlah pesanan',s.total_orders||0],['Omzet terverifikasi',idr(s.verified_revenue)],['Pesanan terbayar',s.paid_orders||0],['Menunggu pembayaran',s.pending||0],['Batal / kedaluwarsa',s.cancelled||0],['Selesai',s.completed||0]].map(([k,v])=>'<div class="admin-stat"><small>'+esc(k)+'</small><strong>'+esc(v)+'</strong></div>').join('');
+      $('report-daily').innerHTML=makeTable(['Tanggal','Pesanan','Omzet terverifikasi'],(d.daily||[]).map(x=>[x.day,x.orders,idr(x.revenue)]));
+      $('report-products').innerHTML=makeTable(['Produk','Pesanan','Omzet terverifikasi'],(d.products||[]).map(x=>[x.product_name,x.orders,idr(x.revenue)]));
+    }catch(e){setError('reports-error',e.message);}
+  }
+  async function loadActivity(){
+    setError('activity-error','');
+    try{
+      const d=await api('/api/admin/activity');const root=$('activity-list');root.replaceChildren();
+      if(!(d.activities||[]).length){root.innerHTML='<div class="empty">Belum ada aktivitas yang tercatat.</div>';return;}
+      d.activities.forEach(a=>{
+        const card=document.createElement('article');card.className='admin-list-card';
+        const h=document.createElement('h3');h.textContent=a.action+' · '+(a.entity_type||'');
+        const meta=document.createElement('p');meta.className='admin-muted';meta.textContent=new Date(a.created_at).toLocaleString('id-ID')+' · '+(a.entity_id||'—');
+        const details=document.createElement('p');details.textContent=JSON.stringify(a.details||{});
+        card.append(h,meta,details);root.append(card);
+      });
+    }catch(e){setError('activity-error',e.message);}
+  }
+  async function loadSupport(){
+    setError('support-error','');
+    try{const d=await api('/api/admin/support');allTickets=d.tickets||[];renderSupport();}
+    catch(e){setError('support-error',e.message);}
+  }
+  function renderSupport(){
+    const root=$('support-list');root.replaceChildren();
+    if(!allTickets.length){root.innerHTML='<div class="empty">Belum ada tiket masuk.</div>';return;}
+    const statuses={OPEN:'Baru',IN_PROGRESS:'Sedang ditangani',WAITING_PLAYER:'Menunggu pemain',RESOLVED:'Selesai',CLOSED:'Ditutup'};
+    allTickets.forEach(t=>{
+      const card=document.createElement('article');card.className='admin-list-card';
+      const h=document.createElement('h3');h.textContent=t.subject+' · '+t.id;
+      const meta=document.createElement('p');meta.className='admin-muted';meta.textContent=t.player_name+' · '+t.contact+' · '+t.category+' · '+new Date(t.created_at).toLocaleString('id-ID');
+      const msg=document.createElement('p');msg.textContent=t.message;
+      const form=document.createElement('form');form.className='admin-form';
+      const lab1=document.createElement('label');lab1.textContent='Status tiket';
+      const select=document.createElement('select');['OPEN','IN_PROGRESS','WAITING_PLAYER','RESOLVED','CLOSED'].forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=statuses[s];select.append(o);});select.value=t.status;
+      const lab2=document.createElement('label');lab2.textContent='Balasan admin (opsional)';
+      const area=document.createElement('textarea');area.maxLength=1500;area.value=t.admin_reply||'';area.placeholder='Catatan tindak lanjut untuk pelanggan';
+      const btn=document.createElement('button');btn.type='submit';btn.className='btn btn-gold';btn.textContent='Simpan tindak lanjut';
+      form.append(lab1,select,lab2,area,btn);
+      form.addEventListener('submit',async e=>{e.preventDefault();btn.disabled=true;try{await api('/api/admin/support',{method:'POST',body:JSON.stringify({id:t.id,status:select.value,reply:area.value})});await loadSupport();showToast('Tiket diperbarui.');}catch(err){setError('support-error',err.message);btn.disabled=false;}});
+      card.append(h,meta,msg,form);root.append(card);
+    });
+  }
+  async function loadAnnouncements(){setError('announcements-error','');try{const d=await api('/api/admin/announcements');allAnnouncements=d.announcements||[];renderAnnouncements();}catch(e){setError('announcements-error',e.message);}}
+  function renderAnnouncements(){
+    const root=$('announcements-list');root.replaceChildren();
+    if(!allAnnouncements.length){root.innerHTML='<div class="empty">Belum ada pengumuman.</div>';return;}
+    allAnnouncements.forEach(a=>{
+      const card=document.createElement('article');card.className='admin-list-card';
+      const h=document.createElement('h3');h.textContent=a.title;
+      const meta=document.createElement('p');meta.textContent=(a.active?'Aktif':'Nonaktif')+' · '+a.id;
+      const body=document.createElement('p');body.textContent=a.body;
+      const dates=document.createElement('p');dates.className='admin-muted';dates.textContent='Mulai: '+(a.starts_at||'sekarang')+' · Selesai: '+(a.ends_at||'tanpa batas');
+      const btn=document.createElement('button');btn.type='button';btn.className='btn';btn.textContent='Edit pengumuman';btn.addEventListener('click',()=>editAnnouncement(a.id));
+      card.append(h,meta,body,dates,btn);root.append(card);
+    });
+  }
+  function resetAnnouncementForm(){
+    $('announcement-form').reset();$('announcement-id').value='';$('announcement-active').value='1';$('announcement-form-title').textContent='Buat pengumuman';setError('announcements-error','');
+  }
+  function toLocalDateTime(v){if(!v)return '';const d=new Date(v);return Number.isNaN(d.getTime())?'':new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);}
+  function editAnnouncement(id){
+    const a=allAnnouncements.find(x=>x.id===id);if(!a)return;
+    $('announcement-id').value=a.id;$('announcement-title').value=a.title;$('announcement-body').value=a.body;$('announcement-active').value=a.active?'1':'0';
+    $('announcement-start').value=toLocalDateTime(a.starts_at);$('announcement-end').value=toLocalDateTime(a.ends_at);$('announcement-form-title').textContent='Edit pengumuman';
+    $('announcement-form').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  async function saveAnnouncement(e){
+    e.preventDefault();setError('announcements-error','');
+    const starts=$('announcement-start').value,ends=$('announcement-end').value;
+    const payload={id:$('announcement-id').value||undefined,title:$('announcement-title').value.trim(),body:$('announcement-body').value.trim(),active:$('announcement-active').value==='1',startsAt:starts?new Date(starts).toISOString():null,endsAt:ends?new Date(ends).toISOString():null};
+    const btn=$('announcement-form').querySelector('[type=submit]');btn.disabled=true;
+    try{await api('/api/admin/announcements',{method:'POST',body:JSON.stringify(payload)});await loadAnnouncements();resetAnnouncementForm();showToast('Pengumuman tersimpan.');}
+    catch(err){setError('announcements-error',err.message);}finally{btn.disabled=false;}
+  }
+  function initReportDates(){
+    const today=new Date(),from=new Date(Date.now()-29*86400000),format=d=>d.toISOString().slice(0,10);
+    if(!$('report-to').value)$('report-to').value=format(today);
+    if(!$('report-from').value)$('report-from').value=format(from);
+  }
+  initReportDates();
+
   if(sessionStorage.getItem(secretKey))loadOrders();
   setInterval(()=>{if(sessionStorage.getItem(secretKey)&&!document.hidden)loadOrders();},45000);
 })();
