@@ -3,8 +3,8 @@ export const PRODUCTS = {
   VIP_PLUS: { name: 'VIP+', price: 55000, description: 'Rank VIP+ dan Custom Rank permanen; benefit tambahan aktif selama langganan VIP+ berlaku. Saat langganan habis, rank tetap ada tetapi fiturnya berhenti.' },
   CUSTOM_RANK: { name: 'Custom Rank', price: 20000, description: 'Rank dengan nama dan tampilan pilihan pembeli' },
   REENTRY_1: { name: 'Tiket Masuk Kembali · 1', price: 15000, description: 'Satu tiket re-entry: 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif.' },
-  REENTRY_2: { name: 'Tiket Masuk Kembali · 2', price: 28000, description: 'Paket dua tiket masuk kembali' },
-  REENTRY_3: { name: 'Tiket Masuk Kembali · 3', price: 35000, description: 'Paket tiga tiket masuk kembali' }
+  REENTRY_2: { name: 'Tiket Masuk Kembali · 2', price: 28000, description: 'Paket dua tiket re-entry; tiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif.' },
+  REENTRY_3: { name: 'Tiket Masuk Kembali · 3', price: 35000, description: 'Paket tiga tiket re-entry; tiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif.' }
 };
 export const RANK_COLORS = new Set(['#FFFFFF','#FF5555','#FFAA00','#FFFF55','#55FF55','#55FFFF','#5555FF','#AA00AA','#FF55FF','#B98CF4','#E8C47C']);
 export const RANK_STYLES = new Set(['normal','bold','italic','bold_italic']);
