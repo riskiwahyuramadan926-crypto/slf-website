@@ -7,6 +7,17 @@ export async function onRequestGet({ request, env, params }) {
   if (!row || await sha256Hex(key) !== row.access_key_hash) return fail('Pesanan tidak ditemukan atau tautan akses tidak valid.', 404);
   let details = {}; try { details = JSON.parse(row.details_json || '{}'); } catch {}
   const order = {id:row.id,minecraftName:row.minecraft_name,platform:row.platform,productId:row.product_id,productName:row.product_name,details,subtotal:row.subtotal,discount:row.discount,total:row.total,status:row.status,expiresAt:row.expires_at,createdAt:row.created_at,paidAt:row.paid_at,completedAt:row.completed_at,rated:Boolean(row.rated_at)};
+  if (String(row.product_id || '').startsWith('REENTRY_')) {
+    const { results: ticketRows = [] } = await env.DB.prepare(
+      'SELECT id, status, created_at, updated_at, submitted_at, completed_at FROM reentry_tickets WHERE order_id = ? ORDER BY created_at, id'
+    ).bind(id).all();
+    order.tickets = ticketRows.map(ticket => {
+      const ticketUrl = new URL('/store/ticket.html', url.origin);
+      ticketUrl.searchParams.set('id', ticket.id);
+      ticketUrl.searchParams.set('key', key);
+      return { id: ticket.id, status: ticket.status, createdAt: ticket.created_at, updatedAt: ticket.updated_at, submittedAt: ticket.submitted_at, completedAt: ticket.completed_at, url: ticketUrl.toString() };
+    });
+  }
   if (row.status === 'COMPLETED' && !row.rated_at) {
     const reviewUrl = new URL('/store/review.html', url.origin);
     reviewUrl.searchParams.set('id', id); reviewUrl.searchParams.set('key', key);
