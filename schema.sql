@@ -39,6 +39,16 @@ CREATE TABLE IF NOT EXISTS admin_activity (
   entity_type TEXT NOT NULL, entity_id TEXT, details_json TEXT NOT NULL DEFAULT '{}', created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_admin_activity_created_at ON admin_activity(created_at DESC);
+CREATE TABLE IF NOT EXISTS reentry_tickets (
+  id TEXT PRIMARY KEY, order_id TEXT NOT NULL REFERENCES orders(id), access_key_hash TEXT NOT NULL,
+  minecraft_name TEXT NOT NULL, product_name TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'WAITING_PAYMENT'
+    CHECK (status IN ('WAITING_PAYMENT','ACTIVE','PENDING','COMPLETED','CANCELLED')),
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL, submitted_at TEXT, completed_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_reentry_tickets_order ON reentry_tickets(order_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_reentry_tickets_status ON reentry_tickets(status, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS support_tickets (
   id TEXT PRIMARY KEY, player_name TEXT NOT NULL, contact TEXT NOT NULL, category TEXT NOT NULL,
   subject TEXT NOT NULL, message TEXT NOT NULL, request_hash TEXT, status TEXT NOT NULL DEFAULT 'OPEN'
