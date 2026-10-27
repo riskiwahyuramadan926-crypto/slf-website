@@ -6,19 +6,34 @@
   let selected = null;
 
   $('year').textContent = new Date().getFullYear();
-  const productRoot = $('products');
-  cfg.products.forEach((p) => {
-    const article = document.createElement('article'); article.className = 'product'; article.dataset.product = p.id;
-    article.innerHTML = `<div class="iconbox" aria-hidden="true"></div><span class="pill"></span><h3></h3><div class="price"></div><p></p><div class="subtle"></div><button class="btn btn-quiet" type="button">Pilih produk</button>`;
-    article.querySelector('.iconbox').textContent = p.icon;
-    article.querySelector('.pill').textContent = p.tag;
-    article.querySelector('h3').textContent = p.name;
-    article.querySelector('.price').textContent = rupiah(p.price);
-    article.querySelector('p').textContent = p.description;
-    article.querySelector('.subtle').textContent = p.note;
-    article.querySelector('button').addEventListener('click', () => chooseProduct(p.id, true));
-    productRoot.appendChild(article);
-  });
+  function renderProducts(){
+    const productRoot = $('products');
+    cfg.products.forEach((p) => {
+      const article = document.createElement('article'); article.className = 'product'; article.dataset.product = p.id;
+      article.innerHTML = `<div class="iconbox" aria-hidden="true"></div><span class="pill"></span><h3></h3><div class="price"></div><p></p><div class="subtle"></div><button class="btn btn-quiet" type="button">Pilih produk</button>`;
+      article.querySelector('.iconbox').textContent = p.icon;
+      article.querySelector('.pill').textContent = p.tag;
+      article.querySelector('h3').textContent = p.name;
+      article.querySelector('.price').textContent = rupiah(p.price);
+      article.querySelector('p').textContent = p.description;
+      article.querySelector('.subtle').textContent = p.note;
+      article.querySelector('button').addEventListener('click', () => chooseProduct(p.id, true));
+      productRoot.appendChild(article);
+    });
+  }
+  async function initProducts(){
+    try {
+      const response = await fetch('/api/store-products', { cache:'no-store' });
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data.products) && data.products.length) {
+          cfg.products = data.products.map(p => ({ ...(cfg.products.find(old => old.id === p.id) || {}), ...p }));
+        }
+      }
+    } catch (_) { /* Gunakan katalog cadangan statis bila API belum tersedia. */ }
+    renderProducts();
+  }
+  initProducts();
   cfg.rankColors.forEach(c => $('rank-color').add(new Option(c.label, c.value)));
   cfg.rankStyles.forEach(s => $('rank-style').add(new Option(s.label, s.value)));
 
@@ -108,4 +123,40 @@
     } catch (_) { /* Ulasan boleh tidak tampil bila API belum dipasang. */ }
   }
   loadReviews();
+  loadAnnouncements();
+
+  async function loadAnnouncements(){
+    try{
+      const response=await fetch('/api/announcements',{cache:'no-store'});
+      if(!response.ok)return;
+      const data=await response.json(),items=data.announcements||[];
+      if(!items.length)return;
+      const section=$('store-announcements'),root=$('announcement-list');
+      root.replaceChildren();
+      items.forEach(item=>{
+        const card=document.createElement('article');card.className='product';
+        const label=document.createElement('span');label.className='pill';label.textContent='Pengumuman SLF';
+        const title=document.createElement('h3');title.textContent=item.title;
+        const body=document.createElement('p');body.textContent=item.body;
+        const date=document.createElement('div');date.className='subtle';date.textContent=new Date(item.created_at).toLocaleDateString('id-ID');
+        card.append(label,title,body,date);root.append(card);
+      });
+      section.hidden=false;
+    }catch(_){/* Pengumuman tidak mengganggu checkout bila API belum aktif. */}
+  }
+  $('support-form').addEventListener('submit',async event=>{
+    event.preventDefault();
+    const error=$('support-form-error'),result=$('support-result'),btn=$('support-submit');
+    error.textContent='';error.classList.remove('show');result.textContent='';
+    btn.disabled=true;btn.textContent='Mengirim tiket…';
+    const body={playerName:$('support-player').value.trim(),contact:$('support-contact').value.trim(),category:$('support-category').value,subject:$('support-subject').value.trim(),message:$('support-message').value.trim(),website:$('support-website').value};
+    try{
+      const response=await fetch('/api/support/tickets',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+      const data=await response.json().catch(()=>({}));
+      if(!response.ok)throw new Error(data.error||'Tiket belum dapat dikirim.');
+      result.textContent='Tiket berhasil dibuat: '+data.ticketId+'. Simpan nomor ini untuk tindak lanjut.';
+      $('support-form').reset();
+    }catch(e){error.textContent=e.message;error.classList.add('show');}
+    finally{btn.disabled=false;btn.textContent='Kirim tiket bantuan';}
+  });
 })();
