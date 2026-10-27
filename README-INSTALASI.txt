@@ -11,8 +11,9 @@ ALUR PEMBELIAN
 7. Tautan ulasan muncul di halaman status setelah selesai. Ulasan hanya dapat dikirim satu kali.
 
 KONFIGURASI WAJIB
-- Cloudflare Pages D1 binding bernama DB.
-- Jalankan schema.sql pada database D1 jika tabel orders/reviews belum ada.
+- `wrangler.toml` telah mengikat database D1 `slf-website` (`a5d20f54-37fe-495b-8608-dd7afa1a5a05`) dengan nama binding persis `DB`.
+- Pastikan Cloudflare Pages menggunakan Wrangler config dari repository lalu buat deployment baru agar binding aktif.
+- Middleware API membuat tabel `orders` dan `reviews` otomatis jika belum ada. `schema.sql` disimpan sebagai cadangan setup manual.
 - Cloudflare Secret ADMIN_SECRET minimal 32 karakter. Jangan simpan di GitHub.
 - Isi adminWhatsApp di assets/js/store-config.js dengan nomor WhatsApp admin dalam format internasional angka saja. Contoh format: 62812xxxxxxx (ganti dengan nomor admin asli).
 - Harga katalog publik: assets/js/store-config.js. Harga yang dipercaya server: functions/_lib/catalog.js.
