@@ -2,8 +2,8 @@ import { json, fail, readJson, sha256Hex, safeText } from '../_lib/common.js';
 export async function onRequestGet({ env }) {
   if (!env.DB) return json({ average: 0, count: 0, reviews: [] });
   const summary = await env.DB.prepare('SELECT COUNT(*) AS count, COALESCE(AVG(rating),0) AS average FROM reviews').first();
-  const { results = [] } = await env.DB.prepare('SELECT player_name, rating, comment, created_at FROM reviews ORDER BY created_at DESC LIMIT 12').all();
-  return json({ average: Number(summary?.average || 0), count: Number(summary?.count || 0), reviews: results.map(r => ({ playerName: r.player_name, rating: r.rating, comment: r.comment, createdAt: r.created_at })) });
+  const { results = [] } = await env.DB.prepare('SELECT r.player_name, r.rating, r.comment, r.created_at, rr.reply, rr.admin_name, rr.updated_at AS replied_at FROM reviews r LEFT JOIN review_replies rr ON rr.review_order_id = r.order_id ORDER BY r.created_at DESC LIMIT 12').all();
+  return json({ average: Number(summary?.average || 0), count: Number(summary?.count || 0), reviews: results.map(r => ({ playerName: r.player_name, rating: r.rating, comment: r.comment, createdAt: r.created_at, adminReply: r.reply || null, adminName: r.admin_name || null, repliedAt: r.replied_at || null })) });
 }
 export async function onRequestPost({ request, env }) {
   if (!env.DB) return fail('Database ulasan belum tersambung.', 503);
