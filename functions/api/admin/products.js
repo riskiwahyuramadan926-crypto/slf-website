@@ -1,7 +1,7 @@
-import { json, fail, readJson, requireAdmin, safeText, logAdminActivity } from '../../_lib/common.js';
+import { json, fail, readJson, requireOwner, safeText, logAdminActivity } from '../../_lib/common.js';
 
 export async function onRequestGet({ request, env }) {
-  if (!(await requireAdmin(request, env))) return fail('Akses admin ditolak.', 401);
+  if (!(await requireOwner(request, env))) return fail('Fitur ini hanya untuk Owner.', 401);
   if (!env.DB) return fail('Database belum tersambung.', 503);
   const { results = [] } = await env.DB.prepare('SELECT id,name,price,description,icon,tag,note,active,created_at,updated_at FROM store_products ORDER BY created_at,id').all();
   return json({ products: results.map(p => ({ ...p, price: Number(p.price), active: Boolean(p.active) })) });
