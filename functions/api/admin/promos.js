@@ -1,7 +1,7 @@
-import { json, fail, readJson, requireAdmin, safeText, logAdminActivity } from '../../_lib/common.js';
+import { json, fail, readJson, requireOwner, safeText, logAdminActivity } from '../../_lib/common.js';
 
 export async function onRequestGet({ request, env }) {
-  if (!(await requireAdmin(request, env))) return fail('Akses admin ditolak.', 401);
+  if (!(await requireOwner(request, env))) return fail('Fitur ini hanya untuk Owner.', 401);
   if (!env.DB) return fail('Database belum tersambung.', 503);
   const { results = [] } = await env.DB.prepare(`SELECT p.code,p.type,p.value,p.active,p.expires_at,p.max_uses,p.created_at,p.updated_at,
     (SELECT COUNT(*) FROM orders o WHERE o.promo_code=p.code AND o.status IN ('PAID','PROCESSING','COMPLETED')) AS uses
