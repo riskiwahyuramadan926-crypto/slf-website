@@ -13,7 +13,8 @@
   $('reload-customers').addEventListener('click',loadCustomers);
   $('run-report').addEventListener('click',loadReports);
   $('reload-activity').addEventListener('click',loadActivity);
-  $('reload-support').addEventListener('click',loadSupport);\n  $('reload-tickets').addEventListener('click',loadTickets);\n  $('ticket-search').addEventListener('input',renderTickets);\n  $('ticket-status-filter').addEventListener('change',renderTickets);
+  $('reload-support').addEventListener('click',loadSupport);
+  $('reload-tickets').addEventListener('click',loadTickets);\n  $('ticket-search').addEventListener('input',renderTickets);\n  $('ticket-status-filter').addEventListener('change',renderTickets);
   $('customer-search').addEventListener('input',renderCustomers);
   $('product-reset').addEventListener('click',resetProductForm);
   $('promo-reset').addEventListener('click',resetPromoForm);
