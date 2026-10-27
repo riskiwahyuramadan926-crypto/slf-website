@@ -11,6 +11,8 @@ Store menggunakan Cloudflare Pages Functions dan D1. Pembayaran DANA Bisnis dila
 6. Tautan ulasan muncul setelah selesai. Ulasan hanya bisa dikirim satu kali.
 
 
+- CS otomatis 24 jam: widget chat di beranda, Store, dan Wiki menjawab FAQ seputar pembayaran, order, rank, re-entry, kendala teknis, serta keamanan. Pertanyaan yang perlu pemeriksaan manusia diarahkan ke tiket bantuan; ini bukan jaminan petugas manusia selalu online.
+- Tiket bantuan tersimpan di D1 dan muncul di panel Admin. Bila WhatsApp Business Cloud API dikonfigurasi, tiket baru dapat mengirim notifikasi WhatsApp opsional ke admin.
 - Admin operasional mencakup katalog produk berbasis D1 (harga baru dipakai server saat checkout berikutnya), kode promo, ringkasan pelanggan, laporan periode/produk, log tindakan admin, inbox tiket bantuan, pengumuman terjadwal, dan balasan ulasan.
 - Halaman Store memuat katalog aktif dari `/api/store-products`, pengumuman dari `/api/announcements`, dan menerima tiket bantuan melalui `/api/support/tickets`. Schema runtime menyiapkan tabel admin dengan `CREATE TABLE IF NOT EXISTS` dan mempertahankan data lama.
 - Fitur admin: statistik order, pencarian/filter, ekspor CSV, auto-refresh dan notifikasi browser, inbox ulasan serta balasan publik admin.
