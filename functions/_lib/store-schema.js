@@ -137,15 +137,20 @@ export async function ensureStoreSchema(db) {
       catch (error) { if (!/duplicate column/i.test(String(error?.message || error))) throw error; }
       const now = new Date().toISOString();
       const products = [
-        ['VIP_PLUS','VIP+',55000,'Rank VIP+ dan Custom Rank permanen; fitur tambahan aktif selama langganan VIP+ berlaku','♜','Rank permanen + fitur berlangganan','Saat langganan berakhir, rank VIP+ dan Custom Rank tetap ada tetapi benefit berhenti. Saat aktif: claim 15 chunk/3 claim, /shop jarak jauh, dan 5 nyawa per tiket re-entry.'],
+        ['VIP_PLUS','VIP+',55000,'Rank VIP+ tetap dimiliki setelah langganan fitur berakhir; benefit aktif mengikuti masa langganan pada paket','♜','Rank tetap + fitur berlangganan','Saat langganan berakhir, rank VIP+ tetap ada tetapi benefit langganan berhenti. Saat aktif: 20 chunk/2 claim, /shop jarak jauh, dan 5 nyawa per tiket re-entry.'],
         ['CUSTOM_RANK','Custom Rank',20000,'Rank dengan nama dan tampilan pilihan pembeli','✧','Personalisasi','Gaya final mengikuti kemampuan plugin dan format teks server SLF.'],
-        ['REENTRY_1','Tiket Masuk Kembali · 1',15000,'Satu tiket re-entry: 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif','♥','Paket 1 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Pengajuan diproses manual oleh admin.'],
-        ['REENTRY_2','Tiket Masuk Kembali · 2',28000,'Paket dua tiket re-entry','♥','Paket 2 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Pengajuan diproses manual oleh admin.'],
-        ['REENTRY_3','Tiket Masuk Kembali · 3',35000,'Paket tiga tiket re-entry','♥','Paket 3 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Pengajuan diproses manual oleh admin.']
+        ['REENTRY_1','Tiket Masuk Kembali · 1',15000,'Satu tiket re-entry memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ yang langganan fiturnya aktif','♥','Paket 1 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan fitur aktif. Pengajuan diproses manual oleh admin.'],
+        ['REENTRY_2','Tiket Masuk Kembali · 2',28000,'Paket dua tiket re-entry; jumlah nyawa per tiket mengikuti rank dan status langganan VIP+','♥','Paket 2 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan fitur aktif. Pengajuan diproses manual oleh admin.'],
+        ['REENTRY_3','Tiket Masuk Kembali · 3',35000,'Paket tiga tiket re-entry; jumlah nyawa per tiket mengikuti rank dan status langganan VIP+','♥','Paket 3 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan fitur aktif. Pengajuan diproses manual oleh admin.']
       ];
       for (const p of products) {
         await db.prepare('INSERT OR IGNORE INTO store_products (id,name,price,description,icon,tag,note,active,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)')
           .bind(...p,1,now,now).run();
+      }
+      // Refresh canonical product copy without overwriting prices or active flags edited by the Owner.
+      for (const p of products) {
+        await db.prepare('UPDATE store_products SET name=?,description=?,icon=?,tag=?,note=?,updated_at=? WHERE id=?')
+          .bind(p[1],p[3],p[4],p[5],p[6],now,p[0]).run();
       }
       await db.prepare("INSERT OR IGNORE INTO investment_plans (id,unit_price,total_units,profit_share_pct,lock_months,start_date,status,notes,updated_by,created_at,updated_at) VALUES ('main-draft',500000,20,40,4,NULL,'DRAFT','Draft internal only. Belum menjadi penawaran publik atau penerimaan pembayaran.','owner',?,?)")
         .bind(now,now).run();
