@@ -2,9 +2,9 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const secretKey = 'slf_admin_secret_session';
-  let allOrders = [], allReviews = [], allProducts = [], allPromos = [], allCustomers = [], allTickets = [], allAnnouncements = [], allNotes = [], allCmsItems = [], allFinanceEntries = [], currentFinance = {}, investmentPlan = null, currentRole = '', ownerSecretConfigured = false, lastCmsKind = 'slot', knownOrderIds = new Set(), knownTicketIds = new Set(), firstLoad = true, firstTicketLoad = true, activeTab = 'orders';
-  const ownerOnlyTabs = new Set(['products','promos','reports','finance','site-content','investment','access']);
-  const allTabNames = ['orders','tickets','reviews','products','promos','customers','reports','activity','support','announcements','notes','finance','site-content','investment','access'];
+  let allOrders = [], allReviews = [], allProducts = [], allPromos = [], allCustomers = [], allTickets = [], allAnnouncements = [], allNotes = [], allCmsItems = [], allFinanceEntries = [], currentFinance = {}, currentRole = '', ownerSecretConfigured = false, lastCmsKind = 'slot', knownOrderIds = new Set(), knownTicketIds = new Set(), firstLoad = true, firstTicketLoad = true, activeTab = 'orders';
+  const ownerOnlyTabs = new Set(['products','promos','reports','finance','site-content','access']);
+  const allTabNames = ['orders','tickets','reviews','products','promos','customers','reports','activity','support','announcements','notes','finance','site-content','access'];
   const statusLabels = {PENDING_PAYMENT:'Menunggu pembayaran',PAID:'Pembayaran berhasil',PROCESSING:'Sedang diproses',COMPLETED:'Selesai',EXPIRED:'Kedaluwarsa',CANCELLED:'Dibatalkan'};
   const idr = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -49,9 +49,6 @@
   $('cms-reset').addEventListener('click',resetCmsForm);
   $('cms-kind').addEventListener('change',syncCmsForm);
   $('cms-page').addEventListener('change',syncCmsSlots);
-  $('investment-form').addEventListener('submit',saveInvestment);
-  $('investment-reload').addEventListener('click',loadInvestment);
-  $('investment-profit-input').addEventListener('input',renderInvestmentCalculation);
   $('ticket-search').addEventListener('input',renderTickets);
   $('ticket-status-filter').addEventListener('change',renderTickets);
   $('customer-search').addEventListener('input',renderCustomers);
@@ -240,7 +237,7 @@
       showToast('Akses ditolak: fitur ini hanya tersedia untuk Owner.');
       return;
     }
-    const jobs={tickets:loadTickets,products:loadProducts,promos:loadPromos,customers:loadCustomers,reports:loadReports,activity:loadActivity,support:loadSupport,announcements:loadAnnouncements,notes:loadNotes,finance:loadFinance,'site-content':loadSiteContent,investment:loadInvestment,access:loadAccess};
+    const jobs={tickets:loadTickets,products:loadProducts,promos:loadPromos,customers:loadCustomers,reports:loadReports,activity:loadActivity,support:loadSupport,announcements:loadAnnouncements,notes:loadNotes,finance:loadFinance,'site-content':loadSiteContent,access:loadAccess};
     if(name==='reviews'){loadReviews();return;}
     if(jobs[name])jobs[name]();
   }
@@ -631,31 +628,6 @@
     const btn=$('cms-form').querySelector('[type=submit]');btn.disabled=true;
     try{await api('/api/admin/site-content',{method:'POST',body:JSON.stringify(payload)});resetCmsForm();await loadSiteContent();showToast('Konten tersimpan. Muat ulang halaman publik untuk melihat hasilnya.');}
     catch(err){setError('cms-error',err.message);}finally{btn.disabled=false;}
-  }
-
-  async function loadInvestment(){
-    if(currentRole!=='owner'){setError('investment-error','Simulasi pendanaan hanya tersedia untuk Owner.');return;}
-    setError('investment-error','');
-    try{
-      const d=await api('/api/admin/investment');investmentPlan=d.plan;
-      $('investment-unit-price').value=investmentPlan.unit_price;$('investment-units').value=investmentPlan.total_units;
-      $('investment-share').value=investmentPlan.profit_share_pct;$('investment-months').value=investmentPlan.lock_months;
-      $('investment-start').value=investmentPlan.start_date||'';$('investment-status').value=investmentPlan.status;
-      $('investment-notes').value=investmentPlan.notes||'';renderInvestmentCalculation();
-    }catch(e){setError('investment-error',e.message);}
-  }
-  async function saveInvestment(e){
-    e.preventDefault();setError('investment-error','');
-    const payload={unitPrice:Number($('investment-unit-price').value),totalUnits:Number($('investment-units').value),profitSharePct:Number($('investment-share').value),lockMonths:Number($('investment-months').value),startDate:$('investment-start').value||null,status:$('investment-status').value,notes:$('investment-notes').value.trim()};
-    const btn=$('investment-form').querySelector('[type=submit]');btn.disabled=true;
-    try{await api('/api/admin/investment',{method:'POST',body:JSON.stringify(payload)});await loadInvestment();showToast('Parameter simulasi tersimpan sebagai draf internal.');}
-    catch(e){setError('investment-error',e.message);}finally{btn.disabled=false;}
-  }
-  function renderInvestmentCalculation(){
-    const unit=Number($('investment-unit-price').value)||0,units=Number($('investment-units').value)||0,share=Number($('investment-share').value)||0,profit=Math.max(0,Number($('investment-profit-input').value)||0);
-    const target=unit*units,pool=Math.floor(profit*share/100),perUnit=units?Math.floor(pool/units):0;
-    $('investment-stats').innerHTML=[['Target dana (simulasi)',idr(target)],['Unit direncanakan',units],['Periode',Number($('investment-months').value||0)+' bulan']].map(([k,v])=>'<div class="admin-stat"><small>'+esc(k)+'</small><strong>'+esc(v)+'</strong></div>').join('');
-    $('investment-calculation').innerHTML=[['Keuntungan bersih simulasi',idr(profit)],['Pool '+share+'% (jika benar-benar untung)',idr(pool)],['Per unit dari pool',idr(perUnit)]].map(([k,v])=>'<div class="admin-stat"><small>'+esc(k)+'</small><strong>'+esc(v)+'</strong></div>').join('');
   }
 
   function initReportDates(){
