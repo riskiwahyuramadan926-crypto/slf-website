@@ -2,7 +2,7 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const secretKey = 'slf_admin_secret_session';
-  let allOrders = [], allReviews = [], allProducts = [], allPromos = [], allCustomers = [], allTickets = [], allAnnouncements = [], knownOrderIds = new Set(), knownTicketIds = new Set(), firstLoad = true, firstTicketLoad = true, activeTab = 'orders';
+  let allOrders = [], allReviews = [], allProducts = [], allPromos = [], allCustomers = [], allTickets = [], allAnnouncements = [], allNotes = [], allCmsItems = [], allFinanceEntries = [], currentFinance = {}, investmentPlan = null, currentRole = '', ownerSecretConfigured = false, knownOrderIds = new Set(), knownTicketIds = new Set(), firstLoad = true, firstTicketLoad = true, activeTab = 'orders';
   const statusLabels = {PENDING_PAYMENT:'Menunggu pembayaran',PAID:'Pembayaran berhasil',PROCESSING:'Sedang diproses',COMPLETED:'Selesai',EXPIRED:'Kedaluwarsa',CANCELLED:'Dibatalkan'};
   const idr = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -15,6 +15,18 @@
   $('reload-activity').addEventListener('click',loadActivity);
   $('reload-support').addEventListener('click',loadSupport);
   $('reload-tickets').addEventListener('click',loadTickets);
+  $('reload-notes').addEventListener('click',loadNotes);
+  $('reload-finance').addEventListener('click',loadFinance);
+  $('finance-form').addEventListener('submit',saveFinance);
+  $('finance-export').addEventListener('click',exportFinanceCsv);
+  $('note-form').addEventListener('submit',saveNote);
+  $('cms-form').addEventListener('submit',saveCms);
+  $('cms-reset').addEventListener('click',resetCmsForm);
+  $('cms-kind').addEventListener('change',syncCmsForm);
+  $('cms-page').addEventListener('change',syncCmsSlots);
+  $('investment-form').addEventListener('submit',saveInvestment);
+  $('investment-reload').addEventListener('click',loadInvestment);
+  $('investment-profit-input').addEventListener('input',renderInvestmentCalculation);
   $('ticket-search').addEventListener('input',renderTickets);
   $('ticket-status-filter').addEventListener('change',renderTickets);
   $('customer-search').addEventListener('input',renderCustomers);
@@ -36,7 +48,7 @@
   document.querySelectorAll('[data-tab]').forEach(btn=>btn.addEventListener('click',()=>{
     activeTab=btn.dataset.tab;
     document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b===btn));
-    ['orders','tickets','reviews','products','promos','customers','reports','activity','support','announcements'].forEach(name=>{
+    ['orders','tickets','reviews','products','promos','customers','reports','activity','support','announcements','notes','finance','site-content','investment','access'].forEach(name=>{
       const section=$(name+'-tab'); if(section) section.hidden=name!==activeTab;
     });
     if(activeTab!=='orders')loadTab(activeTab);
@@ -47,7 +59,7 @@
     if(init.body)headers['content-type']='application/json';
     const res=await fetch(path,{...init,headers,cache:'no-store'});
     const data=await res.json().catch(()=>({}));
-    if(!res.ok){if(res.status===401){sessionStorage.removeItem(secretKey);$('login-panel').hidden=false;$('dashboard').hidden=true;}throw new Error(data.error||'Permintaan gagal ('+res.status+').');}
+    if(!res.ok){if(res.status===401){sessionStorage.removeItem(secretKey);currentRole='';$('login-panel').hidden=false;$('dashboard').hidden=true;$('role-pill').textContent='Belum masuk';}throw new Error(data.error||'Permintaan gagal ('+res.status+').');}
     return data;
   }
   async function loadOrders(manual=false){
@@ -55,6 +67,7 @@
     const secret=sessionStorage.getItem(secretKey)||'';
     if(!secret){$('login-panel').hidden=false;$('dashboard').hidden=true;return;}
     try{
+      if(!currentRole){const auth=await api('/api/admin/me');currentRole=auth.role;ownerSecretConfigured=Boolean(auth.ownerSecretConfigured);applyRole();updateAccessStatus(auth);}
       const result=await api('/api/admin/orders');
       allOrders=result.orders||[];
       const newOrders=allOrders.filter(o=>!knownOrderIds.has(o.id));
@@ -67,7 +80,7 @@
       $('last-updated').textContent='Pembaruan terakhir: '+new Date(result.generatedAt||Date.now()).toLocaleString('id-ID')+' · '+allOrders.length+' pesanan terakhir';
       if(manual)showToast('Data pesanan diperbarui.');
     }catch(e){
-      if(/401|Akses admin ditolak/i.test(e.message)){sessionStorage.removeItem(secretKey);$('login-panel').hidden=false;$('dashboard').hidden=true;$('login-error').textContent=e.message;$('login-error').classList.add('show');}
+      if(/401|Akses admin ditolak/i.test(e.message)&&!currentRole){sessionStorage.removeItem(secretKey);$('login-panel').hidden=false;$('dashboard').hidden=true;$('login-error').textContent=e.message;$('login-error').classList.add('show');}
       else showAdminError(e.message);
     }
   }
@@ -185,7 +198,7 @@
   function showToast(message){const t=$('toast');if(!t)return;t.textContent=message;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
 
   function loadTab(name){
-    const jobs={tickets:loadTickets,products:loadProducts,promos:loadPromos,customers:loadCustomers,reports:loadReports,activity:loadActivity,support:loadSupport,announcements:loadAnnouncements};
+    const jobs={tickets:loadTickets,products:loadProducts,promos:loadPromos,customers:loadCustomers,reports:loadReports,activity:loadActivity,support:loadSupport,announcements:loadAnnouncements,notes:loadNotes,finance:loadFinance,'site-content':loadSiteContent,investment:loadInvestment,access:loadAccess};
     if(name==='reviews'){loadReviews();return;}
     if(jobs[name])jobs[name]();
   }
