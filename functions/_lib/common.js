@@ -7,6 +7,15 @@ export async function sha256Hex(value) {
   const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
   return [...new Uint8Array(bytes)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
+export async function hmacSha256Hex(secret, value) {
+  if (typeof secret !== 'string' || secret.length < 32) throw new Error('TICKET_LINK_SECRET belum dikonfigurasi dengan benar.');
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const signature = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value)));
+  return [...signature].map(b => b.toString(16).padStart(2, '0')).join('');
+}
 export function randomHex(length = 16) {
   const bytes = new Uint8Array(Math.ceil(length / 2)); crypto.getRandomValues(bytes);
   return [...bytes].map(b => b.toString(16).padStart(2, '0')).join('').slice(0, length);
