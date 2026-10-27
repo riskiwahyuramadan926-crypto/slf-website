@@ -61,3 +61,28 @@
 .wiki-article-aside{display:grid;gap:13px;position:sticky;top:100px}.wiki-aside-card{padding:18px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.wiki-aside-card>strong{display:block;margin-bottom:10px;color:var(--gold2)}.wiki-aside-card a{display:flex;justify-content:space-between;gap:9px;padding:8px 0;border-top:1px solid rgba(229,211,255,.07);font-size:.82rem;color:var(--muted)}.wiki-aside-card a:hover{color:var(--text)}.wiki-aside-card p{font-size:.81rem;color:var(--muted);margin:0 0 8px}.wiki-aside-support{border-color:rgba(243,203,130,.25)}
 @media(max-width:900px){.wiki-article-layout{grid-template-columns:1fr}.wiki-article-aside{position:static;grid-template-columns:repeat(2,minmax(0,1fr))}.wiki-all-cards,.wiki-topic-grid{grid-template-columns:1fr}}
 @media(max-width:560px){.wiki-topic-card{grid-template-columns:36px minmax(0,1fr);padding:14px;gap:10px}.wiki-topic-icon{width:36px;height:36px}.wiki-topic-card .topic-status{grid-column:2}.wiki-topic-arrow{right:12px;top:10px}.wiki-article-body{padding:19px}.wiki-article-aside{grid-template-columns:1fr}.stat-grid{grid-template-columns:1fr}.wiki-category-head{align-items:start;flex-direction:column}.wiki-article-hero{padding:38px 0 34px}.wiki-filter-row{gap:6px}.wiki-filter{padding:7px 10px;font-size:.78rem}}
+
+
+/* ===== WIKI V6 — perdagangan, benefit, dan keterbacaan ===== */
+.trade-compare{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0 28px}
+.trade-card{padding:19px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(145deg,rgba(29,22,48,.96),rgba(20,14,32,.92));min-width:0}
+.trade-card-featured{border-color:rgba(243,203,130,.48);background:linear-gradient(145deg,rgba(63,45,72,.55),rgba(20,14,32,.96))}
+.trade-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:var(--panel2);color:var(--gold);font-size:1.35rem}
+.trade-card h3{margin:13px 0 8px;font-size:1.05rem}
+.trade-badge{display:inline-flex;width:max-content;max-width:100%;border:1px solid rgba(143,224,171,.25);border-radius:999px;padding:4px 8px;color:#a5edbd;font-size:.72rem;font-weight:750}
+.trade-card p{font-size:.86rem;line-height:1.65}
+.trade-card .trade-example{padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:.8rem}
+.vip-benefit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0 26px}
+.vip-benefit{padding:19px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(145deg,rgba(29,22,48,.96),rgba(20,14,32,.92))}
+.vip-benefit-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--panel2);color:var(--gold);font-size:1.3rem}
+.vip-benefit h3{margin:12px 0 6px;font-size:1rem}
+.vip-benefit p{margin:0;font-size:.86rem;line-height:1.65}
+.tip-callout{margin:20px 0;padding:17px 19px;border:1px solid rgba(243,203,130,.28);border-radius:13px;background:linear-gradient(110deg,rgba(243,203,130,.09),rgba(180,154,255,.045));color:var(--muted)}
+.tip-callout b{color:var(--gold2)}
+.wiki-article-body code{padding:2px 5px;border-radius:5px;background:rgba(180,154,255,.12);color:#eee4ff;font-size:.9em}
+.wiki-article-body .stat-grid{margin-top:18px;margin-bottom:24px}
+.wiki-article-body h2{scroll-margin-top:100px}
+.wiki-article-body p{line-height:1.8}
+.wiki-topic-card:focus-visible,.wiki-filter:focus-visible,.wiki-searchbox input:focus-visible,.wiki-searchbox button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+@media(max-width:800px){.trade-compare{grid-template-columns:1fr}.trade-card{padding:17px}.vip-benefit-grid{grid-template-columns:1fr}}
+@media(min-width:801px) and (max-width:1080px){.trade-compare{grid-template-columns:repeat(2,minmax(0,1fr))}.trade-card:last-child{grid-column:1/-1}}
