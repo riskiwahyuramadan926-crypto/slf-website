@@ -8,7 +8,7 @@ export async function onRequestGet({ request, env }) {
 }
 
 export async function onRequestPost({ request, env }) {
-  if (!(await requireAdmin(request, env))) return fail('Akses admin ditolak.', 401);
+  if (!(await requireOwner(request, env))) return fail('Fitur ini hanya untuk Owner.', 403);
   if (!env.DB) return fail('Database belum tersambung.', 503);
   const d = await readJson(request);
   const id = safeText(d.id, 32).toUpperCase();
