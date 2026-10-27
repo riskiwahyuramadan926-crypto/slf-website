@@ -12,7 +12,18 @@ export async function calculatePrice(productId, promoCode, env) {
   if (!env.DB) throw new Error('Database Store belum tersambung.');
   const productRow = await env.DB.prepare('SELECT id, name, price, description, icon, tag, note FROM store_products WHERE id = ? AND active = 1').bind(productId).first();
   if (!productRow) throw new Error('Produk tidak dikenal atau sedang tidak tersedia.');
-  const product = { id: productRow.id, name: productRow.name, price: Number(productRow.price), description: productRow.description || '' };
+  const descriptionOverrides = {
+    VIP_PLUS: 'Rank VIP+ dan Custom Rank permanen. Benefit tambahan hanya aktif selama langganan VIP+ berlaku; setelah langganan habis, rank tetap tetapi fitur tambahan berhenti.',
+    REENTRY_1: 'Satu tiket re-entry: 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif.',
+    REENTRY_2: 'Paket dua tiket re-entry; tiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif.',
+    REENTRY_3: 'Paket tiga tiket re-entry; tiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif.'
+  };
+  const product = {
+    id: productRow.id,
+    name: productRow.name,
+    price: Number(productRow.price),
+    description: descriptionOverrides[productRow.id] || productRow.description || ''
+  };
   let discount = 0;
   if (promoCode) {
     const promo = await env.DB.prepare('SELECT code, type, value, active, expires_at, max_uses FROM promo_codes WHERE code = ?').bind(promoCode).first();
