@@ -14,7 +14,7 @@ export async function onRequestGet({ request, env, params }) {
     order.tickets = await Promise.all(ticketRows.map(async ticket => {
       let ticketKey = '';
       const ticketSecret = typeof env.TICKET_LINK_SECRET === 'string' ? env.TICKET_LINK_SECRET : '';
-      if (ticketSecret.length >= 32) {
+      if (ticketSecret.length >= 32 && ticketSecret !== env.OWNER_SECRET && ticketSecret !== env.ADMIN_SECRET) {
         try {
           const candidate = await hmacSha256Hex(ticketSecret, row.id + ':' + ticket.id + ':' + key);
           if (await sha256Hex(candidate) === ticket.access_key_hash) ticketKey = candidate;
