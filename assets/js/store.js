@@ -26,7 +26,7 @@
       const response = await fetch('/api/store-products', { cache:'no-store' });
       if (response.ok) {
         const data = await response.json();
-        if (Array.isArray(data.products) && data.products.length) {
+        if (Array.isArray(data.products)) {
           cfg.products = data.products.map(p => ({ ...(cfg.products.find(old => old.id === p.id) || {}), ...p }));
         }
       }
