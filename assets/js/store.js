@@ -58,6 +58,8 @@
     const error = $('form-error'); error.textContent = ''; error.classList.remove('show');
     if (!selected) { showError('Pilih satu produk terlebih dahulu.'); return; }
     const btn = $('submit-order'); btn.disabled = true; btn.textContent = 'Membuat pesanan…';
+    const waPhone = String(cfg.adminWhatsApp || '').replace(/\D/g, '');
+    const waWindow = waPhone ? window.open('about:blank', '_blank') : null;
     const body = {
       minecraftName: $('minecraft-name').value.trim(), platform: $('platform').value,
       whatsapp: $('whatsapp').value.trim(), email: $('email').value.trim(), promoCode: $('promo').value.trim().toUpperCase(),
@@ -72,10 +74,16 @@
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || 'Pesanan belum bisa dibuat. Periksa konfigurasi server dan coba lagi.');
       if (!data.orderUrl) throw new Error('Server tidak mengembalikan tautan status pesanan.');
+      if (waPhone) {
+        const lines = ['Halo Admin SLF, saya membuat pesanan Store.', 'Nomor pesanan: ' + data.orderId, 'Pemain: ' + body.minecraftName + ' (' + body.platform + ')', 'Produk: ' + selected.name, 'Total: ' + rupiah(data.total), body.details.rankName ? ('Custom Rank: [' + body.details.rankName + '] warna ' + body.details.rankColor + ', gaya ' + body.details.rankStyle) : '', 'Tautan status: ' + data.orderUrl, 'Mohon kirim QRIS DANA untuk pembayaran. Saya akan membayar sesuai nominal dan mengirim bukti di chat ini.'].filter(Boolean).join('\n');
+        const waUrl = 'https://wa.me/' + waPhone + '?text=' + encodeURIComponent(lines);
+        if (waWindow) waWindow.location.href = waUrl; else window.open(waUrl, '_blank', 'noopener,noreferrer');
+      }
       location.href = data.orderUrl;
     } catch (e) {
+      if (waWindow && !waWindow.closed) waWindow.close();
       showError(e.message || 'Koneksi gagal. Periksa internet dan coba kembali.');
-      btn.disabled = false; btn.textContent = 'Buat pesanan & QRIS ↗';
+      btn.disabled = false; btn.textContent = 'Buat pesanan & WhatsApp ↗';
     }
   });
   function showError(message) { const e = $('form-error'); e.textContent = message; e.classList.add('show'); e.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
