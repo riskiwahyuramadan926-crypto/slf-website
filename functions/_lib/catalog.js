@@ -1,8 +1,8 @@
 // Server-side catalog and pricing. The D1 catalog is authoritative after schema initialization.
 export const PRODUCTS = {
-  VIP_PLUS: { name: 'VIP+', price: 55000, description: 'Rank VIP+ dengan fitur Custom Rank permanen' },
+  VIP_PLUS: { name: 'VIP+', price: 55000, description: 'Rank VIP+ dan Custom Rank permanen; benefit tambahan aktif selama langganan VIP+ berlaku. Saat langganan habis, rank tetap ada tetapi fiturnya berhenti.' },
   CUSTOM_RANK: { name: 'Custom Rank', price: 20000, description: 'Rank dengan nama dan tampilan pilihan pembeli' },
-  REENTRY_1: { name: 'Tiket Masuk Kembali · 1', price: 15000, description: 'Paket satu tiket masuk kembali' },
+  REENTRY_1: { name: 'Tiket Masuk Kembali · 1', price: 15000, description: 'Satu tiket re-entry: 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif.' },
   REENTRY_2: { name: 'Tiket Masuk Kembali · 2', price: 28000, description: 'Paket dua tiket masuk kembali' },
   REENTRY_3: { name: 'Tiket Masuk Kembali · 3', price: 35000, description: 'Paket tiga tiket masuk kembali' }
 };
