@@ -1,4 +1,4 @@
-import { json, fail, readJson, requireAdmin, safeText } from '../../_lib/common.js';
+import { json, fail, readJson, requireAdmin, safeText, logAdminActivity } from '../../_lib/common.js';
 
 export async function onRequestGet({ request, env }) {
   if (!(await requireAdmin(request, env))) return fail('Akses admin ditolak.', 401);
@@ -28,5 +28,6 @@ export async function onRequestPost({ request, env }) {
     VALUES (?, ?, ?, ?, ?)
     ON CONFLICT(review_order_id) DO UPDATE SET admin_name=excluded.admin_name, reply=excluded.reply, updated_at=excluded.updated_at
   `).bind(orderId, adminName, reply, now, now).run();
+  await logAdminActivity(env.DB, 'review_reply_saved', 'review', orderId, { adminName });
   return json({ ok: true, orderId, reply, adminName, updatedAt: now });
 }
