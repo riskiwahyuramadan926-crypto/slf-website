@@ -63,8 +63,44 @@ CREATE TABLE IF NOT EXISTS announcements (
 CREATE INDEX IF NOT EXISTS idx_announcements_active ON announcements(active, starts_at, ends_at);
 
 INSERT OR IGNORE INTO store_products(id,name,price,description,icon,tag,note,active,created_at,updated_at) VALUES
-('VIP_PLUS','VIP+',55000,'Rank VIP+ dan Custom Rank permanen; fitur tambahan aktif selama langganan VIP+ berlaku','♜','Rank permanen + fitur berlangganan','Saat langganan berakhir, rank VIP+ dan Custom Rank tetap ada tetapi benefit langganan berhenti. Saat aktif: claim 15 chunk/3 claim, /shop jarak jauh, dan 5 nyawa per tiket re-entry.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('VIP_PLUS','VIP+',55000,'Rank VIP+ tetap dimiliki setelah langganan fitur berakhir; benefit aktif mengikuti masa langganan pada paket','♜','Rank tetap + fitur berlangganan','Saat langganan berakhir, rank VIP+ tetap ada tetapi benefit langganan berhenti. Saat aktif: 20 chunk/2 claim, /shop jarak jauh, dan 5 nyawa per tiket re-entry.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
 ('CUSTOM_RANK','Custom Rank',20000,'Rank dengan nama dan tampilan pilihan pembeli','✧','Personalisasi','Gaya final mengikuti kemampuan plugin dan format teks server SLF.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
-('REENTRY_1','Tiket Masuk Kembali · 1',15000,'Satu tiket re-entry: 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif','♥','Paket 1 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Pengajuan diproses manual oleh admin.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('REENTRY_1','Tiket Masuk Kembali · 1',15000,'Satu tiket re-entry memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ yang langganan fiturnya aktif','♥','Paket 1 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan fitur aktif. Pengajuan diproses manual oleh admin.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
 ('REENTRY_2','Tiket Masuk Kembali · 2',28000,'Paket dua tiket re-entry','♥','Paket 2 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Pengajuan diproses manual oleh admin.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
 ('REENTRY_3','Tiket Masuk Kembali · 3',35000,'Paket tiga tiket re-entry','♥','Paket 3 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Pengajuan diproses manual oleh admin.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
+
+-- Owner-only finance ledger. Store sales are read from verified orders to avoid double counting.
+CREATE TABLE IF NOT EXISTS finance_entries (
+  id TEXT PRIMARY KEY, entry_date TEXT NOT NULL, kind TEXT NOT NULL CHECK(kind IN ('INCOME','EXPENSE')),
+  category TEXT NOT NULL, description TEXT NOT NULL, amount INTEGER NOT NULL CHECK(amount > 0),
+  reference TEXT, status TEXT NOT NULL DEFAULT 'POSTED' CHECK(status IN ('POSTED','VOIDED')),
+  created_by TEXT NOT NULL DEFAULT 'owner', created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_finance_entries_date ON finance_entries(entry_date DESC,status);
+
+CREATE TABLE IF NOT EXISTS admin_notes (
+  id TEXT PRIMARY KEY, title TEXT NOT NULL, body TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'Operasional', priority TEXT NOT NULL DEFAULT 'MEDIUM' CHECK(priority IN ('LOW','MEDIUM','HIGH')),
+  status TEXT NOT NULL DEFAULT 'OPEN' CHECK(status IN ('OPEN','DONE')),
+  created_by TEXT NOT NULL DEFAULT 'admin', created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_admin_notes_status ON admin_notes(status,priority,updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS site_content (
+  id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('slot','card')), page TEXT NOT NULL CHECK(page IN ('home','store','wiki')),
+  slot_key TEXT UNIQUE, title TEXT NOT NULL DEFAULT '', body TEXT NOT NULL,
+  active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1)), starts_at TEXT, ends_at TEXT,
+  created_by TEXT NOT NULL DEFAULT 'owner', created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_site_content_active ON site_content(active,page,kind);
+
+CREATE TABLE IF NOT EXISTS investment_plans (
+  id TEXT PRIMARY KEY, unit_price INTEGER NOT NULL CHECK(unit_price > 0), total_units INTEGER NOT NULL CHECK(total_units BETWEEN 1 AND 1000),
+  profit_share_pct REAL NOT NULL CHECK(profit_share_pct >= 0 AND profit_share_pct <= 100),
+  lock_months INTEGER NOT NULL CHECK(lock_months BETWEEN 1 AND 60), start_date TEXT,
+  status TEXT NOT NULL DEFAULT 'DRAFT' CHECK(status IN ('DRAFT','PAUSED')),
+  notes TEXT NOT NULL DEFAULT '', updated_by TEXT NOT NULL DEFAULT 'owner', created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+INSERT OR IGNORE INTO investment_plans(id,unit_price,total_units,profit_share_pct,lock_months,status,notes,updated_by,created_at,updated_at)
+VALUES('main-draft',500000,20,40,4,'DRAFT','Draf internal only; bukan penawaran publik atau penerimaan pembayaran.','owner',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
