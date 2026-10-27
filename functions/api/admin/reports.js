@@ -1,8 +1,8 @@
-import { json, fail, requireAdmin } from '../../_lib/common.js';
+import { json, fail, requireOwner } from '../../_lib/common.js';
 
 const validDate = v => /^\d{4}-\d{2}-\d{2}$/.test(v || '') && Number.isFinite(Date.parse(v + 'T00:00:00Z'));
 export async function onRequestGet({ request, env }) {
-  if (!(await requireOwner(request, env))) return fail('Fitur ini hanya untuk Owner.', 401);
+  if (!(await requireOwner(request, env))) return fail('Fitur ini hanya untuk Owner.', 403);
   if (!env.DB) return fail('Database belum tersambung.', 503);
   const url = new URL(request.url);
   const today = new Date().toISOString().slice(0,10);
