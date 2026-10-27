@@ -150,7 +150,7 @@ export async function ensureStoreSchema(db) {
       // Migrate only the older default copy. Do not overwrite product descriptions edited later in the Owner panel.
       const vip = products.find(p => p[0] === 'VIP_PLUS');
       await db.prepare(`UPDATE store_products SET description=?,tag=?,note=?,updated_at=?
-        WHERE id='VIP_PLUS' AND (description LIKE 'Rank VIP+ dan Custom Rank permanen%' OR note LIKE '%claim 15 chunk/3 claim%' OR (description='Rank VIP+ tetap dimiliki setelah langganan fitur berakhir; benefit aktif mengikuti masa langganan pada paket' AND note LIKE 'Saat langganan berakhir, rank VIP+ tetap ada%'))`)
+        WHERE id='VIP_PLUS' AND (description LIKE 'Rank VIP+ dan Custom Rank permanen%' OR description LIKE 'Rank VIP+ dengan fitur Custom Rank permanen%' OR note LIKE '%claim 15 chunk/3 claim%' OR (description='Rank VIP+ tetap dimiliki setelah langganan fitur berakhir; benefit aktif mengikuti masa langganan pada paket' AND note LIKE 'Saat langganan berakhir, rank VIP+ tetap ada%'))`)
         .bind(vip[3],vip[5],vip[6],now).run();
       const ticket = products.find(p => p[0] === 'REENTRY_1');
       await db.prepare(`UPDATE store_products SET description=?,note=?,updated_at=?
