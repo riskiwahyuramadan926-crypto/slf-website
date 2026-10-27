@@ -91,7 +91,35 @@ const statements = [
     id TEXT PRIMARY KEY, title TEXT NOT NULL, body TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1)),
     starts_at TEXT, ends_at TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
   )`,
-  'CREATE INDEX IF NOT EXISTS idx_announcements_active ON announcements(active, starts_at, ends_at)'
+  'CREATE INDEX IF NOT EXISTS idx_announcements_active ON announcements(active, starts_at, ends_at)',
+  `CREATE TABLE IF NOT EXISTS finance_entries (
+    id TEXT PRIMARY KEY, entry_date TEXT NOT NULL, kind TEXT NOT NULL CHECK(kind IN ('INCOME','EXPENSE')),
+    category TEXT NOT NULL, description TEXT NOT NULL, amount INTEGER NOT NULL CHECK(amount > 0),
+    reference TEXT, status TEXT NOT NULL DEFAULT 'POSTED' CHECK(status IN ('POSTED','VOIDED')),
+    created_by TEXT NOT NULL DEFAULT 'owner', created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+  )`,
+  'CREATE INDEX IF NOT EXISTS idx_finance_entries_date ON finance_entries(entry_date DESC, status)',
+  `CREATE TABLE IF NOT EXISTS admin_notes (
+    id TEXT PRIMARY KEY, title TEXT NOT NULL, body TEXT NOT NULL,
+    category TEXT NOT NULL DEFAULT 'Operasional', priority TEXT NOT NULL DEFAULT 'MEDIUM' CHECK(priority IN ('LOW','MEDIUM','HIGH')),
+    status TEXT NOT NULL DEFAULT 'OPEN' CHECK(status IN ('OPEN','DONE')),
+    created_by TEXT NOT NULL DEFAULT 'admin', created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+  )`,
+  'CREATE INDEX IF NOT EXISTS idx_admin_notes_status ON admin_notes(status, priority, updated_at DESC)',
+  `CREATE TABLE IF NOT EXISTS site_content (
+    id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('slot','card')), page TEXT NOT NULL CHECK(page IN ('home','store','wiki')),
+    slot_key TEXT UNIQUE, title TEXT NOT NULL DEFAULT '', body TEXT NOT NULL,
+    active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1)), starts_at TEXT, ends_at TEXT,
+    created_by TEXT NOT NULL DEFAULT 'owner', created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+  )`,
+  'CREATE INDEX IF NOT EXISTS idx_site_content_active ON site_content(active, page, kind)',
+  `CREATE TABLE IF NOT EXISTS investment_plans (
+    id TEXT PRIMARY KEY, unit_price INTEGER NOT NULL CHECK(unit_price > 0), total_units INTEGER NOT NULL CHECK(total_units BETWEEN 1 AND 1000),
+    profit_share_pct REAL NOT NULL CHECK(profit_share_pct >= 0 AND profit_share_pct <= 100),
+    lock_months INTEGER NOT NULL CHECK(lock_months BETWEEN 1 AND 60), start_date TEXT,
+    status TEXT NOT NULL DEFAULT 'DRAFT' CHECK(status IN ('DRAFT','PAUSED')),
+    notes TEXT NOT NULL DEFAULT '', updated_by TEXT NOT NULL DEFAULT 'owner', created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+  )`
 ];
 
 export async function ensureStoreSchema(db) {
@@ -119,6 +147,8 @@ export async function ensureStoreSchema(db) {
         await db.prepare('INSERT OR IGNORE INTO store_products (id,name,price,description,icon,tag,note,active,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)')
           .bind(...p,1,now,now).run();
       }
+      await db.prepare("INSERT OR IGNORE INTO investment_plans (id,unit_price,total_units,profit_share_pct,lock_months,start_date,status,notes,updated_by,created_at,updated_at) VALUES ('main-draft',500000,20,40,4,NULL,'DRAFT','Draft internal only. Belum menjadi penawaran publik atau penerimaan pembayaran.','owner',?,?)")
+        .bind(now,now).run();
     })();
     initialized.set(db, task);
   }
