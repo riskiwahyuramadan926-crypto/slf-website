@@ -2,7 +2,7 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const secretKey = 'slf_admin_secret_session';
-  let allOrders = [], allReviews = [], allProducts = [], allPromos = [], allCustomers = [], allTickets = [], allAnnouncements = [], allNotes = [], allCmsItems = [], allFinanceEntries = [], currentFinance = {}, investmentPlan = null, currentRole = '', ownerSecretConfigured = false, knownOrderIds = new Set(), knownTicketIds = new Set(), firstLoad = true, firstTicketLoad = true, activeTab = 'orders';
+  let allOrders = [], allReviews = [], allProducts = [], allPromos = [], allCustomers = [], allTickets = [], allAnnouncements = [], allNotes = [], allCmsItems = [], allFinanceEntries = [], currentFinance = {}, investmentPlan = null, currentRole = '', ownerSecretConfigured = false, lastCmsKind = 'slot', knownOrderIds = new Set(), knownTicketIds = new Set(), firstLoad = true, firstTicketLoad = true, activeTab = 'orders';
   const statusLabels = {PENDING_PAYMENT:'Menunggu pembayaran',PAID:'Pembayaran berhasil',PROCESSING:'Sedang diproses',COMPLETED:'Selesai',EXPIRED:'Kedaluwarsa',CANCELLED:'Dibatalkan'};
   const idr = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -506,7 +506,14 @@
 
   const cmsSlotsByPage={home:[['home.lead','Deskripsi utama'],['home.zoneLead','Pengantar wilayah'],['home.storeLead','Pengantar Store']],store:[['store.lead','Deskripsi utama']],wiki:[['wiki.lead','Pengantar Wiki']]};
   function syncCmsForm(){
-    const slot=$('cms-kind').value==='slot';
+    const kind=$('cms-kind').value;
+    if(kind!==lastCmsKind && $('cms-id').value){
+      // Do not let a user accidentally convert an existing text slot into a card or vice versa.
+      $('cms-id').value='';
+      $('cms-form-title').textContent=kind==='slot'?'Tambah / edit konten':'Tambah kartu informasi';
+    }
+    lastCmsKind=kind;
+    const slot=kind==='slot';
     $('cms-slot-wrap').hidden=!slot;$('cms-title-wrap').hidden=slot;
     if(slot)syncCmsSlots();
   }
@@ -542,14 +549,14 @@
   }
   function editCmsItem(id){
     const x=allCmsItems.find(v=>v.id===id);if(!x)return;
-    $('cms-id').value=x.id;$('cms-kind').value=x.kind;$('cms-page').value=x.page;syncCmsSlots();
+    $('cms-id').value=x.id;$('cms-kind').value=x.kind;lastCmsKind=x.kind;$('cms-page').value=x.page;syncCmsSlots();
     if(x.slot_key)$('cms-slot').value=x.slot_key;
     $('cms-title').value=x.title||'';$('cms-body').value=x.body;$('cms-active').value=x.active?'1':'0';
     $('cms-start').value=toLocalDateTime(x.starts_at);$('cms-end').value=toLocalDateTime(x.ends_at);
     $('cms-form-title').textContent='Edit konten';syncCmsForm();$('cms-form').scrollIntoView({behavior:'smooth',block:'start'});
   }
   function resetCmsForm(){
-    $('cms-form').reset();$('cms-id').value='';$('cms-kind').value='slot';$('cms-page').value='home';$('cms-active').value='1';
+    $('cms-form').reset();$('cms-id').value='';$('cms-kind').value='slot';lastCmsKind='slot';$('cms-page').value='home';$('cms-active').value='1';
     $('cms-form-title').textContent='Tambah / edit konten';syncCmsSlots();syncCmsForm();setError('cms-error','');
   }
   async function saveCms(e){
