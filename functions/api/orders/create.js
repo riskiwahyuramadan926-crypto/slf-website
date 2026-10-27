@@ -1,4 +1,4 @@
-import { json, fail, readJson, sha256Hex, randomHex, safeText, notifyAdmin } from '../../_lib/common.js';
+import { json, fail, readJson, sha256Hex, hmacSha256Hex, randomHex, safeText, notifyAdmin } from '../../_lib/common.js';
 import { calculatePrice, RANK_COLORS, RANK_STYLES } from '../../_lib/catalog.js';
 
 export async function onRequestPost({ request, env }) {
@@ -6,6 +6,10 @@ export async function onRequestPost({ request, env }) {
     if (!env.DB) return fail('Database Store belum tersambung. Binding harus bernama DB.', 503);
     const data = await readJson(request);
     if (!data.agree) return fail('Centang persetujuan sebelum membuat pesanan.');
+    const isReentryProduct = ['REENTRY_1','REENTRY_2','REENTRY_3'].includes(data.productId);
+    if (isReentryProduct && (typeof env.TICKET_LINK_SECRET !== 'string' || env.TICKET_LINK_SECRET.length < 32)) {
+      return fail('Checkout tiket sementara dinonaktifkan demi keamanan tautan pribadi. Owner perlu mengatur Cloudflare Secret TICKET_LINK_SECRET minimal 32 karakter acak sebelum tiket dapat dibeli.', 503);
+    }
     const minecraftName = safeText(data.minecraftName, 32);
     const platform = ['Java', 'Bedrock'].includes(data.platform) ? data.platform : '';
     const whatsapp = safeText(data.whatsapp, 20).replace(/[\s()-]/g, '');
@@ -37,9 +41,12 @@ export async function onRequestPost({ request, env }) {
     const ticketCount = ({ REENTRY_1: 1, REENTRY_2: 2, REENTRY_3: 3 })[data.productId] || 0;
     for (let index = 0; index < ticketCount; index += 1) {
       const ticketId = 'TKT-' + date + '-' + randomHex(8).toUpperCase();
+      // A ticket gets its own HMAC key; sharing it does not reveal the order's access key.
+      const ticketToken = await hmacSha256Hex(env.TICKET_LINK_SECRET, id + ':' + ticketId + ':' + token);
+      const ticketHash = await sha256Hex(ticketToken);
       await env.DB.prepare(
         "INSERT INTO reentry_tickets (id, order_id, access_key_hash, minecraft_name, product_name, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'WAITING_PAYMENT', ?, ?)"
-      ).bind(ticketId, id, hash, minecraftName, price.product.name, now, now).run();
+      ).bind(ticketId, id, ticketHash, minecraftName, price.product.name, now, now).run();
     }
     const orderUrl = new URL('/store/order.html', request.url);
     orderUrl.searchParams.set('id', id); orderUrl.searchParams.set('key', token);
