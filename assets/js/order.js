@@ -27,6 +27,19 @@
     $('status-title').textContent=l[0];$('status-copy').textContent=l[1];$('status-pill').textContent=l[0];$('status-pill').className='status-pill '+l[2];
     const meta=$('order-meta');meta.replaceChildren();
     [['Nomor pesanan',o.id],['Produk',o.productName],['Nama Minecraft',o.minecraftName],['Platform',o.platform],['Total',rp(o.total)],['Dibuat',new Date(o.createdAt).toLocaleString('id-ID')]].forEach(([label,value])=>{const item=document.createElement('div'),small=document.createElement('small'),b=document.createElement('b');item.className='meta-item';small.textContent=label;b.textContent=value==null?'—':String(value);item.append(small,b);meta.appendChild(item);});
+    const ticketSection = $('tickets-section'), ticketRoot = $('order-tickets');
+    const tickets = Array.isArray(o.tickets) ? o.tickets : [];
+    ticketRoot.replaceChildren();
+    ticketSection.hidden = tickets.length === 0;
+    const ticketLabels = {WAITING_PAYMENT:'Menunggu transaksi selesai',ACTIVE:'Aktif · siap diajukan',PENDING:'Pending · menunggu admin',COMPLETED:'Selesai · terpakai',CANCELLED:'Dibatalkan'};
+    tickets.forEach(ticket => {
+      const card = document.createElement('article'); card.className = 'admin-list-card';
+      const heading = document.createElement('h3'); heading.textContent = 'Tiket ' + ticket.id;
+      const status = document.createElement('p'); status.textContent = 'Status: ' + (ticketLabels[ticket.status] || ticket.status);
+      const link = document.createElement('a'); link.className = 'btn btn-primary'; link.href = ticket.url; link.textContent = 'Buka tiket pribadi ↗';
+      const note = document.createElement('p'); note.className = 'admin-muted'; note.textContent = ticket.status === 'WAITING_PAYMENT' ? 'Tiket belum bisa digunakan sebelum transaksi selesai.' : ticket.status === 'ACTIVE' ? 'Simpan tautan ini. Saat siap, tekan “Ajukan tiket” di halaman tiket.' : 'Lihat detail dan status terbaru melalui tautan tiket pribadi.';
+      card.append(heading, status, link, note); ticketRoot.append(card);
+    });
     $('payment-section').hidden=o.status!=='PENDING_PAYMENT';
     $('review-link-section').hidden=!(o.status==='COMPLETED'&&!o.rated&&o.reviewUrl);
     if(o.reviewUrl)$('review-link').href=o.reviewUrl;
