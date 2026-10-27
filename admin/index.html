@@ -19,23 +19,37 @@
 .admin-section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .admin-danger-note{color:#e8b6b6;font-size:.85rem}
 @media(max-width:600px){.admin-form-grid{grid-template-columns:1fr}.admin-form .full{grid-column:auto}.admin-form .admin-inline-actions>*{width:100%}}
+
+.admin-badge{display:inline-flex;padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:var(--gold);font-size:.78rem}
+.admin-form code{background:#271c37;border-radius:5px;padding:2px 5px;color:#e5d5ff}
+.admin-table-wrap table tr.voided{opacity:.58}
+.admin-section-head{margin-bottom:12px}
+#finance-stats,#investment-stats,#investment-calculation{grid-template-columns:repeat(3,minmax(0,1fr))}
+#finance-stats .admin-stat strong,#investment-stats .admin-stat strong,#investment-calculation .admin-stat strong{font-size:1.15rem}
+#access-tab ol{padding-left:22px}#access-tab li{margin:8px 0;color:var(--muted)}
+@media(max-width:720px){#finance-stats,#investment-stats,#investment-calculation{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style></head>
 <body><div class="topline"><b>SLF ADMIN</b> · PUSAT OPERASIONAL STORE</div>
-<header><div class="wrap nav"><a class="brand" href="/"><span class="mark">✦</span><span><strong>SURVIVAL LEGACY FRONTIER</strong><small>PUSAT OPERASIONAL ADMIN</small></span></a><div><a class="btn" href="/store/">Store</a> <button class="btn btn-quiet" id="logout" type="button">Keluar</button></div></div></header>
+<header><div class="wrap nav"><a class="brand" href="/"><span class="mark">✦</span><span><strong>SURVIVAL LEGACY FRONTIER</strong><small>PUSAT OPERASIONAL ADMIN</small></span></a><div><a class="btn" href="/store/">Store</a> <span id="role-pill" class="admin-badge">Belum masuk</span> <button class="btn btn-quiet" id="logout" type="button">Keluar</button></div></div></header>
 <main class="wrap"><section class="hero"><div class="section-head"><div class="eyebrow">Panel staf privat</div><h1>Pusat<span>Operasional.</span></h1><p>Kelola pesanan, konfirmasi pembayaran, balas ulasan, dan ekspor transaksi. Pembayaran tetap harus dicocokkan dengan transaksi masuk di DANA.</p></div></section>
-<section class="panel admin-login" id="login-panel"><h2>Masuk ke pusat admin</h2><p class="panel-lede">Kode admin hanya disimpan di sesi tab ini. Jangan pernah bagikan kode ke pembeli. Kode 6 digit lebih mudah ditebak; pembatasan percobaan akan mengunci akses sementara setelah 5 kali gagal.</p><form id="login-form"><div class="field"><label for="admin-secret">ADMIN_SECRET</label><input id="admin-secret" type="password" minlength="6" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" required autocomplete="current-password" placeholder="Masukkan kode admin 6 digit"></div><button class="btn btn-primary btnwide" type="submit">Masuk</button><div class="form-error" id="login-error"></div></form></section>
+<section class="panel admin-login" id="login-panel"><h2>Masuk ke pusat admin</h2><p class="panel-lede">Rahasia hanya disimpan di sesi tab browser ini. Jangan bagikan rahasia Owner kepada staf. Sistem mengunci percobaan sementara setelah 5 kali gagal.</p><form id="login-form"><div class="field"><label for="admin-secret">ADMIN_SECRET</label><input id="admin-secret" type="password" minlength="6" maxlength="120" required autocomplete="current-password" placeholder="Masukkan rahasia akses Owner/Admin"></div><button class="btn btn-primary btnwide" type="submit">Masuk</button><div class="form-error" id="login-error"></div></form></section>
 <section id="dashboard" hidden>
 <div class="admin-tabs">
 <button class="btn active" data-tab="orders" type="button">Pesanan & Transaksi</button>
 <button class="btn" data-tab="tickets" type="button">Tiket Re-entry</button>
 <button class="btn" data-tab="reviews" type="button">Ulasan</button>
-<button class="btn" data-tab="products" type="button">Produk</button>
-<button class="btn" data-tab="promos" type="button">Promo</button>
+<button class="btn" data-tab="products" data-owner-only="true" type="button">Produk</button>
+<button class="btn" data-tab="promos" data-owner-only="true" type="button">Promo</button>
 <button class="btn" data-tab="customers" type="button">Pelanggan</button>
-<button class="btn" data-tab="reports" type="button">Laporan</button>
+<button class="btn" data-tab="reports" data-owner-only="true" type="button">Statistik & Laporan</button>
 <button class="btn" data-tab="activity" type="button">Aktivitas Admin</button>
 <button class="btn" data-tab="support" type="button">Pusat Bantuan</button>
 <button class="btn" data-tab="announcements" type="button">Pengumuman</button>
+<button class="btn" data-tab="notes" type="button">Catatan Admin</button>
+<button class="btn" data-tab="finance" data-owner-only="true" type="button">Kas & Keuangan</button>
+<button class="btn" data-tab="site-content" data-owner-only="true" type="button">Editor Website</button>
+<button class="btn" data-tab="investment" data-owner-only="true" type="button">Simulasi Investasi</button>
+<button class="btn" data-tab="access" data-owner-only="true" type="button">Akses & Role</button>
 </div>
 <section id="orders-tab"><div class="section-head"><h2>Ringkasan operasional</h2><p id="last-updated" class="admin-muted">Menunggu data…</p></div>
 <div class="admin-stats" id="stats"><div class="admin-stat"><small>Pesanan</small><strong>—</strong></div><div class="admin-stat"><small>Menunggu bayar</small><strong>—</strong></div><div class="admin-stat"><small>Diproses</small><strong>—</strong></div><div class="admin-stat"><small>Omzet terverifikasi</small><strong>—</strong></div></div>
@@ -106,6 +120,73 @@
       <div><label for="announcement-end">Berhenti tampil (opsional)</label><input id="announcement-end" type="datetime-local"></div>
     </div><div class="admin-inline-actions"><button class="btn btn-gold" type="submit">Simpan pengumuman</button><button class="btn btn-quiet" id="announcement-reset" type="button">Pengumuman baru</button></div><div id="announcements-error" class="form-error"></div>
   </form><div id="announcements-list" class="admin-list"><div class="empty">Memuat pengumuman…</div></div>
+
+<section id="notes-tab" hidden>
+  <div class="section-head"><h2>Catatan operasional tim</h2><p>Catatan dibagikan ke Owner dan Admin. Hindari menulis password, OTP, data pribadi sensitif, atau informasi pembayaran rahasia.</p><button class="btn" id="reload-notes" type="button">↻ Muat ulang catatan</button></div>
+  <form id="note-form" class="admin-form"><h3>Catatan baru</h3><div class="admin-form-grid">
+    <div><label for="note-title">Judul</label><input id="note-title" required maxlength="120"></div>
+    <div><label for="note-category">Kategori</label><select id="note-category"><option>Operasional</option><option>Teknis</option><option>Komunitas</option><option>Pesanan</option><option>Follow-up</option></select></div>
+    <div><label for="note-priority">Prioritas</label><select id="note-priority"><option value="LOW">Rendah</option><option value="MEDIUM" selected>Normal</option><option value="HIGH">Tinggi</option></select></div>
+    <div class="full"><label for="note-body">Isi catatan</label><textarea id="note-body" required maxlength="2000" placeholder="Apa yang perlu diingat atau ditindaklanjuti?"></textarea></div>
+  </div><button class="btn btn-gold" type="submit">Simpan catatan</button><div id="notes-error" class="form-error"></div></form>
+  <div id="notes-list" class="admin-list"><div class="empty">Memuat catatan…</div></div>
+</section>
+<section id="finance-tab" hidden>
+  <div class="section-head"><h2>Kas dan laporan keuangan</h2><p>Penjualan Store dari order terverifikasi dihitung otomatis. Catat pemasukan lain dan semua pengeluaran; jangan masukkan lagi penjualan Store agar tidak terhitung dua kali.</p></div>
+  <div class="admin-tools"><label>Dari <input id="finance-from" type="date"></label><label>Sampai <input id="finance-to" type="date"></label><button class="btn btn-gold" id="reload-finance" type="button">Buat laporan</button><button class="btn" id="finance-export" type="button">Ekspor CSV kas</button></div>
+  <div id="finance-error" class="form-error"></div><div id="finance-stats" class="admin-stats"></div>
+  <form id="finance-form" class="admin-form"><h3>Catat uang masuk / keluar</h3><div class="admin-form-grid">
+    <div><label for="finance-kind">Jenis</label><select id="finance-kind"><option value="INCOME">Uang masuk (non-Store)</option><option value="EXPENSE">Uang keluar / biaya</option></select></div>
+    <div><label for="finance-date">Tanggal transaksi</label><input id="finance-date" type="date" required></div>
+    <div><label for="finance-category">Kategori</label><select id="finance-category"><option>Donasi</option><option>Sponsor</option><option>Pengembalian dana</option><option>Hosting</option><option>Domain</option><option>Plugin dan layanan</option><option>Promosi</option><option>Biaya transaksi</option><option>Operasional lain</option></select></div>
+    <div><label for="finance-amount">Nominal (Rp)</label><input id="finance-amount" type="number" min="1" max="2000000000" step="1" required></div>
+    <div class="full"><label for="finance-description">Uraian</label><input id="finance-description" required minlength="3" maxlength="500" placeholder="Contoh: pembayaran hosting bulan November"></div>
+    <div class="full"><label for="finance-reference">Referensi / nomor bukti (opsional)</label><input id="finance-reference" maxlength="120" placeholder="Nama bukti atau nomor kuitansi, jangan masukkan data rahasia"></div>
+  </div><div class="admin-inline-actions"><button class="btn btn-gold" type="submit">Simpan transaksi kas</button></div></form>
+  <h3 class="admin-section-title">Rincian kas</h3><div id="finance-entries" class="admin-table-wrap"></div>
+  <h3 class="admin-section-title">Ringkasan per hari</h3><div id="finance-daily" class="admin-table-wrap"></div>
+  <p class="admin-note">Angka “surplus kas estimasi” adalah pemasukan yang dicatat dikurangi pengeluaran yang dicatat. Pastikan semua biaya server masuk supaya laporan tidak menampilkan keuntungan yang terlalu tinggi.</p>
+</section>
+<section id="site-content-tab" hidden>
+  <div class="section-head"><h2>Editor Website</h2><p>Ubah teks pada slot yang disediakan atau tambah kartu informasi di Beranda, Store, dan Wiki tanpa menyentuh GitHub. Tool ini mengedit konten terstruktur, bukan HTML bebas, supaya tampilan dan keamanan tetap terjaga.</p></div>
+  <div class="admin-danger-note">Hanya Owner. Perubahan konten aktif akan tampil otomatis setelah situs memuat data terbaru.</div>
+  <form id="cms-form" class="admin-form"><h3 id="cms-form-title">Tambah / edit konten</h3><input id="cms-id" type="hidden">
+    <div class="admin-form-grid">
+      <div><label for="cms-kind">Jenis konten</label><select id="cms-kind"><option value="slot">Edit teks yang tersedia</option><option value="card">Tambah kartu informasi</option></select></div>
+      <div><label for="cms-page">Halaman</label><select id="cms-page"><option value="home">Beranda</option><option value="store">Store</option><option value="wiki">Wiki</option></select></div>
+      <div class="full" id="cms-slot-wrap"><label for="cms-slot">Bagian yang diubah</label><select id="cms-slot"><option value="home.lead">Beranda · deskripsi utama</option><option value="home.zoneLead">Beranda · pengantar wilayah</option><option value="home.storeLead">Beranda · pengantar Store</option><option value="wiki.lead">Wiki · pengantar</option><option value="store.lead">Store · deskripsi utama</option></select></div>
+      <div class="full" id="cms-title-wrap"><label for="cms-title">Judul kartu</label><input id="cms-title" maxlength="120" placeholder="Judul informasi"></div>
+      <div class="full"><label for="cms-body">Isi konten</label><textarea id="cms-body" required maxlength="2500" placeholder="Tulis teks yang akan dilihat pengunjung"></textarea></div>
+      <div><label for="cms-active">Status publikasi</label><select id="cms-active"><option value="1">Aktif</option><option value="0">Nonaktif</option></select></div>
+      <div><label for="cms-start">Mulai tampil (opsional)</label><input id="cms-start" type="datetime-local"></div>
+      <div><label for="cms-end">Selesai tampil (opsional)</label><input id="cms-end" type="datetime-local"></div>
+    </div><div class="admin-inline-actions"><button class="btn btn-gold" type="submit">Simpan konten</button><button class="btn btn-quiet" id="cms-reset" type="button">Konten baru</button></div><div id="cms-error" class="form-error"></div>
+  </form><div id="cms-list" class="admin-list"><div class="empty">Memuat konten…</div></div>
+</section>
+<section id="investment-tab" hidden>
+  <div class="section-head"><h2>Simulasi rencana pendanaan</h2><p>Area ini hanya kalkulator/draf internal Owner, bukan toko atau pendaftaran investor. Tidak ada pembayaran, janji hasil, atau penawaran publik dari tool ini.</p></div>
+  <div class="admin-danger-note">Sebelum menawarkan lembar atau menerima uang, minta orang tua/wali dan profesional hukum/keuangan yang kompeten memeriksa struktur dan ketentuannya. Jangan publikasikan rencana sebagai investasi siap dibeli.</div>
+  <form id="investment-form" class="admin-form"><h3>Parameter draf</h3><div class="admin-form-grid">
+    <div><label for="investment-unit-price">Harga per unit (Rp)</label><input id="investment-unit-price" type="number" min="1000" max="2000000000" required></div>
+    <div><label for="investment-units">Jumlah unit yang direncanakan</label><input id="investment-units" type="number" min="1" max="1000" required></div>
+    <div><label for="investment-share">Porsi keuntungan yang akan dibagikan (%)</label><input id="investment-share" type="number" min="0" max="40" step="0.1" required></div>
+    <div><label for="investment-months">Periode penempatan (bulan)</label><input id="investment-months" type="number" min="1" max="60" required></div>
+    <div><label for="investment-start">Tanggal mulai (opsional)</label><input id="investment-start" type="date"></div>
+    <div><label for="investment-status">Status draf</label><select id="investment-status"><option value="DRAFT">Draf internal</option><option value="PAUSED">Ditangguhkan</option></select></div>
+    <div class="full"><label for="investment-notes">Catatan / syarat yang masih harus ditinjau</label><textarea id="investment-notes" maxlength="1000" placeholder="Risiko, definisi keuntungan bersih, cara menghitung biaya, periode laporan, dan syarat lainnya"></textarea></div>
+  </div><div class="admin-inline-actions"><button class="btn btn-gold" type="submit">Simpan parameter draf</button><button class="btn" id="investment-reload" type="button">Muat ulang</button></div><div id="investment-error" class="form-error"></div></form>
+  <div id="investment-stats" class="admin-stats"></div>
+  <div class="admin-form"><h3>Kalkulator pembagian—simulasi saja</h3><p class="admin-muted">Masukkan estimasi keuntungan bersih aktual selama satu periode. Jika hasil bersih nol/rugi, pembagian keuntungan menjadi Rp0. Ini tidak memprediksi atau menjamin hasil.</p><div class="admin-form-grid"><div><label for="investment-profit-input">Estimasi keuntungan bersih (Rp)</label><input id="investment-profit-input" type="number" min="0" max="2000000000" step="1" value="0"></div></div><div id="investment-calculation" class="admin-stats"></div></div>
+</section>
+<section id="access-tab" hidden>
+  <div class="section-head"><h2>Pemisahan akses Owner dan Admin</h2><p>Hak akses diperiksa di server API, bukan hanya menyembunyikan tombol di browser.</p></div>
+  <div id="access-status" class="admin-form"><p>Memeriksa konfigurasi…</p></div>
+  <div class="admin-list">
+    <article class="admin-list-card"><h3>Owner</h3><p>Pemilik penuh: kas/keuangan, editor website, pengaturan draf pendanaan, produk, promo, laporan, dan semua operasional.</p></article>
+    <article class="admin-list-card"><h3>Admin / staf</h3><p>Operasional terbatas: menangani pesanan/tiket, ulasan, pelanggan, pengumuman, catatan tim, dan aktivitas. Tidak bisa membuka keuangan, mengubah harga/promo, atau mengedit slot/kartu website.</p></article>
+  </div>
+  <div class="admin-form"><h3>Cara mengaktifkan dua role</h3><ol><li>Cloudflare Dashboard → Workers & Pages → proyek SLF → Settings → Variables and Secrets.</li><li>Tambahkan rahasia <code>OWNER_SECRET</code> khusus Owner dan rahasia berbeda <code>ADMIN_SECRET</code> untuk staf. Gunakan rahasia panjang acak (minimal 32 karakter), bukan PIN enam digit.</li><li>Simpan lalu redeploy/restart sesuai instruksi Cloudflare. Jangan kirim rahasia lewat grup publik.</li><li>Setelah <code>OWNER_SECRET</code> aktif, <code>ADMIN_SECRET</code> otomatis menjadi role Admin terbatas.</li></ol><p class="admin-danger-note">Mode kompatibilitas: jika OWNER_SECRET belum tersedia, ADMIN_SECRET lama masih berfungsi sebagai Owner. Atur rahasia Owner terlebih dahulu sebelum membagikan rahasia Admin.</p></div>
+</section>
 </section>
 </section></main>
-<footer><div class="wrap footer-inner"><span>Jangan pernah membagikan ADMIN_SECRET.</span><div class="footer-links"><a href="/">Portal</a><a href="/store/">Store</a></div></div></footer><div class="toast" id="toast" role="status" aria-live="polite"></div></body></html>
+<footer><div class="wrap footer-inner"><span>Jaga rahasia Owner dan Admin. Jangan pernah membagikannya di chat publik.</span><div class="footer-links"><a href="/">Portal</a><a href="/store/">Store</a></div></div></footer><div class="toast" id="toast" role="status" aria-live="polite"></div></body></html>
