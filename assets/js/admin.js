@@ -2,7 +2,7 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const secretKey = 'slf_admin_secret_session';
-  let allOrders = [], allReviews = [], allProducts = [], allPromos = [], allCustomers = [], allTickets = [], allAnnouncements = [], knownOrderIds = new Set(), firstLoad = true, activeTab = 'orders';
+  let allOrders = [], allReviews = [], allProducts = [], allPromos = [], allCustomers = [], allTickets = [], allAnnouncements = [], knownOrderIds = new Set(), knownTicketIds = new Set(), firstLoad = true, firstTicketLoad = true, activeTab = 'orders';
   const statusLabels = {PENDING_PAYMENT:'Menunggu pembayaran',PAID:'Pembayaran berhasil',PROCESSING:'Sedang diproses',COMPLETED:'Selesai',EXPIRED:'Kedaluwarsa',CANCELLED:'Dibatalkan'};
   const idr = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -255,10 +255,24 @@
       });
     }catch(e){setError('activity-error',e.message);}
   }
-  async function loadSupport(){
+  async function loadSupport(manual=false){
     setError('support-error','');
-    try{const d=await api('/api/admin/support');allTickets=d.tickets||[];renderSupport();}
-    catch(e){setError('support-error',e.message);}
+    try{
+      const d=await api('/api/admin/support');
+      const nextTickets=d.tickets||[];
+      const newTickets=nextTickets.filter(t=>!knownTicketIds.has(t.id));
+      if(!firstTicketLoad&&newTickets.length)notifyNewTickets(newTickets);
+      nextTickets.forEach(t=>knownTicketIds.add(t.id));
+      firstTicketLoad=false;
+      allTickets=nextTickets;renderSupport();
+      if(manual)showToast('Tiket bantuan diperbarui.');
+    }catch(e){setError('support-error',e.message);}
+  }
+  function notifyNewTickets(tickets){
+    if('Notification' in window&&Notification.permission==='granted'){
+      tickets.forEach(t=>new Notification('Tiket bantuan baru · SLF',{body:t.id+' · '+t.player_name+' · '+t.subject,tag:t.id}));
+    }
+    showToast(tickets.length+' tiket bantuan baru masuk.');
   }
   function renderSupport(){
     const root=$('support-list');root.replaceChildren();
@@ -330,5 +344,5 @@
   initReportDates();
 
   if(sessionStorage.getItem(secretKey))loadOrders();
-  setInterval(()=>{if(sessionStorage.getItem(secretKey)&&!document.hidden)loadOrders();},45000);
+  setInterval(()=>{if(sessionStorage.getItem(secretKey)&&!document.hidden){loadOrders();loadSupport();}},45000);
 })();
