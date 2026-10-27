@@ -505,7 +505,7 @@
     e.preventDefault();setError('finance-error','');
     const payload={kind:$('finance-kind').value,entryDate:$('finance-date').value,category:$('finance-category').value,amount:Number($('finance-amount').value),description:$('finance-description').value.trim(),reference:$('finance-reference').value.trim()};
     const btn=$('finance-form').querySelector('[type=submit]');btn.disabled=true;
-    try{await api('/api/admin/finance',{method:'POST',body:JSON.stringify(payload)});$('finance-form').reset();$('finance-date').value=new Date().toISOString().slice(0,10);await loadFinance();showToast('Transaksi kas dicatat.');}
+    try{await api('/api/admin/finance',{method:'POST',body:JSON.stringify(payload)});$('finance-form').reset();$('finance-date').value=new Date().toISOString().slice(0,10);syncFinanceCategories();await loadFinance();showToast('Transaksi kas dicatat.');}
     catch(err){setError('finance-error',err.message);}finally{btn.disabled=false;}
   }
   function exportFinanceCsv(){
