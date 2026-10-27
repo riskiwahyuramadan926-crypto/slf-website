@@ -1,4 +1,4 @@
-import { json, fail } from '../../_lib/common.js';
+import { json, fail } from '../_lib/common.js';
 export async function onRequestGet({env}) {
   if (!env.DB) return fail('D1 belum terhubung dengan binding DB.',503);
   try {
