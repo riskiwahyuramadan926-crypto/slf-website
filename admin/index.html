@@ -165,12 +165,24 @@
 </section>
 <section id="investment-tab" hidden>
   <div class="section-head"><h2>Simulasi rencana pendanaan</h2><p>Area ini hanya kalkulator/draf internal Owner, bukan toko atau pendaftaran investor. Tidak ada pembayaran, janji hasil, atau penawaran publik dari tool ini.</p></div>
-  <div class="admin-danger-note">Sebelum menawarkan lembar atau menerima uang, minta orang tua/wali dan profesional hukum/keuangan yang kompeten memeriksa struktur dan ketentuannya. Jangan publikasikan rencana sebagai investasi siap dibeli.</div>
+  <div class="admin-danger-note">DRAF INTERNAL SAJA — belum ada pembelian, pendaftaran pemodal, pencatatan lembar anggota, atau pembayaran. Jangan menerima uang anggota atau mengumumkan penawaran sampai wali dan profesional hukum/keuangan memeriksa struktur, perizinan, kontrak, dan pajaknya.</div>
+  <div class="admin-panel" style="margin:16px 0;padding:18px;border:1px solid var(--line);border-radius:14px;background:var(--panel)">
+    <h3>Ketentuan draf yang perlu disepakati</h3>
+    <ul class="admin-muted">
+      <li>Siklus pembagian direncanakan setiap 4 bulan sejak tanggal mulai resmi.</li>
+      <li>Snapshot laporan keuangan direncanakan diumumkan 2 hari sebelum jadwal pembagian.</li>
+      <li>Modal masuk pada 1–2 bulan pertama ikut secara proporsional menurut bulan aktif / 4. Modal yang baru masuk setelah 3 bulan siklus berjalan tidak ikut pembagian terdekat dan menunggu periode berikutnya untuk ikut penuh.</li>
+      <li>Pembagian hanya dipertimbangkan jika ada laba bersih yang tersedia. Jika tidak ada laba, tidak ada pembayaran pada periode itu; evaluasi lagi pada periode berikutnya.</li>
+      <li>Keikutsertaan sukarela tanpa paksaan. Jika server tutup/bangkrut, pengembalian modal tidak dijamin penuh dan dapat sebagian atau tidak ada.</li>
+      <li>Jumlah lembar anggota baru dapat dicatat/dilihat melalui akun pribadi setelah mekanisme legal, perlindungan data, dan pembelian disetujui. Saat ini semuanya masih draf dan tidak menerima pembayaran.</li>
+    </ul>
+    <p><a href="/pendanaan/" target="_blank" rel="noopener noreferrer">Lihat halaman informasi draf ↗</a></p>
+  </div>
   <form id="investment-form" class="admin-form"><h3>Parameter draf</h3><div class="admin-form-grid">
     <div><label for="investment-unit-price">Harga per unit (Rp)</label><input id="investment-unit-price" type="number" min="1000" max="2000000000" required></div>
     <div><label for="investment-units">Jumlah unit yang direncanakan</label><input id="investment-units" type="number" min="1" max="1000" required></div>
     <div><label for="investment-share">Porsi keuntungan yang akan dibagikan (%)</label><input id="investment-share" type="number" min="0" max="40" step="0.1" required></div>
-    <div><label for="investment-months">Periode penempatan (bulan)</label><input id="investment-months" type="number" min="1" max="60" required></div>
+    <div><label for="investment-months">Siklus pembagian (bulan)</label><input id="investment-months" type="number" min="4" max="4" value="4" readonly required><small>Siklus draf ditetapkan 4 bulan.</small></div>
     <div><label for="investment-start">Tanggal mulai (opsional)</label><input id="investment-start" type="date"></div>
     <div><label for="investment-status">Status draf</label><select id="investment-status"><option value="DRAFT">Draf internal</option><option value="PAUSED">Ditangguhkan</option></select></div>
     <div class="full"><label for="investment-notes">Catatan / syarat yang masih harus ditinjau</label><textarea id="investment-notes" maxlength="1000" placeholder="Risiko, definisi keuntungan bersih, cara menghitung biaya, periode laporan, dan syarat lainnya"></textarea></div>
