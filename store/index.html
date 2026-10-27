@@ -11,7 +11,7 @@
   <div class="topline"><b>SURVIVAL LEGACY FRONTIER</b> · STORE RESMI · TRANSAKSI TERCATAT</div>
   <header><div class="wrap nav">
     <a class="brand" href="/"><span class="mark">✦</span><span><strong>SURVIVAL LEGACY FRONTIER</strong><small>SEBUAH DUNIA, BANYAK KISAH</small></span></a>
-    <nav class="navlinks"><a href="/">Beranda</a><a href="#produk">Produk</a><a href="#pesan">Cara membeli</a><a href="#ulasan">Ulasan</a></nav>
+    <nav class="navlinks"><a href="/">Beranda</a><a href="#produk">Produk</a><a href="#pesan">Cara membeli</a><a href="#ulasan">Ulasan</a><a href="/bantuan/">Pusat Bantuan</a></nav>
     <a class="btn btn-primary" href="#produk">Pilih Produk ↓</a>
   </div></header>
   <main>
@@ -79,22 +79,9 @@
       <div class="rating-summary"><strong id="review-average">—</strong><div><div class="stars" id="review-stars">☆☆☆☆☆</div><div class="subtle" id="review-count">Belum ada ulasan</div></div></div>
       <div class="reviews" id="reviews-list"><div class="empty">Ulasan akan tampil di sini setelah pembeli menyelesaikan pesanan dan memberi rating.</div></div>
     </div></section>
-      <section class="section" id="pusat-bantuan"><div class="wrap"><div class="section-head"><div class="eyebrow">Pusat bantuan</div><h2>Butuh bantuan?</h2><p>Kirim tiket ke tim SLF untuk kendala pesanan, pembayaran, akun, atau teknis. Jangan pernah kirim password atau kode OTP.</p></div>
-      <form class="panel" id="support-form" style="max-width:760px;margin:auto">
-        <div class="form-grid">
-          <div class="field"><label for="support-player">Nama Minecraft *</label><input id="support-player" required minlength="2" maxlength="32" autocomplete="off"></div>
-          <div class="field"><label for="support-contact">Kontak yang bisa dihubungi *</label><input id="support-contact" required maxlength="100" placeholder="WhatsApp atau email"></div>
-          <div class="field"><label for="support-category">Kategori *</label><select id="support-category" required><option value="">Pilih kategori</option><option value="orders">Pesanan</option><option value="payments">Pembayaran</option><option value="account">Akun Minecraft</option><option value="technical">Masalah teknis</option><option value="other">Lainnya</option></select></div>
-          <div class="field"><label for="support-subject">Subjek *</label><input id="support-subject" required minlength="4" maxlength="100"></div>
-          <div class="field full"><label for="support-message">Ceritakan kendalanya *</label><textarea id="support-message" required minlength="10" maxlength="1500" rows="5"></textarea></div>
-          <div class="field" style="position:absolute;left:-9999px" aria-hidden="true"><label for="support-website">Website</label><input id="support-website" tabindex="-1" autocomplete="off"></div>
-        </div>
-        <div class="form-error" id="support-form-error" role="alert"></div><p class="payment-note" id="support-result" role="status"></p>
-        <button class="btn btn-primary btnwide" id="support-submit" type="submit">Kirim tiket bantuan</button>
-      </form>
-    </div></section>
-  </main>
-  <footer><div class="wrap footer-inner"><div>© <span id="year"></span> Survival Legacy Frontier · Store resmi.<br>Minecraft adalah merek dagang Mojang/Microsoft; SLF bukan produk resmi mereka.</div><div class="footer-links"><a href="/">Portal SLF</a><a href="https://saweria.co/LegacyFrontier" target="_blank" rel="noopener noreferrer">Saweria</a><a href="/admin/">Admin</a></div></div></footer>
+    <section class="section" id="support-link"><div class="wrap"><div class="notice"><strong>Butuh bantuan?</strong> Untuk kendala pesanan, pembayaran, akun, atau teknis, buat tiket melalui halaman Pusat Bantuan terpisah agar alur bantuan tidak tercampur dengan transaksi Store.<p style="margin:10px 0 0"><a class="btn btn-outline" href="/bantuan/">Buka Pusat Bantuan ↗</a></p></div></div></section>
+</main>
+  <footer><div class="wrap footer-inner"><div>© <span id="year"></span> Survival Legacy Frontier · Store resmi.<br>Minecraft adalah merek dagang Mojang/Microsoft; SLF bukan produk resmi mereka.</div><div class="footer-links"><a href="/">Portal SLF</a><a href="/bantuan/">Pusat Bantuan</a><a href="https://saweria.co/LegacyFrontier" target="_blank" rel="noopener noreferrer">Saweria</a><a href="/admin/">Admin</a></div></div></footer>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="/assets/js/support-widget.js" defer></script>
 </body></html>
