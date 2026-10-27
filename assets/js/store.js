@@ -103,7 +103,7 @@
         const p = document.createElement('p'); p.textContent = review.comment || 'Pembeli tidak menambahkan komentar.';
         const name = document.createElement('strong'); name.textContent = review.playerName || 'Pemain SLF';
         const time = document.createElement('div'); time.className = 'subtle'; time.textContent = new Date(review.createdAt).toLocaleDateString('id-ID');
-        card.append(stars, p, name, time); root.appendChild(card);
+        card.append(stars, p, name, time); if (review.adminReply) { const reply = document.createElement('div'); reply.className = 'review-admin-reply'; reply.style.cssText = 'margin-top:12px;padding:12px;border-left:3px solid #e8c47c;background:#21192c;border-radius:0 10px 10px 0'; const label = document.createElement('strong'); label.textContent = 'Balasan ' + (review.adminName || 'Tim SLF'); const text = document.createElement('p'); text.style.margin = '5px 0 0'; text.textContent = review.adminReply; reply.append(label, text); card.appendChild(reply); } root.appendChild(card);
       });
     } catch (_) { /* Ulasan boleh tidak tampil bila API belum dipasang. */ }
   }
