@@ -43,6 +43,8 @@
         <button type="button" data-question="Bagaimana VIP dan Custom Rank diproses?">VIP / Rank</button>
         <button type="button" data-question="Bagaimana tiket masuk kembali digunakan?">Tiket re-entry</button>
         <button type="button" data-question="Saya ada kendala teknis masuk server">Kendala teknis</button>
+        <button type="button" data-question="Bagaimana aturan dan zona SLF?">Aturan / Zona</button>
+        <button type="button" data-question="Bagaimana cara klaim tanah?">Klaim tanah</button>
         <button type="button" data-question="Saya ingin bicara dengan admin manusia">Hubungi admin</button>
       </div>
       <form class="slf-cs-form" id="slf-cs-form"><input id="slf-cs-input" maxlength="500" required autocomplete="off" aria-label="Tulis pertanyaan" placeholder="Tulis pertanyaan…"><button id="slf-cs-send" type="submit">Kirim</button></form>
