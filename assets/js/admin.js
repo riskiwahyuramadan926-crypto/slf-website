@@ -170,7 +170,7 @@
     const root=$('tickets-list');if(!root)return;root.replaceChildren();
     const query=$('ticket-search').value.trim().toLowerCase(), status=$('ticket-status-filter').value;
     const list=allTickets.filter(t=>{
-      const hay=[t.id,t.order_id,t.minecraft_name,t.product_name,t.whatsapp,t.status].join(' ').toLowerCase();
+      const hay=[t.id,t.order_id,t.minecraft_name,t.product_name,t.whatsapp,t.status,t.season_id].join(' ').toLowerCase();
       return (!query||hay.includes(query))&&(status==='ALL'||t.status===status);
     });
     if(!list.length){root.innerHTML='<div class="empty">Tidak ada tiket yang cocok dengan filter.</div>';return;}
@@ -178,7 +178,7 @@
       const card=document.createElement('article');card.className='admin-list-card';
       const h=document.createElement('h3');h.textContent=t.id+' · '+t.minecraft_name;
       const state=document.createElement('span');state.className='admin-status';state.textContent=ticketStatusLabels[t.status]||t.status;
-      const details=document.createElement('p');details.textContent=t.product_name+' · Pesanan '+t.order_id+' · '+idr(t.total);
+      const details=document.createElement('p');details.textContent=t.product_name+' · Pesanan '+t.order_id+' · Season '+(t.season_id||'season-1')+' · '+idr(t.total);
       const dates=document.createElement('p');dates.className='admin-muted';dates.textContent='Dibeli: '+new Date(t.created_at).toLocaleString('id-ID')+' · Diajukan: '+(t.submitted_at?new Date(t.submitted_at).toLocaleString('id-ID'):'—')+' · Selesai: '+(t.completed_at?new Date(t.completed_at).toLocaleString('id-ID'):'—');
       const contact=document.createElement('p');contact.textContent='WhatsApp: '+(t.whatsapp||'—')+' · Status transaksi: '+(statusLabels[t.order_status]||t.order_status);
       card.append(h,state,details,dates,contact);
