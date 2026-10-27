@@ -39,7 +39,16 @@ const statements = [
     comment TEXT,
     created_at TEXT NOT NULL
   )`,
-  'CREATE INDEX IF NOT EXISTS idx_reviews_created_at ON reviews(created_at DESC)'
+  'CREATE INDEX IF NOT EXISTS idx_reviews_created_at ON reviews(created_at DESC)',
+  `CREATE TABLE IF NOT EXISTS review_replies (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    review_order_id TEXT NOT NULL UNIQUE REFERENCES reviews(order_id),
+    admin_name TEXT NOT NULL DEFAULT 'Tim SLF',
+    reply TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`,
+  'CREATE INDEX IF NOT EXISTS idx_review_replies_created_at ON review_replies(created_at DESC)'
 ];
 
 export async function ensureStoreSchema(db) {
