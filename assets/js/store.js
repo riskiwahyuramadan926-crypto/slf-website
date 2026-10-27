@@ -97,7 +97,34 @@
       if (!response.ok) throw new Error(data.error || 'Pesanan belum bisa dibuat. Periksa konfigurasi server dan coba lagi.');
       if (!data.orderUrl) throw new Error('Server tidak mengembalikan tautan status pesanan.');
       if (waPhone) {
-        const lines = ['Halo Admin SLF, saya membuat pesanan Store.', 'Nomor pesanan: ' + data.orderId, 'Pemain: ' + body.minecraftName + ' (' + body.platform + ')', 'Produk: ' + selected.name, 'Total: ' + rupiah(data.total), body.details.rankName ? ('Custom Rank: [' + body.details.rankName + '] warna ' + body.details.rankColor + ', gaya ' + body.details.rankStyle) : '', 'Tautan status: ' + data.orderUrl, 'Mohon kirim QRIS DANA untuk pembayaran. Saya akan membayar sesuai nominal dan mengirim bukti di chat ini.'].filter(Boolean).join('\n');
+        const lines = [
+          '✦ *SLF STORE — PERMINTAAN PEMBAYARAN*',
+          '',
+          'Halo Admin SLF, saya ingin melanjutkan pembayaran pesanan berikut.',
+          '',
+          '📋 *DETAIL PESANAN*',
+          '• Nomor pesanan: ' + data.orderId,
+          '• Nama Minecraft: ' + body.minecraftName,
+          '• Platform: ' + body.platform,
+          '• Produk: ' + selected.name,
+          '• Total pembayaran: ' + rupiah(data.total),
+          body.details.rankName ? '' : null,
+          body.details.rankName ? '🎨 *PENGATURAN CUSTOM RANK*' : null,
+          body.details.rankName ? '• Nama rank: [' + body.details.rankName + ']' : null,
+          body.details.rankName ? '• Warna: ' + body.details.rankColor : null,
+          body.details.rankName ? '• Gaya teks: ' + body.details.rankStyle : null,
+          body.details.buyerNote ? '' : null,
+          body.details.buyerNote ? '📝 *CATATAN PEMBELI*' : null,
+          body.details.buyerNote || null,
+          '',
+          '🔗 *STATUS PESANAN*',
+          data.orderUrl,
+          '',
+          '💳 *LANGKAH SELANJUTNYA*',
+          'Mohon kirim QRIS DANA untuk pesanan ini. Saya akan memeriksa nama merchant dan nominal sebelum membayar, lalu mengirim bukti pembayaran di chat ini.',
+          '',
+          'Terima kasih, Admin SLF.'
+        ].filter(line => line !== null && line !== undefined).join('\\n');
         const waUrl = 'https://wa.me/' + waPhone + '?text=' + encodeURIComponent(lines);
         if (waWindow) waWindow.location.href = waUrl; else window.open(waUrl, '_blank', 'noopener,noreferrer');
       }
