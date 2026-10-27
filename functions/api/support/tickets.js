@@ -1,4 +1,4 @@
-import { json, fail, readJson, randomHex, safeText, sha256Hex } from '../../_lib/common.js';
+import { json, fail, readJson, randomHex, safeText, sha256Hex, notifySupportAdmin } from '../../_lib/common.js';
 
 export async function onRequestPost({ request, env }) {
   if (!env.DB) return fail('Pusat bantuan belum tersedia.', 503);
@@ -21,5 +21,10 @@ export async function onRequestPost({ request, env }) {
   const id = 'CS-' + now.slice(2,10).replaceAll('-','') + '-' + randomHex(5).toUpperCase();
   await env.DB.prepare("INSERT INTO support_tickets (id,player_name,contact,category,subject,message,status,request_hash,created_at,updated_at) VALUES (?,?,?,?,?,?,'OPEN',?,?,?)")
     .bind(id,playerName,contact,category,subject,message,requestHash,now,now).run();
+  try {
+    await notifySupportAdmin(env, { id, player_name:playerName, category, subject }, new URL('/admin/', request.url).toString());
+  } catch (notificationError) {
+    console.error('Support ticket WhatsApp notification failed:', notificationError?.message || notificationError);
+  }
   return json({ ok:true, ticketId:id, message:'Pesan tersimpan. Simpan nomor tiket untuk tindak lanjut.' }, 201);
 }
