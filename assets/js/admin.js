@@ -18,6 +18,7 @@
   $('reload-notes').addEventListener('click',loadNotes);
   $('reload-finance').addEventListener('click',loadFinance);
   $('finance-form').addEventListener('submit',saveFinance);
+  $('finance-kind').addEventListener('change',syncFinanceCategories);
   $('finance-export').addEventListener('click',exportFinanceCsv);
   $('note-form').addEventListener('submit',saveNote);
   $('cms-form').addEventListener('submit',saveCms);
@@ -450,6 +451,16 @@
     catch(err){setError('notes-error',err.message);}finally{btn.disabled=false;}
   }
 
+  function syncFinanceCategories(){
+    const kind=$('finance-kind').value;
+    const old=$('finance-category').value;
+    const categories=kind==='INCOME'
+      ?[['Donasi','Donasi'],['Sponsor','Sponsor'],['Pemasukan lain','Pemasukan lain']]
+      :[['Pengembalian dana','Pengembalian dana'],['Hosting','Hosting'],['Domain','Domain'],['Plugin dan layanan','Plugin dan layanan'],['Promosi','Promosi'],['Biaya transaksi','Biaya transaksi'],['Operasional lain','Operasional lain']];
+    $('finance-category').replaceChildren();
+    categories.forEach(([value,label])=>$('finance-category').add(new Option(label,value)));
+    if(categories.some(x=>x[0]===old))$('finance-category').value=old;
+  }
   async function loadFinance(){
     if(currentRole!=='owner'){setError('finance-error','Tab keuangan hanya tersedia untuk Owner.');return;}
     setError('finance-error','');
@@ -600,7 +611,7 @@
     if(!$('finance-to').value)$('finance-to').value=format(today);
     if(!$('finance-from').value)$('finance-from').value=format(from);
     if(!$('finance-date').value)$('finance-date').value=format(today);
-    syncCmsSlots();syncCmsForm();
+    syncCmsSlots();syncCmsForm();syncFinanceCategories();
   }
   initReportDates();
 
