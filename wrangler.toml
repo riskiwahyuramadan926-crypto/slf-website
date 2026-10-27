@@ -2,6 +2,9 @@ name = "slf-store"
 pages_build_output_dir = "."
 compatibility_date = "2026-10-25"
 
+[vars]
+SLF_CURRENT_SEASON = "season-1"
+
 # D1 Store: binding ini digunakan oleh semua endpoint /api/*
 [[d1_databases]]
 binding = "DB"
