@@ -13,7 +13,7 @@
   $('reload-customers').addEventListener('click',loadCustomers);
   $('run-report').addEventListener('click',loadReports);
   $('reload-activity').addEventListener('click',loadActivity);
-  $('reload-support').addEventListener('click',loadSupport);
+  $('reload-support').addEventListener('click',loadSupport);\n  $('reload-tickets').addEventListener('click',loadTickets);\n  $('ticket-search').addEventListener('input',renderTickets);\n  $('ticket-status-filter').addEventListener('change',renderTickets);
   $('customer-search').addEventListener('input',renderCustomers);
   $('product-reset').addEventListener('click',resetProductForm);
   $('promo-reset').addEventListener('click',resetPromoForm);
@@ -33,7 +33,7 @@
   document.querySelectorAll('[data-tab]').forEach(btn=>btn.addEventListener('click',()=>{
     activeTab=btn.dataset.tab;
     document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b===btn));
-    ['orders','reviews','products','promos','customers','reports','activity','support','announcements'].forEach(name=>{
+    ['orders','tickets','reviews','products','promos','customers','reports','activity','support','announcements'].forEach(name=>{
       const section=$(name+'-tab'); if(section) section.hidden=name!==activeTab;
     });
     if(activeTab!=='orders')loadTab(activeTab);
@@ -95,6 +95,7 @@
       const copy=document.createElement('button');copy.type='button';copy.className='btn btn-quiet';copy.textContent='Salin nomor';copy.addEventListener('click',()=>copyText(o.id,'Nomor pesanan tersalin.'));actions.append(copy);
       const copySummary=document.createElement('button');copySummary.type='button';copySummary.className='btn btn-quiet';copySummary.textContent='Salin ringkasan';copySummary.addEventListener('click',()=>copyText(orderSummary(o),'Ringkasan pesanan tersalin.'));actions.append(copySummary);
       if(o.status==='PENDING_PAYMENT'){const b=document.createElement('button');b.type='button';b.className='btn btn-gold';b.textContent='Konfirmasi pembayaran';b.addEventListener('click',async()=>{if(!confirm('Cocokkan nominal dan transaksi masuk di DANA terlebih dahulu. Screenshot saja tidak cukup. Konfirmasi '+o.id+'?'))return;b.disabled=true;try{await api('/api/admin/verify-payment',{method:'POST',body:JSON.stringify({orderId:o.id})});await loadOrders();showToast('Pembayaran ditandai terverifikasi.');}catch(e){showAdminError(e.message);b.disabled=false;}});actions.append(b);}
+      if(o.status==='PENDING_PAYMENT'){const cancel=document.createElement('button');cancel.type='button';cancel.className='btn btn-quiet';cancel.textContent='Batalkan transaksi';cancel.addEventListener('click',async()=>{if(!confirm('Batalkan transaksi '+o.id+'? Pastikan pembeli belum membayar. Tiket re-entry yang terkait juga akan dibatalkan.'))return;cancel.disabled=true;try{await api('/api/admin/cancel',{method:'POST',body:JSON.stringify({orderId:o.id})});await loadOrders();showToast('Transaksi dibatalkan.');}catch(e){showAdminError(e.message);cancel.disabled=false;}});actions.append(cancel);}
       if(o.status==='PAID'){const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='Mulai proses';b.addEventListener('click',async()=>{b.disabled=true;try{await api('/api/admin/process',{method:'POST',body:JSON.stringify({orderId:o.id})});await loadOrders();}catch(e){showAdminError(e.message);b.disabled=false;}});actions.append(b);}
       if(['PAID','PROCESSING'].includes(o.status)){const b=document.createElement('button');b.type='button';b.className='btn btn-gold';b.textContent='Tandai selesai';b.addEventListener('click',async()=>{if(!confirm('Produk sudah benar-benar diberikan ke '+o.minecraft_name+'?'))return;b.disabled=true;try{await api('/api/admin/complete',{method:'POST',body:JSON.stringify({orderId:o.id})});await loadOrders();showToast('Pesanan selesai.');}catch(e){showAdminError(e.message);b.disabled=false;}});actions.append(b);}
       if(['PENDING_PAYMENT','PAID','PROCESSING'].includes(o.status)){const b=document.createElement('button');b.type='button';b.className='btn btn-quiet';b.textContent='Salin pesan status';b.addEventListener('click',()=>copyText(messageFor(o),'Pesan status tersalin.'));actions.append(b);}
@@ -103,6 +104,45 @@
   }
   function messageFor(o){const s=o.status==='PENDING_PAYMENT'?'masih menunggu pembayaran. Jika sudah membayar, kirim bukti agar kami cocokkan dengan transaksi masuk.':o.status==='PAID'?'sudah terverifikasi dan masuk antrean pemrosesan.':o.status==='PROCESSING'?'sedang diproses oleh tim SLF.':o.status==='COMPLETED'?'telah selesai. Terima kasih telah mendukung SLF.':'sedang kami periksa.';return 'Halo '+o.minecraft_name+', ini admin SLF. Pesanan '+o.id+' ('+o.product_name+', '+idr(o.total)+') '+s+'';}
   function orderSummary(o){return ['SLF STORE — RINGKASAN PESANAN','Nomor: '+o.id,'Tanggal: '+new Date(o.created_at).toLocaleString('id-ID'),'Pemain: '+o.minecraft_name+' ('+o.platform+')','WhatsApp: '+o.whatsapp,'Produk: '+o.product_name,'Subtotal: '+idr(o.subtotal),'Diskon: '+idr(o.discount),'Total: '+idr(o.total),'Status: '+(statusLabels[o.status]||o.status),'Catatan: '+(o.details?.buyerNote||'—')].join('\n');}
+  const ticketStatusLabels={WAITING_PAYMENT:'Menunggu transaksi selesai',ACTIVE:'Aktif · belum digunakan',PENDING:'Pending · diajukan member',COMPLETED:'Selesai · terpakai',CANCELLED:'Dibatalkan'};
+  async function loadTickets(){
+    setError('tickets-error','');
+    try{
+      const data=await api('/api/admin/tickets');
+      allTickets=data.tickets||[];
+      knownTicketIds=new Set(allTickets.map(t=>t.id));
+      firstTicketLoad=false;
+      renderTickets();
+    }catch(e){setError('tickets-error',e.message);}
+  }
+  function renderTickets(){
+    const root=$('tickets-list');if(!root)return;root.replaceChildren();
+    const query=$('ticket-search').value.trim().toLowerCase(), status=$('ticket-status-filter').value;
+    const list=allTickets.filter(t=>{
+      const hay=[t.id,t.order_id,t.minecraft_name,t.product_name,t.whatsapp,t.status].join(' ').toLowerCase();
+      return (!query||hay.includes(query))&&(status==='ALL'||t.status===status);
+    });
+    if(!list.length){root.innerHTML='<div class="empty">Tidak ada tiket yang cocok dengan filter.</div>';return;}
+    list.forEach(t=>{
+      const card=document.createElement('article');card.className='admin-list-card';
+      const h=document.createElement('h3');h.textContent=t.id+' · '+t.minecraft_name;
+      const state=document.createElement('span');state.className='admin-status';state.textContent=ticketStatusLabels[t.status]||t.status;
+      const details=document.createElement('p');details.textContent=t.product_name+' · Pesanan '+t.order_id;
+      const dates=document.createElement('p');dates.className='admin-muted';dates.textContent='Dibeli: '+new Date(t.created_at).toLocaleString('id-ID')+' · Diajukan: '+(t.submitted_at?new Date(t.submitted_at).toLocaleString('id-ID'):'—')+' · Selesai: '+(t.completed_at?new Date(t.completed_at).toLocaleString('id-ID'):'—');
+      const contact=document.createElement('p');contact.textContent='WhatsApp: '+(t.whatsapp||'—')+' · Status transaksi: '+(statusLabels[t.order_status]||t.order_status);
+      card.append(h,state,details,dates,contact);
+      const actions=document.createElement('div');actions.className='admin-inline-actions';
+      const copy=document.createElement('button');copy.type='button';copy.className='btn btn-quiet';copy.textContent='Salin ID tiket';copy.addEventListener('click',()=>copyText(t.id,'Nomor tiket tersalin.'));actions.append(copy);
+      if(t.status==='PENDING'){
+        const done=document.createElement('button');done.type='button';done.className='btn btn-gold';done.textContent='Tandai selesai';done.addEventListener('click',async()=>{if(!confirm('Proses re-entry untuk '+t.minecraft_name+' sudah benar-benar selesai?'))return;done.disabled=true;try{await api('/api/admin/ticket-status',{method:'POST',body:JSON.stringify({ticketId:t.id,status:'COMPLETED'})});await loadTickets();showToast('Tiket ditandai selesai.');}catch(e){showAdminError(e.message);done.disabled=false;}});actions.append(done);
+        const reopen=document.createElement('button');reopen.type='button';reopen.className='btn btn-quiet';reopen.textContent='Kembalikan aktif';reopen.addEventListener('click',async()=>{if(!confirm('Kembalikan tiket ini ke status Aktif agar member bisa mengajukan lagi?'))return;reopen.disabled=true;try{await api('/api/admin/ticket-status',{method:'POST',body:JSON.stringify({ticketId:t.id,status:'ACTIVE'})});await loadTickets();showToast('Tiket dikembalikan ke Aktif.');}catch(e){showAdminError(e.message);reopen.disabled=false;}});actions.append(reopen);
+      } else if(t.status==='COMPLETED'){
+        const reopen=document.createElement('button');reopen.type='button';reopen.className='btn btn-quiet';reopen.textContent='Pulihkan ke aktif';reopen.addEventListener('click',async()=>{if(!confirm('Pulihkan tiket yang sudah selesai ke status Aktif? Gunakan hanya jika status sebelumnya keliru.'))return;reopen.disabled=true;try{await api('/api/admin/ticket-status',{method:'POST',body:JSON.stringify({ticketId:t.id,status:'ACTIVE'})});await loadTickets();showToast('Tiket dipulihkan.');}catch(e){showAdminError(e.message);reopen.disabled=false;}});actions.append(reopen);
+      }
+      card.append(actions);root.append(card);
+    });
+  }
+
   async function loadReviews(){
     $('reviews-error').classList.remove('show');
     try{const data=await api('/api/admin/reviews');allReviews=data.reviews||[];renderReviews();}
@@ -142,7 +182,7 @@
   function showToast(message){const t=$('toast');if(!t)return;t.textContent=message;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
 
   function loadTab(name){
-    const jobs={products:loadProducts,promos:loadPromos,customers:loadCustomers,reports:loadReports,activity:loadActivity,support:loadSupport,announcements:loadAnnouncements};
+    const jobs={tickets:loadTickets,products:loadProducts,promos:loadPromos,customers:loadCustomers,reports:loadReports,activity:loadActivity,support:loadSupport,announcements:loadAnnouncements};
     if(name==='reviews'){loadReviews();return;}
     if(jobs[name])jobs[name]();
   }
@@ -344,5 +384,5 @@
   initReportDates();
 
   if(sessionStorage.getItem(secretKey))loadOrders();
-  setInterval(()=>{if(sessionStorage.getItem(secretKey)&&!document.hidden){loadOrders();loadSupport();}},45000);
+  setInterval(()=>{if(sessionStorage.getItem(secretKey)&&!document.hidden){loadOrders();loadSupport();if(activeTab==='tickets')loadTickets();}},45000);
 })();
