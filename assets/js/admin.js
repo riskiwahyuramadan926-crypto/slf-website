@@ -392,10 +392,202 @@
     try{await api('/api/admin/announcements',{method:'POST',body:JSON.stringify(payload)});await loadAnnouncements();resetAnnouncementForm();showToast('Pengumuman tersimpan.');}
     catch(err){setError('announcements-error',err.message);}finally{btn.disabled=false;}
   }
+
+  function applyRole(){
+    const owner=currentRole==='owner';
+    $('role-pill').textContent=owner?'OWNER · akses penuh':'ADMIN · terbatas';
+    $('role-pill').style.color=owner?'var(--gold)':'var(--purple)';
+    document.querySelectorAll('[data-owner-only="true"]').forEach(button=>{button.hidden=!owner;});
+    if(!owner&&['products','promos','reports','finance','site-content','investment','access'].includes(activeTab)){
+      activeTab='orders';
+      document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===activeTab));
+      ['orders','tickets','reviews','products','promos','customers','reports','activity','support','announcements','notes','finance','site-content','investment','access'].forEach(name=>{const section=$(name+'-tab');if(section)section.hidden=name!==activeTab;});
+    }
+  }
+  function updateAccessStatus(auth){
+    ownerSecretConfigured=Boolean(auth.ownerSecretConfigured);
+    if(!$('access-status'))return;
+    $('access-status').innerHTML=ownerSecretConfigured
+      ? '<p><b>Status:</b> <span class="admin-status">OWNER_SECRET sudah disetel</span></p><p>Mode saat ini memisahkan rahasia Owner dan Admin. Jangan bagikan OWNER_SECRET kepada staf.</p>'
+      : '<p class="admin-danger-note"><b>Status penting:</b> OWNER_SECRET belum terdeteksi. Untuk sementara, ADMIN_SECRET lama masih memiliki hak Owner.</p><p>Setel OWNER_SECRET di Cloudflare terlebih dahulu. Setelah itu, ADMIN_SECRET berubah menjadi akses Admin terbatas.</p>';
+  }
+  async function loadAccess(){
+    try{const auth=await api('/api/admin/me');currentRole=auth.role;updateAccessStatus(auth);applyRole();}
+    catch(e){setError('admin-error',e.message);}
+  }
+
+  async function loadNotes(){
+    setError('notes-error','');
+    try{const d=await api('/api/admin/notes');allNotes=d.notes||[];renderNotes();}
+    catch(e){setError('notes-error',e.message);}
+  }
+  function renderNotes(){
+    const root=$('notes-list');root.replaceChildren();
+    if(!allNotes.length){root.innerHTML='<div class="empty">Belum ada catatan tim.</div>';return;}
+    const priorities={LOW:'Rendah',MEDIUM:'Normal',HIGH:'Tinggi'};
+    allNotes.forEach(n=>{
+      const card=document.createElement('article');card.className='admin-list-card';
+      const h=document.createElement('h3');h.textContent=n.title;
+      const meta=document.createElement('p');meta.className='admin-muted';meta.textContent=n.category+' · Prioritas '+(priorities[n.priority]||n.priority)+' · '+(n.created_by==='owner'?'Owner':'Admin')+' · '+new Date(n.created_at).toLocaleString('id-ID');
+      const body=document.createElement('p');body.textContent=n.body;
+      const state=document.createElement('span');state.className='admin-status';state.textContent=n.status==='DONE'?'Selesai':'Perlu ditindaklanjuti';
+      const btn=document.createElement('button');btn.type='button';btn.className=n.status==='DONE'?'btn':'btn btn-gold';btn.textContent=n.status==='DONE'?'Buka kembali':'Tandai selesai';
+      btn.addEventListener('click',async()=>{btn.disabled=true;try{await api('/api/admin/notes',{method:'POST',body:JSON.stringify({id:n.id,status:n.status==='DONE'?'OPEN':'DONE'})});await loadNotes();showToast('Catatan diperbarui.');}catch(e){setError('notes-error',e.message);btn.disabled=false;}});
+      card.append(h,meta,body,state,document.createElement('br'),btn);root.append(card);
+    });
+  }
+  async function saveNote(e){
+    e.preventDefault();setError('notes-error','');
+    const payload={title:$('note-title').value.trim(),category:$('note-category').value,priority:$('note-priority').value,body:$('note-body').value.trim()};
+    const btn=$('note-form').querySelector('[type=submit]');btn.disabled=true;
+    try{await api('/api/admin/notes',{method:'POST',body:JSON.stringify(payload)});$('note-form').reset();$('note-priority').value='MEDIUM';await loadNotes();showToast('Catatan tersimpan.');}
+    catch(err){setError('notes-error',err.message);}finally{btn.disabled=false;}
+  }
+
+  async function loadFinance(){
+    if(currentRole!=='owner'){setError('finance-error','Tab keuangan hanya tersedia untuk Owner.');return;}
+    setError('finance-error','');
+    const params=new URLSearchParams();if($('finance-from').value)params.set('from',$('finance-from').value);if($('finance-to').value)params.set('to',$('finance-to').value);
+    try{const d=await api('/api/admin/finance'+(params.size?'?'+params.toString():''));currentFinance=d;allFinanceEntries=d.entries||[];renderFinance();showToast('Laporan kas diperbarui.');}
+    catch(e){setError('finance-error',e.message);}
+  }
+  function renderFinance(){
+    const s=currentFinance.summary||{};
+    $('finance-stats').innerHTML=[
+      ['Penjualan Store',idr(s.storeSales||0)],
+      ['Pemasukan lain',idr(s.otherIncome||0)],
+      ['Total pengeluaran',idr(s.expenses||0)],
+      ['Total pemasukan',idr(s.allIncome||0)],
+      ['Surplus kas estimasi',idr(s.estimatedNet||0)],
+      ['Order terverifikasi',Number(s.paidOrders||0)]
+    ].map(([k,v])=>'<div class="admin-stat"><small>'+esc(k)+'</small><strong>'+esc(v)+'</strong></div>').join('');
+    const root=$('finance-entries');root.replaceChildren();
+    if(!allFinanceEntries.length){root.innerHTML='<div class="empty">Belum ada transaksi kas manual di rentang ini. Penjualan Store tetap dihitung otomatis.</div>';}
+    else{
+      const wrap=document.createElement('div');wrap.className='admin-table-wrap';
+      const table=document.createElement('table');table.className='admin-data-table';
+      const thead=document.createElement('thead');thead.innerHTML='<tr><th>Tanggal</th><th>Jenis</th><th>Kategori / Uraian</th><th>Nominal</th><th>Referensi</th><th>Status</th><th>Aksi</th></tr>';table.append(thead);
+      const tbody=document.createElement('tbody');
+      allFinanceEntries.forEach(x=>{
+        const tr=document.createElement('tr');if(x.status==='VOIDED')tr.className='voided';
+        const vals=[x.entry_date,x.kind==='INCOME'?'Masuk':'Keluar',x.category+' · '+x.description,idr(x.amount),x.reference||'—',x.status==='POSTED'?'Tercatat':'Dibatalkan'];
+        vals.forEach(v=>{const td=document.createElement('td');td.textContent=String(v??'—');tr.append(td);});
+        const act=document.createElement('td');
+        if(x.status==='POSTED'){
+          const btn=document.createElement('button');btn.type='button';btn.className='btn btn-quiet';btn.textContent='Batalkan catatan';
+          btn.addEventListener('click',async()=>{if(!confirm('Tandai catatan '+x.id+' sebagai dibatalkan? Catatan tidak dihapus dari audit.'))return;btn.disabled=true;try{await api('/api/admin/finance',{method:'POST',body:JSON.stringify({id:x.id,void:true})});await loadFinance();showToast('Catatan kas dibatalkan dan tetap tersimpan di audit.');}catch(e){setError('finance-error',e.message);btn.disabled=false;}});
+          act.append(btn);
+        }else act.textContent='—';
+        tr.append(act);tbody.append(tr);
+      });
+      table.append(tbody);wrap.append(table);root.append(wrap);
+    }
+    $('finance-daily').innerHTML=makeTable(['Tanggal','Penjualan Store','Pemasukan lain','Pengeluaran','Surplus estimasi'],(currentFinance.daily||[]).map(x=>[x.day,idr(x.storeSales),idr(x.otherIncome),idr(x.expenses),idr(x.estimatedNet)]));
+  }
+  async function saveFinance(e){
+    e.preventDefault();setError('finance-error','');
+    const payload={kind:$('finance-kind').value,entryDate:$('finance-date').value,category:$('finance-category').value,amount:Number($('finance-amount').value),description:$('finance-description').value.trim(),reference:$('finance-reference').value.trim()};
+    const btn=$('finance-form').querySelector('[type=submit]');btn.disabled=true;
+    try{await api('/api/admin/finance',{method:'POST',body:JSON.stringify(payload)});$('finance-form').reset();$('finance-date').value=new Date().toISOString().slice(0,10);await loadFinance();showToast('Transaksi kas dicatat.');}
+    catch(err){setError('finance-error',err.message);}finally{btn.disabled=false;}
+  }
+  function exportFinanceCsv(){
+    const rows=[['ID','Tanggal','Jenis','Kategori','Uraian','Nominal','Referensi','Status','Dibuat Oleh']];
+    allFinanceEntries.forEach(x=>rows.push([x.id,x.entry_date,x.kind,x.category,x.description,x.amount,x.reference||'',x.status,x.created_by]));
+    const csv='\uFEFF'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+    const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));const a=document.createElement('a');a.href=url;a.download='slf-laporan-kas-'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);showToast('CSV kas dibuat.');
+  }
+
+  const cmsSlotsByPage={home:[['home.lead','Deskripsi utama'],['home.zoneLead','Pengantar wilayah'],['home.storeLead','Pengantar Store']],store:[['store.lead','Deskripsi utama']],wiki:[['wiki.lead','Pengantar Wiki']]};
+  function syncCmsForm(){
+    const slot=$('cms-kind').value==='slot';
+    $('cms-slot-wrap').hidden=!slot;$('cms-title-wrap').hidden=slot;
+    if(slot)syncCmsSlots();
+  }
+  function syncCmsSlots(){
+    const page=$('cms-page').value, old=$('cms-slot').value;
+    const options=cmsSlotsByPage[page]||[];
+    $('cms-slot').replaceChildren();
+    options.forEach(([value,label])=>{$('cms-slot').add(new Option(label,value));});
+    if(options.some(x=>x[0]===old))$('cms-slot').value=old;
+    if($('cms-kind').value==='slot')$('cms-slot-wrap').hidden=false;
+  }
+  $('cms-slot').addEventListener('change',()=>{const prefix=$('cms-slot').value.split('.')[0];if(['home','store','wiki'].includes(prefix))$('cms-page').value=prefix;});
+  async function loadSiteContent(){
+    if(currentRole!=='owner'){setError('cms-error','Editor Website hanya tersedia untuk Owner.');return;}
+    setError('cms-error','');
+    try{const d=await api('/api/admin/site-content');allCmsItems=d.items||[];renderSiteContent();}
+    catch(e){setError('cms-error',e.message);}
+  }
+  function renderSiteContent(){
+    const root=$('cms-list');root.replaceChildren();
+    if(!allCmsItems.length){root.innerHTML='<div class="empty">Belum ada perubahan teks atau kartu konten.</div>';return;}
+    allCmsItems.forEach(x=>{
+      const card=document.createElement('article');card.className='admin-list-card';
+      const h=document.createElement('h3');h.textContent=x.kind==='slot'?'Slot teks · '+x.slot_key:x.title;
+      const meta=document.createElement('p');meta.className='admin-muted';meta.textContent=x.page.toUpperCase()+' · '+(x.active?'Aktif':'Nonaktif')+' · '+(x.starts_at||'mulai sekarang')+' · '+(x.ends_at||'tanpa jadwal akhir');
+      const body=document.createElement('p');body.textContent=x.body;
+      const actions=document.createElement('div');actions.className='admin-inline-actions';
+      const edit=document.createElement('button');edit.type='button';edit.className='btn';edit.textContent='Edit';edit.addEventListener('click',()=>editCmsItem(x.id));
+      actions.append(edit);
+      if(x.kind==='card'){const del=document.createElement('button');del.type='button';del.className='btn btn-quiet';del.textContent='Hapus kartu';del.addEventListener('click',async()=>{if(!confirm('Hapus kartu konten ini dari website?'))return;del.disabled=true;try{await api('/api/admin/site-content?id='+encodeURIComponent(x.id),{method:'DELETE'});await loadSiteContent();showToast('Kartu konten dihapus.');}catch(e){setError('cms-error',e.message);del.disabled=false;}});actions.append(del);}
+      card.append(h,meta,body,actions);root.append(card);
+    });
+  }
+  function editCmsItem(id){
+    const x=allCmsItems.find(v=>v.id===id);if(!x)return;
+    $('cms-id').value=x.id;$('cms-kind').value=x.kind;$('cms-page').value=x.page;syncCmsSlots();
+    if(x.slot_key)$('cms-slot').value=x.slot_key;
+    $('cms-title').value=x.title||'';$('cms-body').value=x.body;$('cms-active').value=x.active?'1':'0';
+    $('cms-start').value=toLocalDateTime(x.starts_at);$('cms-end').value=toLocalDateTime(x.ends_at);
+    $('cms-form-title').textContent='Edit konten';syncCmsForm();$('cms-form').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  function resetCmsForm(){
+    $('cms-form').reset();$('cms-id').value='';$('cms-kind').value='slot';$('cms-page').value='home';$('cms-active').value='1';
+    $('cms-form-title').textContent='Tambah / edit konten';syncCmsSlots();syncCmsForm();setError('cms-error','');
+  }
+  async function saveCms(e){
+    e.preventDefault();setError('cms-error','');
+    const kind=$('cms-kind').value;
+    const payload={id:$('cms-id').value||undefined,kind,page:$('cms-page').value,slotKey:kind==='slot'?$('cms-slot').value:undefined,title:kind==='card'?$('cms-title').value.trim():'',body:$('cms-body').value.trim(),active:$('cms-active').value==='1',startsAt:$('cms-start').value?new Date($('cms-start').value).toISOString():null,endsAt:$('cms-end').value?new Date($('cms-end').value).toISOString():null};
+    const btn=$('cms-form').querySelector('[type=submit]');btn.disabled=true;
+    try{await api('/api/admin/site-content',{method:'POST',body:JSON.stringify(payload)});resetCmsForm();await loadSiteContent();showToast('Konten tersimpan. Muat ulang halaman publik untuk melihat hasilnya.');}
+    catch(err){setError('cms-error',err.message);}finally{btn.disabled=false;}
+  }
+
+  async function loadInvestment(){
+    if(currentRole!=='owner'){setError('investment-error','Simulasi pendanaan hanya tersedia untuk Owner.');return;}
+    setError('investment-error','');
+    try{
+      const d=await api('/api/admin/investment');investmentPlan=d.plan;
+      $('investment-unit-price').value=investmentPlan.unit_price;$('investment-units').value=investmentPlan.total_units;
+      $('investment-share').value=investmentPlan.profit_share_pct;$('investment-months').value=investmentPlan.lock_months;
+      $('investment-start').value=investmentPlan.start_date||'';$('investment-status').value=investmentPlan.status;
+      $('investment-notes').value=investmentPlan.notes||'';renderInvestmentCalculation();
+    }catch(e){setError('investment-error',e.message);}
+  }
+  async function saveInvestment(e){
+    e.preventDefault();setError('investment-error','');
+    const payload={unitPrice:Number($('investment-unit-price').value),totalUnits:Number($('investment-units').value),profitSharePct:Number($('investment-share').value),lockMonths:Number($('investment-months').value),startDate:$('investment-start').value||null,status:$('investment-status').value,notes:$('investment-notes').value.trim()};
+    const btn=$('investment-form').querySelector('[type=submit]');btn.disabled=true;
+    try{await api('/api/admin/investment',{method:'POST',body:JSON.stringify(payload)});await loadInvestment();showToast('Parameter simulasi tersimpan sebagai draf internal.');}
+    catch(e){setError('investment-error',e.message);}finally{btn.disabled=false;}
+  }
+  function renderInvestmentCalculation(){
+    const unit=Number($('investment-unit-price').value)||0,units=Number($('investment-units').value)||0,share=Number($('investment-share').value)||0,profit=Math.max(0,Number($('investment-profit-input').value)||0);
+    const target=unit*units,pool=Math.floor(profit*share/100),perUnit=units?Math.floor(pool/units):0;
+    $('investment-stats').innerHTML=[['Target dana (simulasi)',idr(target)],['Unit direncanakan',units],['Periode',Number($('investment-months').value||0)+' bulan']].map(([k,v])=>'<div class="admin-stat"><small>'+esc(k)+'</small><strong>'+esc(v)+'</strong></div>').join('');
+    $('investment-calculation').innerHTML=[['Keuntungan bersih simulasi',idr(profit)],['Pool '+share+'% (jika benar-benar untung)',idr(pool)],['Per unit dari pool',idr(perUnit)]].map(([k,v])=>'<div class="admin-stat"><small>'+esc(k)+'</small><strong>'+esc(v)+'</strong></div>').join('');
+  }
+
   function initReportDates(){
     const today=new Date(),from=new Date(Date.now()-29*86400000),format=d=>d.toISOString().slice(0,10);
     if(!$('report-to').value)$('report-to').value=format(today);
     if(!$('report-from').value)$('report-from').value=format(from);
+    if(!$('finance-to').value)$('finance-to').value=format(today);
+    if(!$('finance-from').value)$('finance-from').value=format(from);
+    if(!$('finance-date').value)$('finance-date').value=format(today);
+    syncCmsSlots();syncCmsForm();
   }
   initReportDates();
 
