@@ -120,8 +120,11 @@ export async function notifyAdmin(env, order, orderUrl) {
 export async function logAdminActivity(db, action, entityType, entityId, details = {}) {
   if (!db) return;
   try {
+    const roleFromDetails = details && ['owner','admin'].includes(details.role) ? details.role : '';
+    const ownerOnlyEntities = new Set(['product','promo','finance_entry','investment_plan','site_content']);
+    const actor = roleFromDetails || (ownerOnlyEntities.has(String(entityType)) ? 'owner' : 'admin');
     await db.prepare('INSERT INTO admin_activity (actor, action, entity_type, entity_id, details_json, created_at) VALUES (?, ?, ?, ?, ?, ?)')
-      .bind('admin', String(action).slice(0,80), String(entityType).slice(0,40), entityId ? String(entityId).slice(0,100) : null, JSON.stringify(details).slice(0,2000), new Date().toISOString()).run();
+      .bind(actor, String(action).slice(0,80), String(entityType).slice(0,40), entityId ? String(entityId).slice(0,100) : null, JSON.stringify(details).slice(0,2000), new Date().toISOString()).run();
   } catch (error) { console.error('Admin activity log failed:', error?.message || error); }
 }
 
