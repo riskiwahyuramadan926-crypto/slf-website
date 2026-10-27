@@ -11,8 +11,8 @@ Store menggunakan Cloudflare Pages Functions dan D1. Pembayaran DANA Bisnis dila
 6. Tautan ulasan muncul setelah selesai. Ulasan hanya bisa dikirim satu kali.
 
 ## Konfigurasi wajib
-- Cloudflare Pages D1 binding bernama DB.
-- Jalankan schema.sql pada database D1 bila tabel belum dibuat.
+- Binding D1 sudah ditetapkan di `wrangler.toml`: `DB` → database `slf-website` (`a5d20f54-37fe-495b-8608-dd7afa1a5a05`). Pastikan Pages memakai Wrangler config ini dan buat deployment baru.
+- Middleware Store membuat tabel `orders` dan `reviews` secara aman saat API pertama kali diakses. `schema.sql` tetap tersedia untuk pemeriksaan atau pemasangan manual.
 - Cloudflare Secret ADMIN_SECRET, minimal 32 karakter.
 - Isi adminWhatsApp di assets/js/store-config.js dengan nomor admin format internasional angka saja (contoh format 62812xxxxxxx, ganti dengan nomor asli). Tanpa ini, checkout masih tercatat tetapi WhatsApp tidak terbuka otomatis.
 - Harga ada di assets/js/store-config.js dan functions/_lib/catalog.js.
