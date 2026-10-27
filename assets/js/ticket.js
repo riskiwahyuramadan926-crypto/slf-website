@@ -73,6 +73,7 @@
         'Nomor pesanan: ' + current.orderId,
         'Nama Minecraft: ' + current.minecraftName,
         'Paket: ' + current.productName,
+        'Jumlah nyawa mengikuti status rank/berlangganan: Member atau VIP biasa = 3 nyawa per tiket; VIP+ dengan langganan aktif = 5 nyawa per tiket.',
         'Tautan tiket pribadi: ' + link,
         'Mohon proses pengajuan re-entry saya.'
       ].join('\n');
