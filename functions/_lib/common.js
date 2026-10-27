@@ -33,14 +33,51 @@ export async function rsaVerify(publicPem, message, signatureBase64) {
 }
 export function safeText(value, max = 200) { return typeof value === 'string' ? value.trim().slice(0, max) : ''; }
 export function currency(n) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n || 0); }
+let adminAuthSchemaPromise;
+async function ensureAdminAuthTable(db) {
+  if (!adminAuthSchemaPromise) {
+    adminAuthSchemaPromise = db.prepare(`CREATE TABLE IF NOT EXISTS admin_auth_attempts (
+      ip_hash TEXT PRIMARY KEY,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      window_started INTEGER NOT NULL,
+      blocked_until INTEGER NOT NULL DEFAULT 0
+    )`).run().catch(error => { adminAuthSchemaPromise = null; throw error; });
+  }
+  return adminAuthSchemaPromise;
+}
 export async function requireAdmin(request, env) {
   const expected = env.ADMIN_SECRET;
-  if (!expected || expected.length < 32) return false;
+  // Allow either a strong 32+ character secret or a 6-digit PIN.
+  // Six-digit PINs are rate-limited below and should only be a temporary convenience.
+  if (!expected || !(expected.length >= 32 || /^\\d{6}$/.test(expected)) || !env.DB) return false;
   const actual = request.headers.get('authorization') || '';
   if (!actual.startsWith('Bearer ')) return false;
-  const a = actual.slice(7);
-  // Constant-work hash comparison avoids comparing secret text directly.
-  return (await sha256Hex(a)) === (await sha256Hex(expected));
+  const supplied = actual.slice(7);
+  try {
+    await ensureAdminAuthTable(env.DB);
+    const now = Math.floor(Date.now() / 1000);
+    const ipHash = await sha256Hex(request.headers.get('cf-connecting-ip') || 'local-unknown');
+    let attempt = await env.DB.prepare('SELECT attempts, window_started, blocked_until FROM admin_auth_attempts WHERE ip_hash = ?').bind(ipHash).first();
+    if (attempt && Number(attempt.blocked_until) > now) return false;
+
+    let attempts = attempt && now - Number(attempt.window_started) < 900 ? Number(attempt.attempts) : 0;
+    const windowStarted = attempts ? Number(attempt.window_started) : now;
+    if (await sha256Hex(supplied) === await sha256Hex(expected)) {
+      await env.DB.prepare('DELETE FROM admin_auth_attempts WHERE ip_hash = ?').bind(ipHash).run();
+      return true;
+    }
+
+    attempts += 1;
+    const blockedUntil = attempts >= 5 ? now + 900 : 0;
+    await env.DB.prepare(`INSERT INTO admin_auth_attempts (ip_hash, attempts, window_started, blocked_until)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(ip_hash) DO UPDATE SET attempts=excluded.attempts, window_started=excluded.window_started, blocked_until=excluded.blocked_until`)
+      .bind(ipHash, attempts, windowStarted, blockedUntil).run();
+    return false;
+  } catch (error) {
+    console.error('Admin authentication rate-limit check failed:', error?.message || error);
+    return false;
+  }
 }
 export async function notifyAdmin(env, order, orderUrl) {
   if (!env.WA_ACCESS_TOKEN || !env.WA_PHONE_NUMBER_ID || !env.WA_ADMIN_TO) return;
