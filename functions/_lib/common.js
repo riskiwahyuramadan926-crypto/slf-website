@@ -51,7 +51,7 @@ async function adminAuthState(db, request, env) {
   const actual = request.headers.get('authorization') || '';
   if (!actual.startsWith('Bearer ') || !env.DB) return null;
   const supplied = actual.slice(7);
-  const validFormat = value => value && (value.length >= 32 || /^\\d{6}$/.test(value));
+  const validFormat = value => typeof value === 'string' && (value.length >= 32 || /^\d{6,16}$/.test(value));
   if (!validFormat(adminSecret) && !validFormat(ownerSecret)) return null;
   // Once an Owner secret is configured, both secrets must differ or role separation is impossible.
   if (ownerSecret && adminSecret && ownerSecret === adminSecret) return null;
