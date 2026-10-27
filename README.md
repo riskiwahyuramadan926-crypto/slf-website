@@ -2,7 +2,7 @@
 
 Store menggunakan Cloudflare Pages Functions dan D1. Pembayaran DANA Bisnis dilakukan manual melalui WhatsApp.
 
-## Batas keamanan pendanaan\n- Modul pendanaan saat ini hanya draf/simulasi Owner. Belum ada akun pemodal, setoran investasi, saldo pemodal, metode pembayaran investasi, atau API penarikan. Siklus/lock 4 bulan adalah rancangan, bukan penguncian dana nyata. Jangan menerima dana anggota sampai struktur dan ketentuan ditinjau wali/orang dewasa yang bertanggung jawab dan profesional hukum/keuangan.\n\n## Alur pembelian
+## Alur pembelian
 1. Pembeli checkout; sistem menyimpan pesanan dan membuka WhatsApp admin dengan detail order.
 2. Admin mengirim QRIS DANA Bisnis secara manual.
 3. Admin memeriksa transaksi masuk dan nominal di DANA (jangan percaya screenshot saja).
@@ -15,7 +15,7 @@ Store menggunakan Cloudflare Pages Functions dan D1. Pembayaran DANA Bisnis dila
 - Tiket re-entry dan statusnya tersimpan di D1. Tautan re-entry yang baru memakai kunci unik per tiket (HMAC dengan `TICKET_LINK_SECRET`); tiket lama tetap mendukung tautan lama selama hash aksesnya masih cocok. Simpan tautan pribadi dan jangan bagikan. Checkout re-entry akan menolak pesanan baru bila `TICKET_LINK_SECRET` belum dikonfigurasi. Tiket bantuan tersimpan di D1 dan muncul di panel Admin. Bila WhatsApp Business Cloud API dikonfigurasi, tiket baru dapat mengirim notifikasi WhatsApp opsional ke admin.
 - Admin operasional mencakup katalog produk berbasis D1 (harga baru dipakai server saat checkout berikutnya), kode promo, ringkasan pelanggan, laporan periode/produk, log tindakan admin, inbox tiket bantuan, pengumuman terjadwal, dan balasan ulasan.
 - Halaman Store memuat katalog aktif dari `/api/store-products`, pengumuman dari `/api/announcements`, dan menerima tiket bantuan melalui `/api/support/tickets`. Schema runtime menyiapkan tabel admin dengan `CREATE TABLE IF NOT EXISTS` dan mempertahankan data lama.
-- Fitur admin: statistik order, pencarian/filter, ekspor CSV, auto-refresh dan notifikasi browser, inbox ulasan serta balasan publik admin. Menu Owner (keuangan, produk/promo, laporan, editor website, simulasi pendanaan, dan pengaturan akses) disembunyikan dari Admin serta dilindungi lagi di API.
+- Fitur admin: statistik order, pencarian/filter, ekspor CSV, auto-refresh dan notifikasi browser, inbox ulasan serta balasan publik admin. Menu Owner (keuangan, produk/promo, laporan, editor website dan pengaturan akses) disembunyikan dari Admin serta dilindungi lagi di API.
 - Notifikasi WhatsApp otomatis membutuhkan Cloudflare secrets `WA_ACCESS_TOKEN`, `WA_PHONE_NUMBER_ID`, `WA_ADMIN_TO` (format nomor internasional angka saja). Untuk notifikasi order stabil di luar jendela layanan WhatsApp, set `WA_TEMPLATE_NAME` ke template Meta yang disetujui dengan 5 placeholder body. Untuk tiket CS gunakan template terpisah `WA_SUPPORT_TEMPLATE_NAME` (juga 5 placeholder); opsional `WA_SUPPORT_TEMPLATE_LANGUAGE`, `WA_TEMPLATE_LANGUAGE`, dan `WHATSAPP_API_VERSION`. Tanpa konfigurasi Cloud API ini, admin tetap menerima notifikasi dalam dashboard selama panel terbuka dan bisa menghubungi pembeli dari tombol Chat WhatsApp.
 - Jangan masukkan token WhatsApp ke file frontend atau GitHub.
 
