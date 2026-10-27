@@ -66,3 +66,28 @@ export async function logAdminActivity(db, action, entityType, entityId, details
       .bind('admin', String(action).slice(0,80), String(entityType).slice(0,40), entityId ? String(entityId).slice(0,100) : null, JSON.stringify(details).slice(0,2000), new Date().toISOString()).run();
   } catch (error) { console.error('Admin activity log failed:', error?.message || error); }
 }
+
+export async function notifySupportAdmin(env, ticket, ticketUrl) {
+  if (!env.WA_ACCESS_TOKEN || !env.WA_PHONE_NUMBER_ID || !env.WA_ADMIN_TO) return;
+  const apiVersion = env.WHATSAPP_API_VERSION || 'v23.0';
+  const endpoint = `https://graph.facebook.com/${apiVersion}/${env.WA_PHONE_NUMBER_ID}/messages`;
+  const ticketLink = ticketUrl || '/admin/';
+  const bodyText = `SLF SUPPORT — TIKET BARU\nNomor tiket: ${ticket.id}\nPemain: ${ticket.player_name}\nKategori: ${ticket.category}\nSubjek: ${ticket.subject}\nPanel admin: ${ticketLink}`;
+  let message;
+  if (env.WA_TEMPLATE_NAME) {
+    message = { messaging_product:'whatsapp', to:env.WA_ADMIN_TO, type:'template', template:{
+      name:env.WA_TEMPLATE_NAME, language:{code:env.WA_TEMPLATE_LANGUAGE || 'id'},
+      components:[{type:'body',parameters:[
+        {type:'text',text:ticket.id},
+        {type:'text',text:ticket.player_name},
+        {type:'text',text:ticket.category},
+        {type:'text',text:ticket.subject},
+        {type:'text',text:`TIKET BARU — ${ticketLink}`}
+      ]}]
+    }};
+  } else {
+    message = { messaging_product:'whatsapp', recipient_type:'individual', to:env.WA_ADMIN_TO, type:'text', text:{preview_url:false,body:bodyText} };
+  }
+  const res = await fetch(endpoint,{method:'POST',headers:{authorization:`Bearer ${env.WA_ACCESS_TOKEN}`,'content-type':'application/json'},body:JSON.stringify(message)});
+  if (!res.ok) throw new Error(`WhatsApp API rejected support notification (${res.status})`);
+}
