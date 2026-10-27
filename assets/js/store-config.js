@@ -7,11 +7,11 @@ window.SLF_STORE_CONFIG = {
   // Isi nomor WhatsApp admin dengan kode negara, angka saja. Contoh format: 62812xxxxxxx.
   adminWhatsApp: '6281396440173',
   products: [
-    { id: 'VIP_PLUS', name: 'VIP+', price: 55000, icon: '♜', tag: 'Keanggotaan', description: 'Rank VIP+ dengan fitur Custom Rank permanen untuk akun Minecraft yang kamu daftarkan.', note: 'Fitur Custom Rank tetap menjadi hak akun setelah dibeli; nama, warna, dan gaya tulisan mengikuti kemampuan plugin SLF.' },
+    { id: 'VIP_PLUS', name: 'VIP+', price: 55000, icon: '♜', tag: 'Rank permanen + fitur berlangganan', description: 'Rank VIP+ dan Custom Rank permanen, dengan fitur tambahan yang aktif selama langganan VIP+ berlaku.', note: 'Jika langganan berakhir, rank VIP+ dan Custom Rank tetap ada, tetapi benefit langganan berhenti. Benefit aktif termasuk claim 15 chunk/3 claim, akses /shop jarak jauh, dan 5 nyawa per tiket re-entry.' },
     { id: 'CUSTOM_RANK', name: 'Custom Rank', price: 20000, icon: '✧', tag: 'Personalisasi', description: 'Tentukan nama rank, warna, dan gaya tulisan yang kamu inginkan.', note: 'Gaya final mengikuti kemampuan plugin dan format teks server SLF.' },
-    { id: 'REENTRY_1', name: 'Tiket Masuk Kembali · 1', price: 15000, icon: '♥', tag: 'Paket 1 tiket', description: 'Tiket pribadi masuk kembali untuk aturan season SLF. Tautan tiket dibuat otomatis setelah checkout.', note: 'Setelah transaksi selesai, buka tautan tiket, lalu tekan Ajukan tiket. Admin menandai selesai setelah proses re-entry benar-benar selesai.' },
-    { id: 'REENTRY_2', name: 'Tiket Masuk Kembali · 2', price: 28000, icon: '♥', tag: 'Paket 2 tiket', description: 'Paket dua tiket masuk kembali.', note: 'Tiket digunakan sesuai kebijakan season; tidak otomatis mengaktifkan akun.' },
-    { id: 'REENTRY_3', name: 'Tiket Masuk Kembali · 3', price: 35000, icon: '♥', tag: 'Paket 3 tiket', description: 'Paket tiga tiket masuk kembali.', note: 'Penggunaan tetap perlu diproses admin sesuai aturan season.' }
+    { id: 'REENTRY_1', name: 'Tiket Masuk Kembali · 1', price: 15000, icon: '♥', tag: 'Paket 1 tiket', description: 'Satu tiket re-entry untuk mengajukan masuk kembali ke Survival SLF.', note: 'Setiap tiket memberikan 3 nyawa untuk Member/VIP biasa, atau 5 nyawa jika langganan VIP+ masih aktif. Tiket harus diajukan dan diproses manual oleh admin.' },
+    { id: 'REENTRY_2', name: 'Tiket Masuk Kembali · 2', price: 28000, icon: '♥', tag: 'Paket 2 tiket', description: 'Paket dua tiket re-entry.', note: 'Setiap tiket memberikan 3 nyawa untuk Member/VIP biasa, atau 5 nyawa jika langganan VIP+ aktif. Penggunaan diproses manual oleh admin.' },
+    { id: 'REENTRY_3', name: 'Tiket Masuk Kembali · 3', price: 35000, icon: '♥', tag: 'Paket 3 tiket', description: 'Paket tiga tiket re-entry.', note: 'Setiap tiket memberikan 3 nyawa untuk Member/VIP biasa, atau 5 nyawa jika langganan VIP+ aktif. Penggunaan diproses manual oleh admin.' }
   ],
   rankColors: [
     { value: '#FFFFFF', label: 'Putih' }, { value: '#FF5555', label: 'Merah' }, { value: '#FFAA00', label: 'Emas' },
