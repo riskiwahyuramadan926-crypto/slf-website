@@ -95,12 +95,3 @@ CREATE TABLE IF NOT EXISTS site_content (
 );
 CREATE INDEX IF NOT EXISTS idx_site_content_active ON site_content(active,page,kind);
 
-CREATE TABLE IF NOT EXISTS investment_plans (
-  id TEXT PRIMARY KEY, unit_price INTEGER NOT NULL CHECK(unit_price > 0), total_units INTEGER NOT NULL CHECK(total_units BETWEEN 1 AND 1000),
-  profit_share_pct REAL NOT NULL CHECK(profit_share_pct >= 0 AND profit_share_pct <= 100),
-  lock_months INTEGER NOT NULL CHECK(lock_months BETWEEN 1 AND 60), start_date TEXT,
-  status TEXT NOT NULL DEFAULT 'DRAFT' CHECK(status IN ('DRAFT','PAUSED')),
-  notes TEXT NOT NULL DEFAULT '', updated_by TEXT NOT NULL DEFAULT 'owner', created_at TEXT NOT NULL, updated_at TEXT NOT NULL
-);
-INSERT OR IGNORE INTO investment_plans(id,unit_price,total_units,profit_share_pct,lock_months,status,notes,updated_by,created_at,updated_at)
-VALUES('main-draft',500000,20,40,4,'DRAFT','Draf internal only; bukan penawaran publik atau penerimaan pembayaran.','owner',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
