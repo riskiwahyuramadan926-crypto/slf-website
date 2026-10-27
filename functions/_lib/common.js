@@ -61,14 +61,11 @@ async function adminAuthState(db, request, env) {
     const now = Math.floor(Date.now() / 1000);
     const ipHash = await sha256Hex(request.headers.get('cf-connecting-ip') || 'local-unknown');
     const attempt = await db.prepare('SELECT attempts, window_started, blocked_until FROM admin_auth_attempts WHERE ip_hash = ?').bind(ipHash).first();
-    if (attempt && Number(attempt.blocked_until) > now) return null;
-
-    const attempts = attempt && now - Number(attempt.window_started) < 900 ? Number(attempt.attempts) : 0;
-    const windowStarted = attempts ? Number(attempt.window_started) : now;
     const suppliedHash = await sha256Hex(supplied);
     const ownerMatches = validFormat(ownerSecret) && suppliedHash === await sha256Hex(ownerSecret);
     const adminMatches = validFormat(adminSecret) && suppliedHash === await sha256Hex(adminSecret);
 
+    // A correct secret can recover access even if earlier failed attempts triggered a temporary lock.
     if (ownerMatches || adminMatches) {
       await db.prepare('DELETE FROM admin_auth_attempts WHERE ip_hash = ?').bind(ipHash).run();
       // Backward compatibility: until OWNER_SECRET is configured, ADMIN_SECRET remains Owner.
@@ -76,6 +73,9 @@ async function adminAuthState(db, request, env) {
       return ownerSecret ? 'admin' : 'owner';
     }
 
+    if (attempt && Number(attempt.blocked_until) > now) return null;
+    const attempts = attempt && now - Number(attempt.window_started) < 900 ? Number(attempt.attempts) : 0;
+    const windowStarted = attempts ? Number(attempt.window_started) : now;
     const nextAttempts = attempts + 1;
     const blockedUntil = nextAttempts >= 5 ? now + 900 : 0;
     await db.prepare(`INSERT INTO admin_auth_attempts (ip_hash, attempts, window_started, blocked_until)
