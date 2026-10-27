@@ -133,7 +133,7 @@ async function answerQuestion(message, env) {
   return { topic:'belum-diketahui', answer:'Aku belum punya jawaban pasti untuk pertanyaan itu dan tidak mau menebak. Coba pilih panduan yang paling dekat dengan masalahmu, atau buat tiket agar tim SLF dapat menindaklanjuti. Jangan sertakan password, PIN, atau OTP.', actions:[actions.guide,actions.faq,actions.ticket] };
 }
 
-export async function onRequestPost({ request }) {
+export async function onRequestPost({ request, env }) {
   let data;
   try { data = await readJson(request); } catch { return fail('Pesan tidak terbaca. Coba kirim ulang.'); }
   const rawMessage = typeof data.message === 'string' ? data.message.trim() : '';
