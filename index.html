@@ -89,5 +89,6 @@
     const toast=document.getElementById('toast');let toastTimer;
     document.querySelectorAll('[data-placeholder]').forEach(link=>link.addEventListener('click',event=>{event.preventDefault();toast.textContent=link.dataset.placeholder;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),3500);}));
   </script>
+  <script src="/assets/js/support-widget.js" defer></script>
 </body>
 </html>
