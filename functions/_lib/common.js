@@ -45,39 +45,58 @@ async function ensureAdminAuthTable(db) {
   }
   return adminAuthSchemaPromise;
 }
-export async function requireAdmin(request, env) {
-  const expected = env.ADMIN_SECRET;
-  // Allow either a strong 32+ character secret or a 6-digit PIN.
-  // Six-digit PINs are rate-limited below and should only be a temporary convenience.
-  if (!expected || !(expected.length >= 32 || /^\d{6}$/.test(expected)) || !env.DB) return false;
+async function adminAuthState(db, request, env) {
+  const ownerSecret = typeof env.OWNER_SECRET === 'string' ? env.OWNER_SECRET : '';
+  const adminSecret = typeof env.ADMIN_SECRET === 'string' ? env.ADMIN_SECRET : '';
   const actual = request.headers.get('authorization') || '';
-  if (!actual.startsWith('Bearer ')) return false;
+  if (!actual.startsWith('Bearer ') || !env.DB) return null;
   const supplied = actual.slice(7);
+  const validFormat = value => value && (value.length >= 32 || /^\\d{6}$/.test(value));
+  if (!validFormat(adminSecret) && !validFormat(ownerSecret)) return null;
+
   try {
-    await ensureAdminAuthTable(env.DB);
+    await ensureAdminAuthTable(db);
     const now = Math.floor(Date.now() / 1000);
     const ipHash = await sha256Hex(request.headers.get('cf-connecting-ip') || 'local-unknown');
-    let attempt = await env.DB.prepare('SELECT attempts, window_started, blocked_until FROM admin_auth_attempts WHERE ip_hash = ?').bind(ipHash).first();
-    if (attempt && Number(attempt.blocked_until) > now) return false;
+    const attempt = await db.prepare('SELECT attempts, window_started, blocked_until FROM admin_auth_attempts WHERE ip_hash = ?').bind(ipHash).first();
+    if (attempt && Number(attempt.blocked_until) > now) return null;
 
-    let attempts = attempt && now - Number(attempt.window_started) < 900 ? Number(attempt.attempts) : 0;
+    const attempts = attempt && now - Number(attempt.window_started) < 900 ? Number(attempt.attempts) : 0;
     const windowStarted = attempts ? Number(attempt.window_started) : now;
-    if (await sha256Hex(supplied) === await sha256Hex(expected)) {
-      await env.DB.prepare('DELETE FROM admin_auth_attempts WHERE ip_hash = ?').bind(ipHash).run();
-      return true;
+    const suppliedHash = await sha256Hex(supplied);
+    const ownerMatches = validFormat(ownerSecret) && suppliedHash === await sha256Hex(ownerSecret);
+    const adminMatches = validFormat(adminSecret) && suppliedHash === await sha256Hex(adminSecret);
+
+    if (ownerMatches || adminMatches) {
+      await db.prepare('DELETE FROM admin_auth_attempts WHERE ip_hash = ?').bind(ipHash).run();
+      // Backward compatibility: until OWNER_SECRET is configured, ADMIN_SECRET remains Owner.
+      if (ownerMatches) return 'owner';
+      return ownerSecret ? 'admin' : 'owner';
     }
 
-    attempts += 1;
-    const blockedUntil = attempts >= 5 ? now + 900 : 0;
-    await env.DB.prepare(`INSERT INTO admin_auth_attempts (ip_hash, attempts, window_started, blocked_until)
+    const nextAttempts = attempts + 1;
+    const blockedUntil = nextAttempts >= 5 ? now + 900 : 0;
+    await db.prepare(`INSERT INTO admin_auth_attempts (ip_hash, attempts, window_started, blocked_until)
       VALUES (?, ?, ?, ?)
       ON CONFLICT(ip_hash) DO UPDATE SET attempts=excluded.attempts, window_started=excluded.window_started, blocked_until=excluded.blocked_until`)
-      .bind(ipHash, attempts, windowStarted, blockedUntil).run();
-    return false;
+      .bind(ipHash, nextAttempts, windowStarted, blockedUntil).run();
+    return null;
   } catch (error) {
     console.error('Admin authentication rate-limit check failed:', error?.message || error);
-    return false;
+    return null;
   }
+}
+
+export async function getAdminRole(request, env) {
+  return adminAuthState(env.DB, request, env);
+}
+
+export async function requireAdmin(request, env) {
+  return Boolean(await getAdminRole(request, env));
+}
+
+export async function requireOwner(request, env) {
+  return (await getAdminRole(request, env)) === 'owner';
 }
 export async function notifyAdmin(env, order, orderUrl) {
   if (!env.WA_ACCESS_TOKEN || !env.WA_PHONE_NUMBER_ID || !env.WA_ADMIN_TO) return;
