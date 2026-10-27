@@ -11,20 +11,23 @@ ALUR PEMBELIAN
 7. Tautan ulasan muncul di halaman status setelah selesai. Ulasan hanya dapat dikirim satu kali.
 
 
-- Fitur admin: statistik order, pencarian/filter, ekspor CSV, auto-refresh dan notifikasi browser, inbox ulasan serta balasan publik admin.
+- Fitur admin: pesanan/transaksi, verifikasi pembayaran manual, ekspor CSV, notifikasi browser, balasan ulasan, manajemen katalog produk dan harga, kode promo, data pelanggan, laporan penjualan, log aktivitas admin, pusat bantuan/tiket, serta pengumuman Store.
+- Harga produk dikelola di menu Produk dan disimpan ke D1. Harga baru digunakan untuk pesanan baru; detail order yang sudah tersimpan tidak berubah.
+- Kode promo yang dibuat di menu Promo divalidasi di server. Promo lama dari secret PROMO_CODES_JSON tetap bisa bekerja selama konfigurasi legacy masih tersedia.
+- Formulir bantuan di /store/ menyimpan tiket ke D1. Balasan/status di panel admin, dan admin bisa membuka WhatsApp/email pelanggan dari tombol kontak; pengiriman balasan tetap tindakan manual.
 - Notifikasi WhatsApp otomatis membutuhkan Cloudflare secrets `WA_ACCESS_TOKEN`, `WA_PHONE_NUMBER_ID`, `WA_ADMIN_TO` (format nomor internasional angka saja). Untuk notifikasi stabil di luar jendela layanan WhatsApp, set `WA_TEMPLATE_NAME` ke nama template Meta yang sudah disetujui dengan tepat 5 placeholder body; opsional `WA_TEMPLATE_LANGUAGE` dan `WHATSAPP_API_VERSION`. Tanpa konfigurasi Cloud API ini, admin tetap menerima notifikasi dalam dashboard selama panel terbuka dan bisa menghubungi pembeli dari tombol Chat WhatsApp.
 - Jangan masukkan token WhatsApp ke file frontend atau GitHub.
 
 KONFIGURASI WAJIB
 - `wrangler.toml` telah mengikat database D1 `slf-website` (`a5d20f54-37fe-495b-8608-dd7afa1a5a05`) dengan nama binding persis `DB`.
 - Pastikan Cloudflare Pages menggunakan Wrangler config dari repository lalu buat deployment baru agar binding aktif.
-- Middleware API membuat tabel `orders` dan `reviews` otomatis jika belum ada. `schema.sql` disimpan sebagai cadangan setup manual.
+- Middleware API membuat tabel pesanan, ulasan, katalog, promo, aktivitas, tiket bantuan, dan pengumuman secara aman jika belum ada. `schema.sql` disimpan sebagai cadangan setup manual.
 - Cloudflare Secret ADMIN_SECRET minimal 32 karakter. Jangan simpan di GitHub.
 - Isi adminWhatsApp di assets/js/store-config.js dengan nomor WhatsApp admin dalam format internasional angka saja. Contoh format: 62812xxxxxxx (ganti dengan nomor admin asli).
-- Harga katalog publik: assets/js/store-config.js. Harga yang dipercaya server: functions/_lib/catalog.js.
+- Katalog tampilan dimuat dari `/api/store-products`; data produk dan harga utama berada di tabel D1 `store_products`. Harga dihitung server melalui `functions/_lib/catalog.js`.
 
 UJI
-- Buka /api/health. Harus muncul {"ok":true,"database":"connected","tables":["orders","reviews"]}.
+- Buka /api/health. Harus muncul {"ok":true,"database":"connected","tables":["admin_activity","announcements","orders","promo_codes","review_replies","reviews","store_products","support_tickets"]}.
 - Buat pesanan uji dari /store/. Pastikan nomor pesanan, nominal, dan tautan status dikirim melalui WhatsApp admin.
 - Di /admin/, masukkan ADMIN_SECRET. Pesanan harus muncul.
 - Jangan menekan verifikasi jika belum ada pembayaran nyata. Verifikasi setelah transaksi masuk DANA.
