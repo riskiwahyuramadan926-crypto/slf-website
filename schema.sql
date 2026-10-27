@@ -42,12 +42,14 @@ CREATE INDEX IF NOT EXISTS idx_admin_activity_created_at ON admin_activity(creat
 CREATE TABLE IF NOT EXISTS reentry_tickets (
   id TEXT PRIMARY KEY, order_id TEXT NOT NULL REFERENCES orders(id), access_key_hash TEXT NOT NULL,
   minecraft_name TEXT NOT NULL, product_name TEXT NOT NULL,
+  season_id TEXT NOT NULL DEFAULT 'season-1',
   status TEXT NOT NULL DEFAULT 'WAITING_PAYMENT'
     CHECK (status IN ('WAITING_PAYMENT','ACTIVE','PENDING','COMPLETED','CANCELLED')),
   created_at TEXT NOT NULL, updated_at TEXT NOT NULL, submitted_at TEXT, completed_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_reentry_tickets_order ON reentry_tickets(order_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_reentry_tickets_status ON reentry_tickets(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_reentry_tickets_season_player ON reentry_tickets(season_id, minecraft_name, created_at);
 
 CREATE TABLE IF NOT EXISTS support_tickets (
   id TEXT PRIMARY KEY, player_name TEXT NOT NULL, contact TEXT NOT NULL, category TEXT NOT NULL,
@@ -65,9 +67,9 @@ CREATE INDEX IF NOT EXISTS idx_announcements_active ON announcements(active, sta
 INSERT OR IGNORE INTO store_products(id,name,price,description,icon,tag,note,active,created_at,updated_at) VALUES
 ('VIP_PLUS','VIP+',55000,'Rank VIP+ tetap dimiliki setelah langganan fitur berakhir; benefit aktif mengikuti masa langganan pada paket','♜','Rank tetap + fitur berlangganan','Saat langganan berakhir, rank VIP+ tetap ada tetapi benefit langganan berhenti. Saat aktif: 20 chunk/2 claim, /shop jarak jauh, dan 5 nyawa per tiket re-entry.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
 ('CUSTOM_RANK','Custom Rank',20000,'Rank dengan nama dan tampilan pilihan pembeli','✧','Personalisasi','Gaya final mengikuti kemampuan plugin dan format teks server SLF.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
-('REENTRY_1','Tiket Masuk Kembali · 1',15000,'Satu tiket re-entry memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ yang langganan fiturnya aktif','♥','Paket 1 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan fitur aktif. Pengajuan diproses manual oleh admin.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
-('REENTRY_2','Tiket Masuk Kembali · 2',28000,'Paket dua tiket re-entry','♥','Paket 2 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Pengajuan diproses manual oleh admin.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
-('REENTRY_3','Tiket Masuk Kembali · 3',35000,'Paket tiga tiket re-entry','♥','Paket 3 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Pengajuan diproses manual oleh admin.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+('REENTRY_1','Tiket Masuk Kembali · 1',15000,'Satu tiket re-entry memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ yang langganan fiturnya aktif. Maksimal total 3 tiket per pemain per season.','♥','Paket 1 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan fitur aktif. Maksimal 3 tiket per pemain per season; pengajuan diproses manual oleh admin.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('REENTRY_2','Tiket Masuk Kembali · 2',28000,'Paket dua tiket re-entry; tiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Maksimal total 3 tiket per pemain per season.','♥','Paket 2 tiket','Paket 2 tetap dihitung sebagai 2 tiket dalam batas maksimum 3 tiket per pemain per season. Pengajuan diproses manual oleh admin.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('REENTRY_3','Tiket Masuk Kembali · 3',35000,'Paket tiga tiket re-entry; tiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Maksimal total 3 tiket per pemain per season.','♥','Paket 3 tiket','Paket 3 menghabiskan seluruh kuota tiket pemain untuk season tersebut. Pengajuan diproses manual oleh admin.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 
 
 -- Owner-only finance ledger. Store sales are read from verified orders to avoid double counting.
