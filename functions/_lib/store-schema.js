@@ -153,15 +153,27 @@ export async function ensureStoreSchema(db) {
         .bind(vip[3],vip[5],vip[6],now).run();
       const ticket1 = products.find(p => p[0] === 'REENTRY_1');
       await db.prepare(`UPDATE store_products SET description=?,note=?,updated_at=?
-        WHERE id='REENTRY_1' AND description LIKE 'Satu tiket re-entry:%'`)
+        WHERE id='REENTRY_1'
+          AND description NOT LIKE '%Maksimal total 3 tiket per pemain per season%'
+          AND note NOT LIKE '%3 tiket per pemain per season%'
+          AND (description LIKE 'Satu tiket re-entry:%' OR description LIKE 'Satu tiket re-entry memberi %' OR description LIKE 'Satu tiket re-entry untuk mengajukan%')
+          AND note LIKE 'Setiap tiket%'`)
         .bind(ticket1[3],ticket1[6],now).run();
       const ticket2 = products.find(p => p[0] === 'REENTRY_2');
       await db.prepare(`UPDATE store_products SET description=?,note=?,updated_at=?
-        WHERE id='REENTRY_2' AND description='Paket dua tiket re-entry'`)
+        WHERE id='REENTRY_2'
+          AND description NOT LIKE '%Maksimal total 3 tiket per pemain per season%'
+          AND note NOT LIKE '%3 tiket per pemain per season%'
+          AND description LIKE 'Paket dua tiket re-entry%'
+          AND note LIKE 'Setiap tiket%'`)
         .bind(ticket2[3],ticket2[6],now).run();
       const ticket3 = products.find(p => p[0] === 'REENTRY_3');
       await db.prepare(`UPDATE store_products SET description=?,note=?,updated_at=?
-        WHERE id='REENTRY_3' AND description='Paket tiga tiket re-entry'`)
+        WHERE id='REENTRY_3'
+          AND description NOT LIKE '%Paket tiga tiket re-entry; tiap tiket memberi 3 nyawa%'
+          AND note NOT LIKE '%3 tiket per pemain per season%'
+          AND description LIKE 'Paket tiga tiket re-entry%'
+          AND note LIKE 'Setiap tiket%'`)
         .bind(ticket3[3],ticket3[6],now).run();
     })();
     initialized.set(db, task);
