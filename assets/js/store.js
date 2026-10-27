@@ -200,19 +200,4 @@
       section.hidden=false;
     }catch(_){/* Pengumuman tidak mengganggu checkout bila API belum aktif. */}
   }
-  $('support-form').addEventListener('submit',async event=>{
-    event.preventDefault();
-    const error=$('support-form-error'),result=$('support-result'),btn=$('support-submit');
-    error.textContent='';error.classList.remove('show');result.textContent='';
-    btn.disabled=true;btn.textContent='Mengirim tiket…';
-    const body={playerName:$('support-player').value.trim(),contact:$('support-contact').value.trim(),category:$('support-category').value,subject:$('support-subject').value.trim(),message:$('support-message').value.trim(),website:$('support-website').value};
-    try{
-      const response=await fetch('/api/support/tickets',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
-      const data=await response.json().catch(()=>({}));
-      if(!response.ok)throw new Error(data.error||'Tiket belum dapat dikirim.');
-      result.textContent='Tiket berhasil dibuat: '+data.ticketId+'. Simpan nomor ini untuk tindak lanjut.';
-      $('support-form').reset();
-    }catch(e){error.textContent=e.message;error.classList.add('show');}
-    finally{btn.disabled=false;btn.textContent='Kirim tiket bantuan';}
-  });
 })();
