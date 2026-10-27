@@ -7,7 +7,29 @@
   const idr = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   $('logout').addEventListener('click',()=>{sessionStorage.removeItem(secretKey);location.href='/admin/';});
-  $('login-form').addEventListener('submit',async e=>{e.preventDefault();sessionStorage.setItem(secretKey,$('admin-secret').value);firstLoad=true;await loadOrders();});
+  $('login-form').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const form=$('login-form'),button=form.querySelector('[type="submit"]');
+    const secret=$('admin-secret').value;
+    if(!secret){$('login-error').textContent='Masukkan rahasia akses terlebih dahulu.';$('login-error').classList.add('show');return;}
+    sessionStorage.setItem(secretKey,secret);
+    currentRole='';
+    firstLoad=true;
+    $('login-error').textContent='';
+    $('login-error').classList.remove('show');
+    button.disabled=true;
+    button.textContent='Memeriksa akses…';
+    try{await loadOrders();}
+    catch(error){
+      $('login-panel').hidden=false;
+      $('dashboard').hidden=true;
+      $('login-error').textContent=error?.message||'Login gagal. Periksa koneksi dan konfigurasi admin.';
+      $('login-error').classList.add('show');
+    }finally{
+      button.disabled=false;
+      button.textContent='Masuk';
+    }
+  });
   $('reload').addEventListener('click',()=>loadOrders(true));
   $('reload-reviews').addEventListener('click',loadReviews);
   $('reload-customers').addEventListener('click',loadCustomers);
@@ -81,8 +103,19 @@
       $('last-updated').textContent='Pembaruan terakhir: '+new Date(result.generatedAt||Date.now()).toLocaleString('id-ID')+' · '+allOrders.length+' pesanan terakhir';
       if(manual)showToast('Data pesanan diperbarui.');
     }catch(e){
-      if(!currentRole){sessionStorage.removeItem(secretKey);$('login-panel').hidden=false;$('dashboard').hidden=true;$('login-error').textContent=e.message;$('login-error').classList.add('show');}
-      else showAdminError(e.message);
+      // If the dashboard has not opened yet, keep the failure visible on the login screen.
+      // Previously, a successful /me followed by a failed /orders request wrote the error
+      // inside the still-hidden dashboard, leaving the login form with no feedback.
+      if($('dashboard').hidden){
+        if(!currentRole)sessionStorage.removeItem(secretKey);
+        $('login-panel').hidden=false;
+        $('dashboard').hidden=true;
+        const prefix=currentRole?'Akses berhasil dikenali, tetapi data panel gagal dimuat: ':'Login gagal: ';
+        $('login-error').textContent=prefix+(e?.message||'Terjadi kesalahan tidak diketahui.');
+        $('login-error').classList.add('show');
+      }else{
+        showAdminError(e?.message||'Gagal memuat data admin.');
+      }
     }
   }
   function renderStats(s){
