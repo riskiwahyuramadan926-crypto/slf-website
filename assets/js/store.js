@@ -33,7 +33,29 @@
       if (!response.ok) throw new Error('Katalog tidak tersedia');
       const data = await response.json();
       if (!Array.isArray(data.products)) throw new Error('Format katalog tidak valid');
-      cfg.products = data.products.map(p => ({ ...(cfg.products.find(old => old.id === p.id) || {}), ...p }));
+      const productCopyOverrides = {
+        VIP_PLUS: {
+          description: 'Rank VIP+ dan Custom Rank permanen, dengan fitur tambahan selama langganan VIP+ aktif.',
+          note: 'Jika langganan berakhir, rank VIP+ dan Custom Rank tetap ada, tetapi benefit langganan berhenti. Saat aktif: claim 15 chunk/3 claim, akses /shop jarak jauh, dan 5 nyawa per tiket re-entry.'
+        },
+        REENTRY_1: {
+          description: 'Satu tiket re-entry untuk mengajukan masuk kembali ke Survival SLF.',
+          note: 'Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Pengajuan diproses manual oleh admin.'
+        },
+        REENTRY_2: {
+          description: 'Paket dua tiket re-entry.',
+          note: 'Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Pengajuan diproses manual oleh admin.'
+        },
+        REENTRY_3: {
+          description: 'Paket tiga tiket re-entry.',
+          note: 'Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Pengajuan diproses manual oleh admin.'
+        }
+      };
+      cfg.products = data.products.map(p => ({
+        ...(cfg.products.find(old => old.id === p.id) || {}),
+        ...p,
+        ...(productCopyOverrides[p.id] || {})
+      }));
     } catch (_) {
       // Jangan tampilkan harga cadangan yang bisa berbeda dari harga resmi di server.
       cfg.products = [];
