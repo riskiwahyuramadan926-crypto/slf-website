@@ -120,7 +120,7 @@
       <div><label for="announcement-end">Berhenti tampil (opsional)</label><input id="announcement-end" type="datetime-local"></div>
     </div><div class="admin-inline-actions"><button class="btn btn-gold" type="submit">Simpan pengumuman</button><button class="btn btn-quiet" id="announcement-reset" type="button">Pengumuman baru</button></div><div id="announcements-error" class="form-error"></div>
   </form><div id="announcements-list" class="admin-list"><div class="empty">Memuat pengumuman…</div></div>
-
+</section>
 <section id="notes-tab" hidden>
   <div class="section-head"><h2>Catatan operasional tim</h2><p>Catatan dibagikan ke Owner dan Admin. Hindari menulis password, OTP, data pribadi sensitif, atau informasi pembayaran rahasia.</p><button class="btn" id="reload-notes" type="button">↻ Muat ulang catatan</button></div>
   <form id="note-form" class="admin-form"><h3>Catatan baru</h3><div class="admin-form-grid">
@@ -186,7 +186,6 @@
     <article class="admin-list-card"><h3>Admin / staf</h3><p>Operasional terbatas: menangani pesanan/tiket, ulasan, pelanggan, pengumuman, catatan tim, dan aktivitas. Tidak bisa membuka keuangan, mengubah harga/promo, atau mengedit slot/kartu website.</p></article>
   </div>
   <div class="admin-form"><h3>Cara mengaktifkan dua role</h3><ol><li>Cloudflare Dashboard → Workers & Pages → proyek SLF → Settings → Variables and Secrets.</li><li>Tambahkan rahasia <code>OWNER_SECRET</code> khusus Owner dan rahasia berbeda <code>ADMIN_SECRET</code> untuk staf. Gunakan rahasia panjang acak (minimal 32 karakter), bukan PIN enam digit.</li><li>Simpan lalu redeploy/restart sesuai instruksi Cloudflare. Jangan kirim rahasia lewat grup publik.</li><li>Setelah <code>OWNER_SECRET</code> aktif, <code>ADMIN_SECRET</code> otomatis menjadi role Admin terbatas.</li></ol><p class="admin-danger-note">Mode kompatibilitas: jika OWNER_SECRET belum tersedia, ADMIN_SECRET lama masih berfungsi sebagai Owner. Atur rahasia Owner terlebih dahulu sebelum membagikan rahasia Admin.</p></div>
-</section>
 </section>
 </section></main>
 <footer><div class="wrap footer-inner"><span>Jaga rahasia Owner dan Admin. Jangan pernah membagikannya di chat publik.</span><div class="footer-links"><a href="/">Portal</a><a href="/store/">Store</a></div></div></footer><div class="toast" id="toast" role="status" aria-live="polite"></div></body></html>
