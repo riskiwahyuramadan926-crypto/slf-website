@@ -86,3 +86,13 @@
 .wiki-topic-card:focus-visible,.wiki-filter:focus-visible,.wiki-searchbox input:focus-visible,.wiki-searchbox button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 @media(max-width:800px){.trade-compare{grid-template-columns:1fr}.trade-card{padding:17px}.vip-benefit-grid{grid-template-columns:1fr}}
 @media(min-width:801px) and (max-width:1080px){.trade-compare{grid-template-columns:repeat(2,minmax(0,1fr))}.trade-card:last-child{grid-column:1/-1}}
+
+
+/* Dynamic CMS cards for Wiki landing and article consistency */
+.cms-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.cms-content-card{min-width:0;padding:20px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,rgba(29,22,48,.95),rgba(20,14,32,.95))}
+.cms-content-label{display:inline-flex;margin-bottom:10px;padding:4px 8px;border:1px solid rgba(243,203,130,.25);border-radius:999px;color:var(--gold2);font-size:.68rem;font-weight:800;letter-spacing:.1em}
+.cms-content-card h3{margin:0 0 8px;font-size:1.02rem;line-height:1.35}
+.cms-content-card p{margin:0;color:var(--muted);line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:850px){.cms-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.cms-card-grid{grid-template-columns:1fr}.cms-content-card{padding:16px}}
