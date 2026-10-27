@@ -509,10 +509,16 @@
     catch(err){setError('finance-error',err.message);}finally{btn.disabled=false;}
   }
   function exportFinanceCsv(){
-    const rows=[['ID','Tanggal','Jenis','Kategori','Uraian','Nominal','Referensi','Status','Dibuat Oleh']];
+    const s=currentFinance.summary||{};
+    const from=currentFinance.from||$('finance-from').value||'';
+    const to=currentFinance.to||$('finance-to').value||'';
+    const rows=[
+      ['ID','Tanggal / Periode','Jenis','Kategori','Uraian','Nominal','Referensi','Status','Dibuat Oleh'],
+      ['STORE-SALES-SUMMARY',from+' s.d. '+to,'INCOME','Penjualan Store terverifikasi','Ringkasan omzet pesanan terverifikasi selama periode ini',Number(s.storeSales||0),'Sumber otomatis: order terverifikasi','SUMMARY','system']
+    ];
     allFinanceEntries.forEach(x=>rows.push([x.id,x.entry_date,x.kind,x.category,x.description,x.amount,x.reference||'',x.status,x.created_by]));
     const csv='\uFEFF'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
-    const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));const a=document.createElement('a');a.href=url;a.download='slf-laporan-kas-'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);showToast('CSV kas dibuat.');
+    const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));const a=document.createElement('a');a.href=url;a.download='slf-laporan-kas-'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);showToast('CSV kas dibuat. Penjualan Store di baris pertama adalah ringkasan periode, bukan transaksi individu.');
   }
 
   const cmsSlotsByPage={home:[['home.lead','Deskripsi utama'],['home.zoneLead','Pengantar wilayah'],['home.storeLead','Pengantar Store']],store:[['store.lead','Deskripsi utama']],wiki:[['wiki.lead','Pengantar Wiki']]};
