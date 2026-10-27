@@ -49,7 +49,7 @@ export async function requireAdmin(request, env) {
   const expected = env.ADMIN_SECRET;
   // Allow either a strong 32+ character secret or a 6-digit PIN.
   // Six-digit PINs are rate-limited below and should only be a temporary convenience.
-  if (!expected || !(expected.length >= 32 || /^\\d{6}$/.test(expected)) || !env.DB) return false;
+  if (!expected || !(expected.length >= 32 || /^\d{6}$/.test(expected)) || !env.DB) return false;
   const actual = request.headers.get('authorization') || '';
   if (!actual.startsWith('Bearer ')) return false;
   const supplied = actual.slice(7);
