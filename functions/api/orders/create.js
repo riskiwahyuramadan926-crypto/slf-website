@@ -27,6 +27,23 @@ export async function onRequestPost({ request, env }) {
     let price;
     try { price = await calculatePrice(data.productId, promoCode, env); }
     catch (e) { return fail(e.message || 'Produk/promo tidak valid.'); }
+    const ticketCount = ({ REENTRY_1: 1, REENTRY_2: 2, REENTRY_3: 3 })[data.productId] || 0;
+    const seasonId = String(env.SLF_CURRENT_SEASON || 'season-1').trim();
+    if (!/^[A-Za-z0-9._-]{1,40}$/.test(seasonId)) return fail('Konfigurasi SLF_CURRENT_SEASON tidak valid.', 503);
+    if (ticketCount > 0) {
+      const existing = await env.DB.prepare(
+        `SELECT COUNT(*) AS total
+         FROM reentry_tickets t JOIN orders o ON o.id = t.order_id
+         WHERE LOWER(TRIM(t.minecraft_name)) = LOWER(TRIM(?))
+           AND t.season_id = ?
+           AND o.status NOT IN ('CANCELLED','EXPIRED')`
+      ).bind(minecraftName, seasonId).first();
+      const reserved = Number(existing?.total || 0);
+      if (reserved + ticketCount > 3) {
+        const remaining = Math.max(0, 3 - reserved);
+        return fail(`Batas maksimal 3 tiket re-entry per pemain per season. Nama Minecraft ini sudah memiliki ${reserved} tiket pada season ${seasonId}; sisa kuota ${remaining} tiket. Paket yang dibeli ikut dihitung per tiket.`, 409);
+      }
+    }
     const now = new Date().toISOString();
     const date = now.slice(2,10).replaceAll('-','');
     const id = 'SLF-' + date + '-' + randomHex(6).toUpperCase();
@@ -38,15 +55,14 @@ export async function onRequestPost({ request, env }) {
       : {buyerNote:safeText(data.details?.buyerNote,400)};
     const sql = "INSERT INTO orders (id,access_key_hash,minecraft_name,platform,whatsapp,email,product_id,product_name,details_json,promo_code,subtotal,discount,total,status,partner_reference_no,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'PENDING_PAYMENT',?,?,?)";
     await env.DB.prepare(sql).bind(id,hash,minecraftName,platform,whatsapp,email||null,data.productId,price.product.name,JSON.stringify(details),promoCode||null,price.subtotal,price.discount,price.total,ref,now,now).run();
-    const ticketCount = ({ REENTRY_1: 1, REENTRY_2: 2, REENTRY_3: 3 })[data.productId] || 0;
     for (let index = 0; index < ticketCount; index += 1) {
       const ticketId = 'TKT-' + date + '-' + randomHex(8).toUpperCase();
       // A ticket gets its own HMAC key; sharing it does not reveal the order's access key.
       const ticketToken = await hmacSha256Hex(env.TICKET_LINK_SECRET, id + ':' + ticketId + ':' + token);
       const ticketHash = await sha256Hex(ticketToken);
       await env.DB.prepare(
-        "INSERT INTO reentry_tickets (id, order_id, access_key_hash, minecraft_name, product_name, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'WAITING_PAYMENT', ?, ?)"
-      ).bind(ticketId, id, ticketHash, minecraftName, price.product.name, now, now).run();
+        "INSERT INTO reentry_tickets (id, order_id, access_key_hash, minecraft_name, product_name, season_id, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'WAITING_PAYMENT', ?, ?)"
+      ).bind(ticketId, id, ticketHash, minecraftName, price.product.name, seasonId, now, now).run();
     }
     const orderUrl = new URL('/store/order.html', request.url);
     orderUrl.searchParams.set('id', id); orderUrl.searchParams.set('key', token);
