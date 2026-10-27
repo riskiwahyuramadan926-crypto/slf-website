@@ -124,7 +124,7 @@
           'Mohon kirim QRIS DANA untuk pesanan ini. Saya akan memeriksa nama merchant dan nominal sebelum membayar, lalu mengirim bukti pembayaran di chat ini.',
           '',
           'Terima kasih, Admin SLF.'
-        ].filter(line => line !== null && line !== undefined).join('\\n');
+        ].filter(line => line !== null && line !== undefined).join('\n');
         const waUrl = 'https://wa.me/' + waPhone + '?text=' + encodeURIComponent(lines);
         if (waWindow) waWindow.location.href = waUrl; else window.open(waUrl, '_blank', 'noopener,noreferrer');
       }
