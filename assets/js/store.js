@@ -8,6 +8,12 @@
   $('year').textContent = new Date().getFullYear();
   function renderProducts(){
     const productRoot = $('products');
+    productRoot.replaceChildren();
+    if (!cfg.products.length) {
+      const empty = document.createElement('div'); empty.className = 'empty';
+      empty.textContent = 'Katalog Store sementara tidak tersedia. Coba muat ulang halaman nanti.';
+      productRoot.appendChild(empty); $('submit-order').disabled = true; return;
+    }
     cfg.products.forEach((p) => {
       const article = document.createElement('article'); article.className = 'product'; article.dataset.product = p.id;
       article.innerHTML = `<div class="iconbox" aria-hidden="true"></div><span class="pill"></span><h3></h3><div class="price"></div><p></p><div class="subtle"></div><button class="btn btn-quiet" type="button">Pilih produk</button>`;
@@ -24,13 +30,14 @@
   async function initProducts(){
     try {
       const response = await fetch('/api/store-products', { cache:'no-store' });
-      if (response.ok) {
-        const data = await response.json();
-        if (Array.isArray(data.products)) {
-          cfg.products = data.products.map(p => ({ ...(cfg.products.find(old => old.id === p.id) || {}), ...p }));
-        }
-      }
-    } catch (_) { /* Gunakan katalog cadangan statis bila API belum tersedia. */ }
+      if (!response.ok) throw new Error('Katalog tidak tersedia');
+      const data = await response.json();
+      if (!Array.isArray(data.products)) throw new Error('Format katalog tidak valid');
+      cfg.products = data.products.map(p => ({ ...(cfg.products.find(old => old.id === p.id) || {}), ...p }));
+    } catch (_) {
+      // Jangan tampilkan harga cadangan yang bisa berbeda dari harga resmi di server.
+      cfg.products = [];
+    }
     renderProducts();
   }
   initProducts();
