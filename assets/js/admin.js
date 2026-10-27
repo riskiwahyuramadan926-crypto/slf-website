@@ -3,6 +3,8 @@
   const $ = id => document.getElementById(id);
   const secretKey = 'slf_admin_secret_session';
   let allOrders = [], allReviews = [], allProducts = [], allPromos = [], allCustomers = [], allTickets = [], allAnnouncements = [], allNotes = [], allCmsItems = [], allFinanceEntries = [], currentFinance = {}, investmentPlan = null, currentRole = '', ownerSecretConfigured = false, lastCmsKind = 'slot', knownOrderIds = new Set(), knownTicketIds = new Set(), firstLoad = true, firstTicketLoad = true, activeTab = 'orders';
+  const ownerOnlyTabs = new Set(['products','promos','reports','finance','site-content','investment','access']);
+  const allTabNames = ['orders','tickets','reviews','products','promos','customers','reports','activity','support','announcements','notes','finance','site-content','investment','access'];
   const statusLabels = {PENDING_PAYMENT:'Menunggu pembayaran',PAID:'Pembayaran berhasil',PROCESSING:'Sedang diproses',COMPLETED:'Selesai',EXPIRED:'Kedaluwarsa',CANCELLED:'Dibatalkan'};
   const idr = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -69,11 +71,13 @@
     if(permission==='granted')new Notification('SLF Admin',{body:'Notifikasi pesanan baru aktif selama panel ini terbuka.'});
   });
   document.querySelectorAll('[data-tab]').forEach(btn=>btn.addEventListener('click',()=>{
-    activeTab=btn.dataset.tab;
-    document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b===btn));
-    ['orders','tickets','reviews','products','promos','customers','reports','activity','support','announcements','notes','finance','site-content','investment','access'].forEach(name=>{
-      const section=$(name+'-tab'); if(section) section.hidden=name!==activeTab;
-    });
+    const target=btn.dataset.tab;
+    if(ownerOnlyTabs.has(target)&&currentRole!=='owner'){
+      showToast('Menu khusus Owner tidak tersedia untuk Admin.');
+      return;
+    }
+    activeTab=target;
+    applyTabVisibility();
     if(activeTab!=='orders')loadTab(activeTab);
   }));
   async function api(path,init={}) {
@@ -232,6 +236,10 @@
   function showToast(message){const t=$('toast');if(!t)return;t.textContent=message;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
 
   function loadTab(name){
+    if(ownerOnlyTabs.has(name)&&currentRole!=='owner'){
+      showToast('Akses ditolak: fitur ini hanya tersedia untuk Owner.');
+      return;
+    }
     const jobs={tickets:loadTickets,products:loadProducts,promos:loadPromos,customers:loadCustomers,reports:loadReports,activity:loadActivity,support:loadSupport,announcements:loadAnnouncements,notes:loadNotes,finance:loadFinance,'site-content':loadSiteContent,investment:loadInvestment,access:loadAccess};
     if(name==='reviews'){loadReviews();return;}
     if(jobs[name])jobs[name]();
@@ -427,29 +435,36 @@
     catch(err){setError('announcements-error',err.message);}finally{btn.disabled=false;}
   }
 
+  function applyTabVisibility(){
+    const owner=currentRole==='owner';
+    const ownerMenu=document.querySelector('[data-owner-menu="true"]');
+    if(ownerMenu)ownerMenu.hidden=!owner;
+    document.querySelectorAll('[data-owner-only="true"]').forEach(button=>{button.hidden=!owner;});
+    allTabNames.forEach(name=>{
+      const section=$(name+'-tab');
+      if(section)section.hidden=name!==activeTab||(!owner&&ownerOnlyTabs.has(name));
+    });
+    document.querySelectorAll('[data-tab]').forEach(button=>{
+      button.classList.toggle('active',button.dataset.tab===activeTab&&(owner||!ownerOnlyTabs.has(button.dataset.tab)));
+    });
+  }
+
   function applyRole(){
     const owner=currentRole==='owner';
-    $('role-pill').textContent=owner?'OWNER · akses penuh':'ADMIN · terbatas';
+    $('role-pill').textContent=owner?'OWNER · akses penuh':'ADMIN · operasional';
     $('role-pill').style.color=owner?'var(--gold)':'var(--purple)';
-    document.querySelectorAll('[data-owner-only="true"]').forEach(button=>{button.hidden=!owner;});
-    if(!owner&&['products','promos','reports','finance','site-content','investment','access'].includes(activeTab)){
-      activeTab='orders';
-      document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===activeTab));
-      ['orders','tickets','reviews','products','promos','customers','reports','activity','support','announcements','notes','finance','site-content','investment','access'].forEach(name=>{const section=$(name+'-tab');if(section)section.hidden=name!==activeTab;});
-    }
+    if(!owner&&ownerOnlyTabs.has(activeTab))activeTab='orders';
+    applyTabVisibility();
   }
+
   function updateAccessStatus(auth){
     ownerSecretConfigured=Boolean(auth.ownerSecretConfigured);
     if(!$('access-status'))return;
-    if(!ownerSecretConfigured){
-      $('access-status').innerHTML='<p class="admin-danger-note"><b>Status penting:</b> OWNER_SECRET belum terdeteksi. Untuk sementara, ADMIN_SECRET lama masih memiliki hak Owner.</p><p>Setel OWNER_SECRET di Cloudflare terlebih dahulu. Setelah itu, ADMIN_SECRET berubah menjadi akses Admin terbatas.</p>';
+    if(!auth.ownerSecretConfigured||!auth.adminSecretConfigured||!auth.secretsDistinct){
+      $('access-status').innerHTML='<p class="admin-danger-note"><b>Konfigurasi belum aman.</b> Panel memerlukan OWNER_SECRET dan ADMIN_SECRET yang berbeda, masing-masing minimal 32 karakter acak. Tidak ada mode lama yang memberi Admin akses Owner.</p><p>Atur kedua secret di Cloudflare Pages → Settings → Variables and Secrets, lalu coba login lagi.</p>';
       return;
     }
-    if(!auth.adminSecretConfigured || !auth.secretsDistinct){
-      $('access-status').innerHTML='<p class="admin-danger-note"><b>Konfigurasi belum aman:</b> OWNER_SECRET dan ADMIN_SECRET harus diisi dan nilainya wajib berbeda. Jika sama, sistem menolak login karena tidak bisa memisahkan role.</p><p>Buat dua rahasia berbeda di Cloudflare, simpan, lalu coba masuk lagi.</p>';
-      return;
-    }
-    $('access-status').innerHTML='<p><b>Status:</b> <span class="admin-status">Owner/Admin terpisah</span></p><p>Mode saat ini memisahkan rahasia Owner dan Admin. Jangan bagikan OWNER_SECRET kepada staf.</p>';
+    $('access-status').innerHTML='<p><b>Status:</b> <span class="admin-status">Owner/Admin terpisah</span></p><p>Owner dapat membuka semua menu. Admin hanya melihat menu operasional. Akses fitur khusus Owner juga diperiksa oleh server API.</p>';
   }
   async function loadAccess(){
     try{const auth=await api('/api/admin/me');currentRole=auth.role;updateAccessStatus(auth);applyRole();}
