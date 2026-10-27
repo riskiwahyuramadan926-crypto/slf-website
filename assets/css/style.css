@@ -991,3 +991,14 @@ footer {
 
 /* WIKI A — Tombol menuju pusat Wiki terpisah */
 .wiki-directory-link{margin:0 0 18px}
+
+
+/* Dynamic CMS cards — minimal styling compatible with SLF's fantasy palette */
+.cms-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.cms-content-card{min-width:0;padding:20px;border:1px solid var(--line,rgba(229,211,255,.15));border-radius:16px;background:linear-gradient(145deg,rgba(38,28,56,.92),rgba(20,14,32,.96));box-shadow:0 12px 36px rgba(0,0,0,.12)}
+.cms-content-label{display:inline-flex;margin-bottom:10px;padding:4px 8px;border:1px solid rgba(243,203,130,.25);border-radius:999px;color:var(--gold,#f3cb82);font-size:.68rem;font-weight:800;letter-spacing:.11em}
+.cms-content-card h3{margin:0 0 8px;font-size:1.05rem;line-height:1.35}
+.cms-content-card p{margin:0;color:var(--muted,#bdb2ce);line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+.cms-section[hidden]{display:none!important}
+@media(max-width:850px){.cms-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.cms-card-grid{grid-template-columns:1fr}.cms-content-card{padding:16px}}
