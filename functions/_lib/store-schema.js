@@ -72,6 +72,7 @@ const statements = [
     access_key_hash TEXT NOT NULL,
     minecraft_name TEXT NOT NULL,
     product_name TEXT NOT NULL,
+    season_id TEXT NOT NULL DEFAULT 'season-1',
     status TEXT NOT NULL DEFAULT 'WAITING_PAYMENT'
       CHECK (status IN ('WAITING_PAYMENT','ACTIVE','PENDING','COMPLETED','CANCELLED')),
     created_at TEXT NOT NULL,
@@ -128,6 +129,11 @@ export async function ensureStoreSchema(db) {
       // Safe schema migration for a deployment that created the ticket table before the rate-limit field existed.
       try { await db.prepare('ALTER TABLE support_tickets ADD COLUMN request_hash TEXT').run(); }
       catch (error) { if (!/duplicate column/i.test(String(error?.message || error))) throw error; }
+      // Tag each re-entry ticket with the season in which its quota was reserved.
+      // Existing tickets are classified as season-1; future season changes use SLF_CURRENT_SEASON.
+      try { await db.prepare("ALTER TABLE reentry_tickets ADD COLUMN season_id TEXT NOT NULL DEFAULT 'season-1'").run(); }
+      catch (error) { if (!/duplicate column/i.test(String(error?.message || error))) throw error; }
+      await db.prepare('CREATE INDEX IF NOT EXISTS idx_reentry_tickets_season_player ON reentry_tickets(season_id, minecraft_name, created_at)').run();
       const now = new Date().toISOString();
       const products = [
         ['VIP_PLUS','VIP+',55000,'Rank VIP+ permanen dengan fitur tambahan berlangganan 60 hari; fitur berhenti saat langganan berakhir, rank tetap','♜','Rank tetap + fitur berlangganan','Fitur tambahan VIP+ aktif selama langganan 60 hari: 20 chunk/2 claim, /shop jarak jauh, dan 5 nyawa per tiket re-entry. Saat langganan berakhir, rank VIP+ dan Custom Rank tetap permanen, tetapi fitur tambahan berhenti.'],
