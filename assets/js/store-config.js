@@ -4,6 +4,8 @@
 window.SLF_STORE_CONFIG = {
   currency: 'IDR',
   storeName: 'SLF Store',
+  // Isi nomor WhatsApp admin dengan kode negara, angka saja. Contoh format: 62812xxxxxxx.
+  adminWhatsApp: '',
   products: [
     { id: 'VIP_PLUS', name: 'VIP+', price: 55000, icon: '♜', tag: 'Keanggotaan', description: 'Rank VIP+ dengan fitur Custom Rank permanen untuk akun Minecraft yang kamu daftarkan.', note: 'Fitur Custom Rank tetap menjadi hak akun setelah dibeli; nama, warna, dan gaya tulisan mengikuti kemampuan plugin SLF.' },
     { id: 'CUSTOM_RANK', name: 'Custom Rank', price: 20000, icon: '✧', tag: 'Personalisasi', description: 'Tentukan nama rank, warna, dan gaya tulisan yang kamu inginkan.', note: 'Gaya final mengikuti kemampuan plugin dan format teks server SLF.' },
