@@ -1,4 +1,5 @@
 import { json, fail, readJson, safeText } from '../../_lib/common.js';
+import { ensureStoreSchema } from '../../_lib/store-schema.js';
 
 const actions = {
   store: { label: 'Lihat produk Store', href: '/store/#produk' },
@@ -14,7 +15,7 @@ const actions = {
   faq: { label: 'FAQ teknis', href: '/wiki/artikel/faq-teknis.html' }
 };
 
-function answerQuestion(message) {
+async function answerQuestion(message, env) {
   const q = message.toLocaleLowerCase('id')
     .normalize('NFKD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -40,6 +41,33 @@ function answerQuestion(message) {
 
   if (/(pesanan|order|status order|status pesanan|cek order|cek pesanan|lacak|tracking|nomor order|link order|tautan order|pesanan hilang)/.test(q)) {
     return { topic:'status-pesanan', answer:'Gunakan tautan status pribadi yang muncul setelah checkout untuk melihat detail pesanan. Simpan tautan itu baik-baik dan jangan bagikan karena memuat kunci akses. Kalau tautannya hilang atau status tidak berubah, kirim tiket berisi nama Minecraft, nomor pesanan jika masih ada, dan masalahnya—jangan kirim password.', actions:[actions.order,actions.ticket] };
+  }
+
+  if (/(harga|berapa|price|biaya|tarif|nominal|price list)/.test(q)) {
+    let currentProducts = [];
+    try {
+      if (env.DB) {
+        await ensureStoreSchema(env.DB);
+        const { results = [] } = await env.DB.prepare("SELECT id,name,price FROM store_products WHERE active=1 ORDER BY created_at,id").all();
+        currentProducts = results;
+      }
+    } catch (error) {
+      console.error('CS catalog lookup unavailable:', error?.message || error);
+    }
+    const mentionsVip = /vip/.test(q);
+    const mentionsCustom = /custom|rank/.test(q);
+    const mentionsReentry = /re.?entry|tiket masuk kembali|tiket/.test(q);
+    let shown = currentProducts;
+    if (mentionsReentry) shown = currentProducts.filter(p => /^REENTRY_/.test(String(p.id)));
+    else if (mentionsCustom && mentionsVip) shown = currentProducts.filter(p => ['VIP_PLUS','CUSTOM_RANK'].includes(String(p.id)));
+    else if (mentionsCustom) shown = currentProducts.filter(p => String(p.id)==='CUSTOM_RANK');
+    else if (mentionsVip) shown = currentProducts.filter(p => String(p.id)==='VIP_PLUS');
+    if (shown.length) {
+      const money = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
+      const list = shown.map(p => '• '+p.name+': '+money(p.price)).join('\n');
+      return { topic:'harga-produk', answer:'Harga aktif yang tercatat di Store SLF saat ini:\n'+list+'\n\nHarga divalidasi ulang saat checkout. Kalau produk yang kamu cari tidak muncul, cek katalog Store.', actions:[actions.store] };
+    }
+    return { topic:'harga-produk', answer:'Harga terbaru ada di katalog Store SLF. Aku belum dapat membaca katalog sekarang, jadi aku tidak akan menebak harga. Total di checkout menjadi acuan untuk pesananmu.', actions:[actions.store,actions.ticket] };
   }
 
   if (/(custom rank|warna rank|nama rank|format rank|gaya rank|vip\+?|donatur|pembelian rank|rank belum|rank belum masuk)/.test(q)) {
@@ -108,9 +136,10 @@ function answerQuestion(message) {
 export async function onRequestPost({ request }) {
   let data;
   try { data = await readJson(request); } catch { return fail('Pesan tidak terbaca. Coba kirim ulang.'); }
-  const message = safeText(data.message, 500);
-  if (message.length < 1) return fail('Tulis pertanyaan terlebih dahulu.');
-  if (message.length > 500) return fail('Pesan maksimal 500 karakter.');
-  const response = answerQuestion(message);
+  const rawMessage = typeof data.message === 'string' ? data.message.trim() : '';
+  if (rawMessage.length < 1) return fail('Tulis pertanyaan terlebih dahulu.');
+  if (rawMessage.length > 500) return fail('Pesan maksimal 500 karakter.');
+  const message = safeText(rawMessage, 500);
+  const response = await answerQuestion(message, env);
   return json({ ok:true, service:'SLF Automated Support', available:'24/7', automated:true, ...response });
 }
