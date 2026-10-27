@@ -20,7 +20,7 @@ export async function calculatePrice(productId, promoCode, env) {
       if (!promo.active) throw new Error('Kode promo sedang tidak aktif.');
       if (promo.expires_at && new Date(promo.expires_at).getTime() < Date.now()) throw new Error('Kode promo sudah kedaluwarsa.');
       if (promo.max_uses !== null && promo.max_uses !== undefined) {
-        const used = await env.DB.prepare(\"SELECT COUNT(*) AS total FROM orders WHERE promo_code = ? AND status IN ('PAID','PROCESSING','COMPLETED')\").bind(promoCode).first();
+        const used = await env.DB.prepare("SELECT COUNT(*) AS total FROM orders WHERE promo_code = ? AND status IN ('PAID','PROCESSING','COMPLETED')").bind(promoCode).first();
         if (Number(used?.total || 0) >= Number(promo.max_uses)) throw new Error('Batas pemakaian kode promo sudah tercapai.');
       }
       if (promo.type === 'percent' && Number(promo.value) > 0 && Number(promo.value) <= 100) discount = Math.floor(product.price * Number(promo.value) / 100);
