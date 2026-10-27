@@ -74,9 +74,9 @@ export async function notifySupportAdmin(env, ticket, ticketUrl) {
   const ticketLink = ticketUrl || '/admin/';
   const bodyText = `SLF SUPPORT — TIKET BARU\nNomor tiket: ${ticket.id}\nPemain: ${ticket.player_name}\nKategori: ${ticket.category}\nSubjek: ${ticket.subject}\nPanel admin: ${ticketLink}`;
   let message;
-  if (env.WA_TEMPLATE_NAME) {
+  if (env.WA_SUPPORT_TEMPLATE_NAME) {
     message = { messaging_product:'whatsapp', to:env.WA_ADMIN_TO, type:'template', template:{
-      name:env.WA_TEMPLATE_NAME, language:{code:env.WA_TEMPLATE_LANGUAGE || 'id'},
+      name:env.WA_SUPPORT_TEMPLATE_NAME, language:{code:env.WA_SUPPORT_TEMPLATE_LANGUAGE || env.WA_TEMPLATE_LANGUAGE || 'id'},
       components:[{type:'body',parameters:[
         {type:'text',text:ticket.id},
         {type:'text',text:ticket.player_name},
