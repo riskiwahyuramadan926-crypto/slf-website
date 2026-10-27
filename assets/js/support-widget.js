@@ -6,7 +6,7 @@
   style.textContent = `
     #slf-cs-root{--cs-bg:#17111f;--cs-panel:#21182b;--cs-line:#554366;--cs-text:#f4edf9;--cs-muted:#c0b2ce;--cs-accent:#c9a5f6;--cs-gold:#e8c47c;font:14px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--cs-text);position:fixed;right:18px;bottom:18px;z-index:99999}
     #slf-cs-root *{box-sizing:border-box}
-    .slf-cs-launch{border:1px solid #8b6cad;background:linear-gradient(135deg,#7046a0,#352047);color:#fff;border-radius:999px;padding:13px 17px;box-shadow:0 12px 35px #0007;cursor:pointer;font:600 14px/1.2 inherit;display:flex;align-items:center;gap:9px}
+    .slf-cs-launch{border:1px solid #8b6cad;background:linear-gradient(135deg,#7046a0,#352047);color:#fff;border-radius:999px;padding:13px 17px;box-shadow:0 12px 35px #0007;cursor:pointer;font:600 14px/1.2 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:flex;align-items:center;gap:9px}
     .slf-cs-dot{width:9px;height:9px;border-radius:50%;background:#83e6ad;box-shadow:0 0 0 4px #83e6ad20}
     .slf-cs-window{position:absolute;right:0;bottom:64px;width:min(370px,calc(100vw - 28px));height:min(570px,calc(100dvh - 110px));min-height:390px;display:flex;flex-direction:column;background:var(--cs-bg);border:1px solid var(--cs-line);border-radius:18px;box-shadow:0 22px 65px #0009;overflow:hidden}
     .slf-cs-window[hidden]{display:none}
