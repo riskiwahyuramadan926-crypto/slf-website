@@ -16,7 +16,7 @@
       '',
       'Mohon bantu periksa status atau kendala pada pesanan ini.',
       'Terima kasih.'
-    ].join('\\n');
+    ].join('\n');
     $('contact-admin').href='https://wa.me/'+phone+'?text='+encodeURIComponent(contactMessage);$('admin-missing').hidden=true;}
   async function refresh(){
     try{
