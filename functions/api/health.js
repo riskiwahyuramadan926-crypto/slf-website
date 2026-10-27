@@ -1,9 +1,9 @@
-import { json, fail } from '../_lib/common.js';
+import { json } from '../_lib/common.js';
 
 export async function onRequestGet({env}) {
   const secret = typeof env.ADMIN_SECRET === 'string' ? env.ADMIN_SECRET : '';
   const adminSecretConfigured = secret.length > 0;
-  const adminSecretFormatValid = secret.length >= 32 || /^\\d{6}$/.test(secret);
+  const adminSecretFormatValid = secret.length >= 32 || /^\d{6}$/.test(secret);
 
   if (!env.DB) {
     return json({
@@ -20,7 +20,7 @@ export async function onRequestGet({env}) {
     const tables=results.map(r=>r.name);
     const required=['orders','reviews','review_replies','store_products','promo_codes','admin_activity','support_tickets','announcements'];
     const missing=required.filter(n=>!tables.includes(n));
-    const result = {
+    return json({
       ok: missing.length === 0,
       database: 'connected',
       tables,
@@ -28,8 +28,7 @@ export async function onRequestGet({env}) {
       adminSecretConfigured,
       adminSecretFormatValid,
       adminAuthTablePresent: tables.includes('admin_auth_attempts')
-    };
-    return json(result, missing.length ? 503 : 200);
+    }, missing.length ? 503 : 200);
   } catch {
     return json({
       ok: false,
