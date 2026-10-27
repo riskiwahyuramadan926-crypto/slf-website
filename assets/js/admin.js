@@ -269,6 +269,16 @@
       const h=document.createElement('h3');h.textContent=t.subject+' · '+t.id;
       const meta=document.createElement('p');meta.className='admin-muted';meta.textContent=t.player_name+' · '+t.contact+' · '+t.category+' · '+new Date(t.created_at).toLocaleString('id-ID');
       const msg=document.createElement('p');msg.textContent=t.message;
+      const contactActions=document.createElement('div');contactActions.className='admin-inline-actions';
+      const replyText=t.admin_reply||('Halo '+t.player_name+', kami menindaklanjuti tiket bantuan '+t.id+' dari tim SLF. Pesan kamu: '+t.subject+'.');
+      if (/^\\+?[0-9\\s()\\-]{8,20}$/.test(t.contact)) {
+        const a=document.createElement('a');a.className='btn btn-quiet';a.target='_blank';a.rel='noopener noreferrer';a.href='https://wa.me/'+t.contact.replace(/\\D/g,'')+'?text='+encodeURIComponent(replyText);a.textContent='Hubungi via WhatsApp';contactActions.append(a);
+      } else if (/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(t.contact)) {
+        const a=document.createElement('a');a.className='btn btn-quiet';a.href='mailto:'+encodeURIComponent(t.contact)+'?subject='+encodeURIComponent('Tindak lanjut tiket SLF '+t.id)+'&body='+encodeURIComponent(replyText);a.textContent='Hubungi via email';contactActions.append(a);
+      }
+      const copyTicket=document.createElement('button');copyTicket.type='button';copyTicket.className='btn btn-quiet';copyTicket.textContent='Salin detail tiket';
+      copyTicket.addEventListener('click',()=>copyText('Tiket '+t.id+'\\nPemain: '+t.player_name+'\\nKontak: '+t.contact+'\\nSubjek: '+t.subject+'\\nPesan: '+t.message+'\\nBalasan admin: '+(t.admin_reply||'—'),'Detail tiket tersalin.'));
+      contactActions.append(copyTicket);
       const form=document.createElement('form');form.className='admin-form';
       const lab1=document.createElement('label');lab1.textContent='Status tiket';
       const select=document.createElement('select');['OPEN','IN_PROGRESS','WAITING_PLAYER','RESOLVED','CLOSED'].forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=statuses[s];select.append(o);});select.value=t.status;
@@ -277,7 +287,7 @@
       const btn=document.createElement('button');btn.type='submit';btn.className='btn btn-gold';btn.textContent='Simpan tindak lanjut';
       form.append(lab1,select,lab2,area,btn);
       form.addEventListener('submit',async e=>{e.preventDefault();btn.disabled=true;try{await api('/api/admin/support',{method:'POST',body:JSON.stringify({id:t.id,status:select.value,reply:area.value})});await loadSupport();showToast('Tiket diperbarui.');}catch(err){setError('support-error',err.message);btn.disabled=false;}});
-      card.append(h,meta,msg,form);root.append(card);
+      card.append(h,meta,msg,contactActions,form);root.append(card);
     });
   }
   async function loadAnnouncements(){setError('announcements-error','');try{const d=await api('/api/admin/announcements');allAnnouncements=d.announcements||[];renderAnnouncements();}catch(e){setError('announcements-error',e.message);}}
