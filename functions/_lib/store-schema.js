@@ -138,9 +138,9 @@ export async function ensureStoreSchema(db) {
       const products = [
         ['VIP_PLUS','VIP+',55000,'Rank VIP+ permanen dengan fitur tambahan berlangganan 60 hari; fitur berhenti saat langganan berakhir, rank tetap','♜','Rank tetap + fitur berlangganan','Fitur tambahan VIP+ aktif selama langganan 60 hari: 20 chunk/2 claim, /shop jarak jauh, dan 5 nyawa per tiket re-entry. Saat langganan berakhir, rank VIP+ dan Custom Rank tetap permanen, tetapi fitur tambahan berhenti.'],
         ['CUSTOM_RANK','Custom Rank',20000,'Rank dengan nama dan tampilan pilihan pembeli','✧','Personalisasi','Gaya final mengikuti kemampuan plugin dan format teks server SLF.'],
-        ['REENTRY_1','Tiket Masuk Kembali · 1',15000,'Satu tiket re-entry memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ yang langganan fiturnya aktif','♥','Paket 1 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan fitur aktif. Pengajuan diproses manual oleh admin.'],
-        ['REENTRY_2','Tiket Masuk Kembali · 2',28000,'Paket dua tiket re-entry; jumlah nyawa per tiket mengikuti rank dan status langganan VIP+','♥','Paket 2 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan fitur aktif. Pengajuan diproses manual oleh admin.'],
-        ['REENTRY_3','Tiket Masuk Kembali · 3',35000,'Paket tiga tiket re-entry; jumlah nyawa per tiket mengikuti rank dan status langganan VIP+','♥','Paket 3 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan fitur aktif. Pengajuan diproses manual oleh admin.']
+        ['REENTRY_1','Tiket Masuk Kembali · 1',15000,'Satu tiket re-entry memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ yang langganan fiturnya aktif. Maksimal total 3 tiket per pemain per season.','♥','Paket 1 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan fitur aktif. Batas total 3 tiket per pemain per season; pengajuan diproses manual oleh admin.'],
+        ['REENTRY_2','Tiket Masuk Kembali · 2',28000,'Paket dua tiket re-entry; tiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Maksimal total 3 tiket per pemain per season.','♥','Paket 2 tiket','Paket 2 dihitung sebagai 2 tiket dalam batas maksimum 3 tiket per pemain per season. Jumlah nyawa mengikuti status langganan VIP+; pengajuan diproses manual.'],
+        ['REENTRY_3','Tiket Masuk Kembali · 3',35000,'Paket tiga tiket re-entry; tiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Paket ini menghabiskan kuota 3 tiket per pemain per season.','♥','Paket 3 tiket','Paket 3 menghabiskan seluruh kuota maksimal 3 tiket per pemain per season. Jumlah nyawa mengikuti status langganan VIP+; pengajuan diproses manual.']
       ];
       for (const p of products) {
         await db.prepare('INSERT OR IGNORE INTO store_products (id,name,price,description,icon,tag,note,active,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)')
@@ -151,10 +151,18 @@ export async function ensureStoreSchema(db) {
       await db.prepare(`UPDATE store_products SET description=?,tag=?,note=?,updated_at=?
         WHERE id='VIP_PLUS' AND (description LIKE 'Rank VIP+ dan Custom Rank permanen%' OR description LIKE 'Rank VIP+ dengan fitur Custom Rank permanen%' OR note LIKE '%claim 15 chunk/3 claim%' OR (description='Rank VIP+ tetap dimiliki setelah langganan fitur berakhir; benefit aktif mengikuti masa langganan pada paket' AND note LIKE 'Saat langganan berakhir, rank VIP+ tetap ada%'))`)
         .bind(vip[3],vip[5],vip[6],now).run();
-      const ticket = products.find(p => p[0] === 'REENTRY_1');
+      const ticket1 = products.find(p => p[0] === 'REENTRY_1');
       await db.prepare(`UPDATE store_products SET description=?,note=?,updated_at=?
         WHERE id='REENTRY_1' AND description LIKE 'Satu tiket re-entry:%'`)
-        .bind(ticket[3],ticket[6],now).run();
+        .bind(ticket1[3],ticket1[6],now).run();
+      const ticket2 = products.find(p => p[0] === 'REENTRY_2');
+      await db.prepare(`UPDATE store_products SET description=?,note=?,updated_at=?
+        WHERE id='REENTRY_2' AND description='Paket dua tiket re-entry'`)
+        .bind(ticket2[3],ticket2[6],now).run();
+      const ticket3 = products.find(p => p[0] === 'REENTRY_3');
+      await db.prepare(`UPDATE store_products SET description=?,note=?,updated_at=?
+        WHERE id='REENTRY_3' AND description='Paket tiga tiket re-entry'`)
+        .bind(ticket3[3],ticket3[6],now).run();
     })();
     initialized.set(db, task);
   }
