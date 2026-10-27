@@ -43,7 +43,7 @@ async function answerQuestion(message, env) {
     return { topic:'status-pesanan', answer:'Gunakan tautan status pribadi yang muncul setelah checkout untuk melihat detail pesanan. Simpan tautan itu baik-baik dan jangan bagikan karena memuat kunci akses. Kalau tautannya hilang atau status tidak berubah, kirim tiket berisi nama Minecraft, nomor pesanan jika masih ada, dan masalahnya—jangan kirim password.', actions:[actions.order,actions.ticket] };
   }
 
-  if (/(harga|price|biaya|tarif|nominal|price list|berapa.*(vip|rank|tiket|produk|store|mahal|rupiah|ribu|rp\\b))/.test(q)) {
+  if (/(harga|price|biaya|tarif|nominal|price list|berapa.*(vip|rank|tiket|produk|store|mahal|rupiah|ribu|rp\b))/.test(q)) {
     let currentProducts = [];
     try {
       if (env.DB) {
