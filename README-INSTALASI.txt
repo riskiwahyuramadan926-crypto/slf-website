@@ -11,6 +11,8 @@ ALUR PEMBELIAN
 7. Tautan ulasan muncul di halaman status setelah selesai. Ulasan hanya dapat dikirim satu kali.
 
 
+- CS otomatis 24 jam tersedia sebagai widget chat di beranda, Store, dan seluruh artikel Wiki. Bot menjawab FAQ berbasis aturan; pertanyaan khusus diarahkan ke formulir tiket. Ini bukan layanan manusia yang dijamin selalu online.
+- Bila WhatsApp Business Cloud API dikonfigurasi, tiket bantuan baru juga dapat mengirim notifikasi ke admin. Tanpa secrets itu, tiket tetap tersimpan di D1 dan terbaca di panel admin.
 - Fitur admin: pesanan/transaksi, verifikasi pembayaran manual, ekspor CSV, notifikasi browser, balasan ulasan, manajemen katalog produk dan harga, kode promo, data pelanggan, laporan penjualan, log aktivitas admin, pusat bantuan/tiket, serta pengumuman Store.
 - Harga produk dikelola di menu Produk dan disimpan ke D1. Harga baru digunakan untuk pesanan baru; detail order yang sudah tersimpan tidak berubah.
 - Kode promo yang dibuat di menu Promo divalidasi di server. Promo lama dari secret PROMO_CODES_JSON tetap bisa bekerja selama konfigurasi legacy masih tersedia.
