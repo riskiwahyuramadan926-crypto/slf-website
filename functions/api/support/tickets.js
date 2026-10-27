@@ -19,7 +19,7 @@ export async function onRequestPost({ request, env }) {
   if (Number(recent?.total || 0) >= 5) return fail('Batas pesan bantuan sementara tercapai. Coba lagi nanti.', 429);
   const now = new Date().toISOString();
   const id = 'CS-' + now.slice(2,10).replaceAll('-','') + '-' + randomHex(5).toUpperCase();
-  await env.DB.prepare('INSERT INTO support_tickets (id,player_name,contact,category,subject,message,status,request_hash,created_at,updated_at) VALUES (?,?,?,?,?,?,'OPEN',?,?,?)')
+  await env.DB.prepare("INSERT INTO support_tickets (id,player_name,contact,category,subject,message,status,request_hash,created_at,updated_at) VALUES (?,?,?,?,?,?,'OPEN',?,?,?)")
     .bind(id,playerName,contact,category,subject,message,requestHash,now,now).run();
   return json({ ok:true, ticketId:id, message:'Pesan tersimpan. Simpan nomor tiket untuk tindak lanjut.' }, 201);
 }
