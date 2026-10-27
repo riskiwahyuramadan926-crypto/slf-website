@@ -38,6 +38,7 @@
       <div class="slf-cs-head"><div><div class="slf-cs-brand" id="slf-cs-title">✦ Asisten CS SLF</div><div class="slf-cs-sub">Bantuan otomatis · tersedia 24 jam</div></div><button class="slf-cs-close" id="slf-cs-close" type="button" aria-label="Tutup chat">Tutup</button></div>
       <div class="slf-cs-log" id="slf-cs-log" aria-live="polite" aria-relevant="additions"></div>
       <div class="slf-cs-quick" id="slf-cs-quick">
+        <button type="button" data-question="Berapa harga produk di Store SLF saat ini?">Harga produk</button>
         <button type="button" data-question="Bagaimana cara pembayaran DANA?">Pembayaran</button>
         <button type="button" data-question="Bagaimana cek status pesanan?">Status pesanan</button>
         <button type="button" data-question="Bagaimana VIP dan Custom Rank diproses?">VIP / Rank</button>
