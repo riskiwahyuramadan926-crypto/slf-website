@@ -80,7 +80,7 @@
       $('last-updated').textContent='Pembaruan terakhir: '+new Date(result.generatedAt||Date.now()).toLocaleString('id-ID')+' · '+allOrders.length+' pesanan terakhir';
       if(manual)showToast('Data pesanan diperbarui.');
     }catch(e){
-      if(/401|Akses admin ditolak/i.test(e.message)&&!currentRole){sessionStorage.removeItem(secretKey);$('login-panel').hidden=false;$('dashboard').hidden=true;$('login-error').textContent=e.message;$('login-error').classList.add('show');}
+      if(!currentRole){sessionStorage.removeItem(secretKey);$('login-panel').hidden=false;$('dashboard').hidden=true;$('login-error').textContent=e.message;$('login-error').classList.add('show');}
       else showAdminError(e.message);
     }
   }
@@ -407,9 +407,15 @@
   function updateAccessStatus(auth){
     ownerSecretConfigured=Boolean(auth.ownerSecretConfigured);
     if(!$('access-status'))return;
-    $('access-status').innerHTML=ownerSecretConfigured
-      ? '<p><b>Status:</b> <span class="admin-status">OWNER_SECRET sudah disetel</span></p><p>Mode saat ini memisahkan rahasia Owner dan Admin. Jangan bagikan OWNER_SECRET kepada staf.</p>'
-      : '<p class="admin-danger-note"><b>Status penting:</b> OWNER_SECRET belum terdeteksi. Untuk sementara, ADMIN_SECRET lama masih memiliki hak Owner.</p><p>Setel OWNER_SECRET di Cloudflare terlebih dahulu. Setelah itu, ADMIN_SECRET berubah menjadi akses Admin terbatas.</p>';
+    if(!ownerSecretConfigured){
+      $('access-status').innerHTML='<p class="admin-danger-note"><b>Status penting:</b> OWNER_SECRET belum terdeteksi. Untuk sementara, ADMIN_SECRET lama masih memiliki hak Owner.</p><p>Setel OWNER_SECRET di Cloudflare terlebih dahulu. Setelah itu, ADMIN_SECRET berubah menjadi akses Admin terbatas.</p>';
+      return;
+    }
+    if(!auth.adminSecretConfigured || !auth.secretsDistinct){
+      $('access-status').innerHTML='<p class="admin-danger-note"><b>Konfigurasi belum aman:</b> OWNER_SECRET dan ADMIN_SECRET harus diisi dan nilainya wajib berbeda. Jika sama, sistem menolak login karena tidak bisa memisahkan role.</p><p>Buat dua rahasia berbeda di Cloudflare, simpan, lalu coba masuk lagi.</p>';
+      return;
+    }
+    $('access-status').innerHTML='<p><b>Status:</b> <span class="admin-status">Owner/Admin terpisah</span></p><p>Mode saat ini memisahkan rahasia Owner dan Admin. Jangan bagikan OWNER_SECRET kepada staf.</p>';
   }
   async function loadAccess(){
     try{const auth=await api('/api/admin/me');currentRole=auth.role;updateAccessStatus(auth);applyRole();}
