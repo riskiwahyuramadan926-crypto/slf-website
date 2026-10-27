@@ -271,13 +271,13 @@
       const msg=document.createElement('p');msg.textContent=t.message;
       const contactActions=document.createElement('div');contactActions.className='admin-inline-actions';
       const replyText=t.admin_reply||('Halo '+t.player_name+', kami menindaklanjuti tiket bantuan '+t.id+' dari tim SLF. Pesan kamu: '+t.subject+'.');
-      if (/^\\+?[0-9\\s()\\-]{8,20}$/.test(t.contact)) {
-        const a=document.createElement('a');a.className='btn btn-quiet';a.target='_blank';a.rel='noopener noreferrer';a.href='https://wa.me/'+t.contact.replace(/\\D/g,'')+'?text='+encodeURIComponent(replyText);a.textContent='Hubungi via WhatsApp';contactActions.append(a);
-      } else if (/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(t.contact)) {
+      if (/^\+?[0-9\s()\-]{8,20}$/.test(t.contact)) {
+        const a=document.createElement('a');a.className='btn btn-quiet';a.target='_blank';a.rel='noopener noreferrer';a.href='https://wa.me/'+t.contact.replace(/\D/g,'')+'?text='+encodeURIComponent(replyText);a.textContent='Hubungi via WhatsApp';contactActions.append(a);
+      } else if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(t.contact)) {
         const a=document.createElement('a');a.className='btn btn-quiet';a.href='mailto:'+encodeURIComponent(t.contact)+'?subject='+encodeURIComponent('Tindak lanjut tiket SLF '+t.id)+'&body='+encodeURIComponent(replyText);a.textContent='Hubungi via email';contactActions.append(a);
       }
       const copyTicket=document.createElement('button');copyTicket.type='button';copyTicket.className='btn btn-quiet';copyTicket.textContent='Salin detail tiket';
-      copyTicket.addEventListener('click',()=>copyText('Tiket '+t.id+'\\nPemain: '+t.player_name+'\\nKontak: '+t.contact+'\\nSubjek: '+t.subject+'\\nPesan: '+t.message+'\\nBalasan admin: '+(t.admin_reply||'—'),'Detail tiket tersalin.'));
+      copyTicket.addEventListener('click',()=>copyText('Tiket '+t.id+'\nPemain: '+t.player_name+'\nKontak: '+t.contact+'\nSubjek: '+t.subject+'\nPesan: '+t.message+'\nBalasan admin: '+(t.admin_reply||'—'),'Detail tiket tersalin.'));
       contactActions.append(copyTicket);
       const form=document.createElement('form');form.className='admin-form';
       const lab1=document.createElement('label');lab1.textContent='Status tiket';
