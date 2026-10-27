@@ -92,9 +92,6 @@ export async function ensureStoreSchema(db) {
       // Safe schema migration for a deployment that created the ticket table before the rate-limit field existed.
       try { await db.prepare('ALTER TABLE support_tickets ADD COLUMN request_hash TEXT').run(); }
       catch (error) { if (!/duplicate column/i.test(String(error?.message || error))) throw error; }
-      // Safe schema migration for a deployment that created the ticket table before the rate-limit field existed.
-      try { await db.prepare('ALTER TABLE support_tickets ADD COLUMN request_hash TEXT').run(); }
-      catch (error) { if (!/duplicate column/i.test(String(error?.message || error))) throw error; }
       const now = new Date().toISOString();
       const products = [
         ['VIP_PLUS','VIP+',55000,'Rank VIP+ dengan fitur Custom Rank permanen','♜','Keanggotaan','Fitur Custom Rank termasuk; rank diberikan manual setelah pembayaran terverifikasi.'],
