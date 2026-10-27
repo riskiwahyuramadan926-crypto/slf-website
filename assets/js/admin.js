@@ -211,7 +211,7 @@
     const p=allPromos.find(x=>x.code===code);if(!p)return;
     $('promo-code-admin').value=p.code;$('promo-code-admin').readOnly=true;$('promo-type').value=p.type;$('promo-value').value=p.value;
     $('promo-active').value=p.active?'1':'0';$('promo-max-uses').value=p.max_uses??'';
-    $('promo-expiry').value=p.expires_at?new Date(p.expires_at).toISOString().slice(0,16):'';$('promo-form-title').textContent='Edit '+p.code;
+    $('promo-expiry').value=toLocalDateTime(p.expires_at);$('promo-form-title').textContent='Edit '+p.code;
     $('promo-form').scrollIntoView({behavior:'smooth',block:'start'});
   }
   async function savePromo(e){
