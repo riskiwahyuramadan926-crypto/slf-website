@@ -45,16 +45,24 @@ async function ensureAdminAuthTable(db) {
   }
   return adminAuthSchemaPromise;
 }
+function constantTimeHexEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 async function adminAuthState(db, request, env) {
   const ownerSecret = typeof env.OWNER_SECRET === 'string' ? env.OWNER_SECRET : '';
   const adminSecret = typeof env.ADMIN_SECRET === 'string' ? env.ADMIN_SECRET : '';
+  // Fail closed: separate Owner and Admin credentials are mandatory. No legacy fallback.
+  const validSecret = value => typeof value === 'string' && value.length >= 32;
+  if (!env.DB || !db || !validSecret(ownerSecret) || !validSecret(adminSecret) || ownerSecret === adminSecret) return null;
+
   const actual = request.headers.get('authorization') || '';
-  if (!actual.startsWith('Bearer ') || !env.DB) return null;
+  if (!actual.startsWith('Bearer ')) return null;
   const supplied = actual.slice(7);
-  const validFormat = value => typeof value === 'string' && (value.length >= 32 || /^\d{6,16}$/.test(value));
-  if (!validFormat(adminSecret) && !validFormat(ownerSecret)) return null;
-  // Once an Owner secret is configured, both secrets must differ or role separation is impossible.
-  if (ownerSecret && adminSecret && ownerSecret === adminSecret) return null;
+  if (supplied.length < 32 || supplied.length > 512) return null;
 
   try {
     await ensureAdminAuthTable(db);
@@ -62,15 +70,13 @@ async function adminAuthState(db, request, env) {
     const ipHash = await sha256Hex(request.headers.get('cf-connecting-ip') || 'local-unknown');
     const attempt = await db.prepare('SELECT attempts, window_started, blocked_until FROM admin_auth_attempts WHERE ip_hash = ?').bind(ipHash).first();
     const suppliedHash = await sha256Hex(supplied);
-    const ownerMatches = validFormat(ownerSecret) && suppliedHash === await sha256Hex(ownerSecret);
-    const adminMatches = validFormat(adminSecret) && suppliedHash === await sha256Hex(adminSecret);
+    const ownerMatches = constantTimeHexEqual(suppliedHash, await sha256Hex(ownerSecret));
+    const adminMatches = constantTimeHexEqual(suppliedHash, await sha256Hex(adminSecret));
 
-    // A correct secret can recover access even if earlier failed attempts triggered a temporary lock.
+    // Correct credentials can recover access after earlier failed attempts.
     if (ownerMatches || adminMatches) {
       await db.prepare('DELETE FROM admin_auth_attempts WHERE ip_hash = ?').bind(ipHash).run();
-      // Backward compatibility: until OWNER_SECRET is configured, ADMIN_SECRET remains Owner.
-      if (ownerMatches) return 'owner';
-      return ownerSecret ? 'admin' : 'owner';
+      return ownerMatches ? 'owner' : 'admin';
     }
 
     if (attempt && Number(attempt.blocked_until) > now) return null;
