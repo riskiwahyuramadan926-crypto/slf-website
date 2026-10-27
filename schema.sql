@@ -63,8 +63,8 @@ CREATE TABLE IF NOT EXISTS announcements (
 CREATE INDEX IF NOT EXISTS idx_announcements_active ON announcements(active, starts_at, ends_at);
 
 INSERT OR IGNORE INTO store_products(id,name,price,description,icon,tag,note,active,created_at,updated_at) VALUES
-('VIP_PLUS','VIP+',55000,'Rank VIP+ dengan fitur Custom Rank permanen','♜','Keanggotaan','Fitur Custom Rank termasuk; rank diberikan manual setelah pembayaran terverifikasi.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('VIP_PLUS','VIP+',55000,'Rank VIP+ dan Custom Rank permanen; fitur tambahan aktif selama langganan VIP+ berlaku','♜','Rank permanen + fitur berlangganan','Saat langganan berakhir, rank VIP+ dan Custom Rank tetap ada tetapi benefit langganan berhenti. Saat aktif: claim 15 chunk/3 claim, /shop jarak jauh, dan 5 nyawa per tiket re-entry.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
 ('CUSTOM_RANK','Custom Rank',20000,'Rank dengan nama dan tampilan pilihan pembeli','✧','Personalisasi','Gaya final mengikuti kemampuan plugin dan format teks server SLF.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
-('REENTRY_1','Tiket Masuk Kembali · 1',15000,'Paket satu tiket masuk kembali','♥','Paket 1 tiket','Tiket diproses manual sesuai aturan season SLF.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
-('REENTRY_2','Tiket Masuk Kembali · 2',28000,'Paket dua tiket masuk kembali','♥','Paket 2 tiket','Tiket diproses manual sesuai aturan season SLF.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
-('REENTRY_3','Tiket Masuk Kembali · 3',35000,'Paket tiga tiket masuk kembali','♥','Paket 3 tiket','Tiket diproses manual sesuai aturan season SLF.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+('REENTRY_1','Tiket Masuk Kembali · 1',15000,'Satu tiket re-entry: 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif','♥','Paket 1 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Pengajuan diproses manual oleh admin.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('REENTRY_2','Tiket Masuk Kembali · 2',28000,'Paket dua tiket re-entry','♥','Paket 2 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Pengajuan diproses manual oleh admin.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('REENTRY_3','Tiket Masuk Kembali · 3',35000,'Paket tiga tiket re-entry','♥','Paket 3 tiket','Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa untuk VIP+ dengan langganan aktif. Pengajuan diproses manual oleh admin.',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
