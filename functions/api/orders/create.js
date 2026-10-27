@@ -1,4 +1,4 @@
-import { json, fail, readJson, sha256Hex, randomHex, safeText } from '../../_lib/common.js';
+import { json, fail, readJson, sha256Hex, randomHex, safeText, notifyAdmin } from '../../_lib/common.js';
 import { calculatePrice, RANK_COLORS, RANK_STYLES } from '../../_lib/catalog.js';
 
 export async function onRequestPost({ request, env }) {
@@ -36,6 +36,10 @@ export async function onRequestPost({ request, env }) {
     await env.DB.prepare(sql).bind(id,hash,minecraftName,platform,whatsapp,email||null,data.productId,price.product.name,JSON.stringify(details),promoCode||null,price.subtotal,price.discount,price.total,ref,now,now).run();
     const orderUrl = new URL('/store/order.html', request.url);
     orderUrl.searchParams.set('id', id); orderUrl.searchParams.set('key', token);
+    // Best-effort WhatsApp Cloud API alert; never block checkout if notification is not configured.
+    try {
+      await notifyAdmin(env, { id, minecraft_name:minecraftName, platform, product_name:price.product.name, total:price.total, status:'PENDING_PAYMENT' }, new URL('/admin/?order='+encodeURIComponent(id), request.url).toString());
+    } catch (notificationError) { console.error('Admin WhatsApp notification failed:', notificationError?.message || notificationError); }
     return json({orderId:id,orderUrl:orderUrl.toString(),total:price.total,subtotal:price.subtotal,discount:price.discount,status:'PENDING_PAYMENT'});
   } catch (e) {
     console.error('Order creation failed', e?.message || e);
