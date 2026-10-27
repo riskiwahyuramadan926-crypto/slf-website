@@ -23,6 +23,7 @@
       <div class="hero-art" aria-label="Ilustrasi portal fantasi ungu"><div class="orb"></div><div class="ruin"></div><div class="art-label"><b>Survival Legacy Frontier</b>Pilih dengan teliti. Simpan nomor pesanan. Mainkan kisahmu.</div></div>
     </div></section>
     <div class="wrap"><div class="notice"><strong>Pembayaran manual:</strong> checkout membuka WhatsApp admin. Admin mengirim QRIS DANA Bisnis, lalu memeriksa transaksi masuk sebelum menandai pembayaran terverifikasi. Screenshot saja tidak cukup.</div></div>
+    <section class="section" id="store-announcements" hidden><div class="wrap"><div class="section-head"><div class="eyebrow">Info terbaru</div><h2>Pengumuman Store.</h2><p>Informasi resmi dari tim SLF.</p></div><div id="announcement-list" class="products"></div></div></section>
     <section class="section" id="produk"><div class="wrap">
       <div class="section-head"><div class="eyebrow">Katalog</div><h2>Pilih produk Store SLF.</h2><p>Harga dihitung ulang di server saat pesanan dibuat. Pilih satu produk per pesanan agar status pembayaran dan pemberian produk mudah dilacak.</p></div>
       <div id="products" class="products" aria-live="polite"></div>
@@ -76,6 +77,20 @@
       <div class="section-head"><div class="eyebrow">Ulasan pemain</div><h2>Pengalaman pembeli.</h2><p>Rating hanya dapat dikirim oleh pembeli dengan pesanan yang sudah ditandai selesai oleh admin.</p></div>
       <div class="rating-summary"><strong id="review-average">—</strong><div><div class="stars" id="review-stars">☆☆☆☆☆</div><div class="subtle" id="review-count">Belum ada ulasan</div></div></div>
       <div class="reviews" id="reviews-list"><div class="empty">Ulasan akan tampil di sini setelah pembeli menyelesaikan pesanan dan memberi rating.</div></div>
+    </div></section>
+      <section class="section" id="pusat-bantuan"><div class="wrap"><div class="section-head"><div class="eyebrow">Pusat bantuan</div><h2>Butuh bantuan?</h2><p>Kirim tiket ke tim SLF untuk kendala pesanan, pembayaran, akun, atau teknis. Jangan pernah kirim password atau kode OTP.</p></div>
+      <form class="panel" id="support-form" style="max-width:760px;margin:auto">
+        <div class="form-grid">
+          <div class="field"><label for="support-player">Nama Minecraft *</label><input id="support-player" required minlength="2" maxlength="32" autocomplete="off"></div>
+          <div class="field"><label for="support-contact">Kontak yang bisa dihubungi *</label><input id="support-contact" required maxlength="100" placeholder="WhatsApp atau email"></div>
+          <div class="field"><label for="support-category">Kategori *</label><select id="support-category" required><option value="">Pilih kategori</option><option value="orders">Pesanan</option><option value="payments">Pembayaran</option><option value="account">Akun Minecraft</option><option value="technical">Masalah teknis</option><option value="other">Lainnya</option></select></div>
+          <div class="field"><label for="support-subject">Subjek *</label><input id="support-subject" required minlength="4" maxlength="100"></div>
+          <div class="field full"><label for="support-message">Ceritakan kendalanya *</label><textarea id="support-message" required minlength="10" maxlength="1500" rows="5"></textarea></div>
+          <div class="field" style="position:absolute;left:-9999px" aria-hidden="true"><label for="support-website">Website</label><input id="support-website" tabindex="-1" autocomplete="off"></div>
+        </div>
+        <div class="form-error" id="support-form-error" role="alert"></div><p class="payment-note" id="support-result" role="status"></p>
+        <button class="btn btn-primary btnwide" id="support-submit" type="submit">Kirim tiket bantuan</button>
+      </form>
     </div></section>
   </main>
   <footer><div class="wrap footer-inner"><div>© <span id="year"></span> Survival Legacy Frontier · Store resmi.<br>Minecraft adalah merek dagang Mojang/Microsoft; SLF bukan produk resmi mereka.</div><div class="footer-links"><a href="/">Portal SLF</a><a href="https://saweria.co/LegacyFrontier" target="_blank" rel="noopener noreferrer">Saweria</a><a href="/admin/">Admin</a></div></div></footer>
