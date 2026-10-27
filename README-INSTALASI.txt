@@ -14,6 +14,8 @@ ALUR PEMBELIAN
 - CS otomatis 24 jam tersedia sebagai widget chat di beranda, Store, dan seluruh artikel Wiki. Bot menjawab FAQ berbasis aturan; pertanyaan khusus diarahkan ke formulir tiket. Ini bukan layanan manusia yang dijamin selalu online.
 - Bila WhatsApp Business Cloud API dikonfigurasi, tiket bantuan baru juga dapat mengirim notifikasi ke admin. Tanpa secrets itu, tiket tetap tersimpan di D1 dan terbaca di panel admin.
 - Fitur admin: pesanan/transaksi, verifikasi pembayaran manual, ekspor CSV, notifikasi browser, balasan ulasan, manajemen katalog produk dan harga, kode promo, data pelanggan, laporan penjualan, log aktivitas admin, pusat bantuan/tiket, serta pengumuman Store.
+- Batas tiket re-entry aktif: maksimal 3 tiket per nama Minecraft per season. Paket 1/2/3 menggunakan kuota sesuai jumlah tiket. Kuota dicek saat checkout dan verifikasi pembayaran; pesanan belum dibayar memesan kuota sampai dibatalkan admin.
+- Variabel `SLF_CURRENT_SEASON` di `wrangler.toml` menentukan season aktif (saat ini `season-1`). Pada season baru, ubah nilainya ke ID baru dan deploy ulang supaya kuota reset untuk season baru.
 - Harga produk dikelola di menu Produk dan disimpan ke D1. Harga baru digunakan untuk pesanan baru; detail order yang sudah tersimpan tidak berubah.
 - Kode promo yang dibuat di menu Promo divalidasi di server. Promo lama dari secret PROMO_CODES_JSON tetap bisa bekerja selama konfigurasi legacy masih tersedia.
 - Formulir bantuan di /store/ menyimpan tiket ke D1. Balasan/status di panel admin, dan admin bisa membuka WhatsApp/email pelanggan dari tombol kontak; pengiriman balasan tetap tindakan manual.
