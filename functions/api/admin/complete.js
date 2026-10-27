@@ -10,6 +10,7 @@ export async function onRequestPost({ request, env }) {
   if (!['PAID','PROCESSING'].includes(row.status)) return fail('Pesanan hanya boleh diselesaikan setelah pembayaran terverifikasi.', 409);
   const now = new Date().toISOString();
   await env.DB.prepare("UPDATE orders SET status = 'COMPLETED', completed_at = ?, updated_at = ? WHERE id = ? AND status IN ('PAID','PROCESSING')").bind(now, now, id).run();
+  await env.DB.prepare("UPDATE reentry_tickets SET status = 'ACTIVE', updated_at = ? WHERE order_id = ? AND status = 'WAITING_PAYMENT'").bind(now, id).run();
   await logAdminActivity(env.DB, 'order_completed', 'order', id, { status: 'COMPLETED' });
   return json({ ok: true, status: 'COMPLETED' });
 }
