@@ -324,3 +324,20 @@ input,textarea,select{font-size:16px}
   .slf-sigil{min-height:165px!important}
   .slf-overlord .inspiration-art img,.slf-jinwoo .inspiration-art img{padding:8px 3px 0!important}
 }
+
+
+/* Light portrait panels keep the replacement character art crisp and consistent with BOFURI. */
+.slf-overlord .inspiration-art{
+  background:radial-gradient(ellipse at 50% 72%,rgba(154,118,234,.18),transparent 65%),linear-gradient(145deg,#f0eafb,#e0e5f3)!important;
+}
+.slf-overlord .inspiration-art img{
+  object-fit:contain!important;object-position:center bottom!important;
+  padding:8px 9px 0!important;mix-blend-mode:multiply;
+}
+.slf-jinwoo .inspiration-art{
+  background:radial-gradient(ellipse at 50% 72%,rgba(73,124,224,.18),transparent 65%),linear-gradient(145deg,#eaf0fc,#dce6f5)!important;
+}
+.slf-jinwoo .inspiration-art img{
+  object-fit:contain!important;object-position:center bottom!important;
+  padding:8px 9px 0!important;mix-blend-mode:multiply;
+}
