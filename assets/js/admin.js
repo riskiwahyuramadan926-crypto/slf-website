@@ -141,7 +141,7 @@
       // Previously, a successful /me followed by a failed /orders request wrote the error
       // inside the still-hidden dashboard, leaving the login form with no feedback.
       if($('dashboard').hidden){
-        if(!currentRole)sessionStorage.removeItem(secretKey);
+        // Only the API's explicit 401 handler clears credentials. Keep them on 5xx so a database outage is not mistaken for a bad secret.
         $('login-panel').hidden=false;
         $('dashboard').hidden=true;
         const prefix=currentRole?'Akses berhasil dikenali, tetapi data panel gagal dimuat: ':'Login gagal: ';
