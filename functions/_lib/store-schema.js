@@ -292,7 +292,7 @@ export async function ensureStoreSchema(db) {
           AND note LIKE 'Setiap tiket%'`)
         .bind(ticket3[3],ticket3[6],now).run();
       } catch (error) {
-        const message = String(error?.message || error || 'unknown error').replace(/[\\r\\n]/g, ' ').slice(0, 240);
+        const message = String(error?.message || error || 'unknown error').replace(/[\r\n]/g, ' ').slice(0, 240);
         console.error('[SLF_SCHEMA] step ' + activeStep + ' failed:', message);
         if (message.startsWith('SLF_SCHEMA_STEP:')) throw error;
         throw new Error('SLF_SCHEMA_STEP:' + activeStep + ':' + message);
