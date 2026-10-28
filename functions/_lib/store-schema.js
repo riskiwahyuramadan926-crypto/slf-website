@@ -197,11 +197,14 @@ export async function ensureStoreSchema(db) {
   let task = initialized.get(db);
   if (!task) {
     task = (async () => {
+      let activeStep = 'create-tables';
+      try {
       const tableStatements = statements.filter(sql => /^\s*CREATE TABLE IF NOT EXISTS/i.test(sql));
       const indexStatements = statements.filter(sql => /^\s*CREATE INDEX IF NOT EXISTS/i.test(sql));
 
       // First create any missing tables. Existing tables are deliberately not dropped or rebuilt.
       for (let i = 0; i < tableStatements.length; i += 1) {
+        activeStep = 'create-table-' + (i + 1);
         const sql = tableStatements[i];
         try {
           await db.prepare(sql).run();
@@ -213,6 +216,7 @@ export async function ensureStoreSchema(db) {
 
       // Upgrade legacy tables before indexes are created. This prevents a single old table
       // missing a newly introduced column from blocking the entire Admin/Store API.
+      activeStep = 'legacy-column-migration';
       try {
         await ensureLegacyColumns(db);
       } catch (error) {
@@ -221,6 +225,7 @@ export async function ensureStoreSchema(db) {
       }
 
       for (let i = 0; i < indexStatements.length; i += 1) {
+        activeStep = 'create-index-' + (i + 1);
         const sql = indexStatements[i];
         try {
           await db.prepare(sql).run();
@@ -230,13 +235,17 @@ export async function ensureStoreSchema(db) {
         }
       }
       // Safe schema migration for a deployment that created the ticket table before the rate-limit field existed.
+      activeStep = 'support-ticket-request-hash';
       try { await db.prepare('ALTER TABLE support_tickets ADD COLUMN request_hash TEXT').run(); }
       catch (error) { if (!/duplicate column/i.test(String(error?.message || error))) throw error; }
       // Tag each re-entry ticket with the season in which its quota was reserved.
       // Existing tickets are classified as season-1; future season changes use SLF_CURRENT_SEASON.
+      activeStep = 'reentry-season-column';
       try { await db.prepare("ALTER TABLE reentry_tickets ADD COLUMN season_id TEXT NOT NULL DEFAULT 'season-1'").run(); }
       catch (error) { if (!/duplicate column/i.test(String(error?.message || error))) throw error; }
+      activeStep = 'reentry-season-index';
       await db.prepare('CREATE INDEX IF NOT EXISTS idx_reentry_tickets_season_player ON reentry_tickets(season_id, minecraft_name, created_at)').run();
+      activeStep = 'seed-products';
       const now = new Date().toISOString();
       const products = [
         ['VIP_PLUS','VIP+',55000,'Rank VIP+ permanen dengan fitur tambahan berlangganan 60 hari; fitur berhenti saat langganan berakhir, rank tetap','♜','Rank tetap + fitur berlangganan','Fitur tambahan VIP+ aktif selama langganan 60 hari: 20 chunk/2 claim, /shop jarak jauh, dan 5 nyawa per tiket re-entry. Saat langganan berakhir, rank VIP+ dan Custom Rank tetap permanen, tetapi fitur tambahan berhenti.'],
@@ -250,10 +259,12 @@ export async function ensureStoreSchema(db) {
           .bind(...p,1,now,now).run();
       }
       // Migrate only the older default copy. Do not overwrite product descriptions edited later in the Owner panel.
+      activeStep = 'catalog-vip-migration';
       const vip = products.find(p => p[0] === 'VIP_PLUS');
       await db.prepare(`UPDATE store_products SET description=?,tag=?,note=?,updated_at=?
         WHERE id='VIP_PLUS' AND (description LIKE 'Rank VIP+ dan Custom Rank permanen%' OR description LIKE 'Rank VIP+ dengan fitur Custom Rank permanen%' OR note LIKE '%claim 15 chunk/3 claim%' OR (description='Rank VIP+ tetap dimiliki setelah langganan fitur berakhir; benefit aktif mengikuti masa langganan pada paket' AND note LIKE 'Saat langganan berakhir, rank VIP+ tetap ada%'))`)
         .bind(vip[3],vip[5],vip[6],now).run();
+      activeStep = 'catalog-reentry-1-migration';
       const ticket1 = products.find(p => p[0] === 'REENTRY_1');
       await db.prepare(`UPDATE store_products SET description=?,note=?,updated_at=?
         WHERE id='REENTRY_1'
@@ -262,6 +273,7 @@ export async function ensureStoreSchema(db) {
           AND (description LIKE 'Satu tiket re-entry:%' OR description LIKE 'Satu tiket re-entry memberi %' OR description LIKE 'Satu tiket re-entry untuk mengajukan%')
           AND note LIKE 'Setiap tiket%'`)
         .bind(ticket1[3],ticket1[6],now).run();
+      activeStep = 'catalog-reentry-2-migration';
       const ticket2 = products.find(p => p[0] === 'REENTRY_2');
       await db.prepare(`UPDATE store_products SET description=?,note=?,updated_at=?
         WHERE id='REENTRY_2'
@@ -270,6 +282,7 @@ export async function ensureStoreSchema(db) {
           AND description LIKE 'Paket dua tiket re-entry%'
           AND note LIKE 'Setiap tiket%'`)
         .bind(ticket2[3],ticket2[6],now).run();
+      activeStep = 'catalog-reentry-3-migration';
       const ticket3 = products.find(p => p[0] === 'REENTRY_3');
       await db.prepare(`UPDATE store_products SET description=?,note=?,updated_at=?
         WHERE id='REENTRY_3'
@@ -278,6 +291,12 @@ export async function ensureStoreSchema(db) {
           AND description LIKE 'Paket tiga tiket re-entry%'
           AND note LIKE 'Setiap tiket%'`)
         .bind(ticket3[3],ticket3[6],now).run();
+      } catch (error) {
+        const message = String(error?.message || error || 'unknown error').replace(/[\\r\\n]/g, ' ').slice(0, 240);
+        console.error('[SLF_SCHEMA] step ' + activeStep + ' failed:', message);
+        if (message.startsWith('SLF_SCHEMA_STEP:')) throw error;
+        throw new Error('SLF_SCHEMA_STEP:' + activeStep + ':' + message);
+      }
     })();
     initialized.set(db, task);
   }
