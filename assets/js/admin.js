@@ -135,6 +135,8 @@
       $('last-updated').textContent='Pembaruan terakhir: '+new Date(result.generatedAt||Date.now()).toLocaleString('id-ID')+' · '+allOrders.length+' pesanan terakhir';
       if(manual)showToast('Data pesanan diperbarui.');
     }catch(e){
+      // Diagnose database/schema failures automatically when the login flow returns a server error.
+      if($('dashboard').hidden && Number(e?.status)>=500){const healthButton=$('check-db-health');if(healthButton&&!healthButton.disabled)healthButton.click();}
       // If the dashboard has not opened yet, keep the failure visible on the login screen.
       // Previously, a successful /me followed by a failed /orders request wrote the error
       // inside the still-hidden dashboard, leaving the login form with no feedback.
