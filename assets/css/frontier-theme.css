@@ -234,3 +234,34 @@ input,textarea,select{font-size:16px}
 @media(max-width:980px){.inspiration-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.inspiration-card{min-height:0}}
 @media(max-width:560px){.inspiration-grid{grid-template-columns:1fr;gap:12px}.inspiration-card{display:grid;grid-template-columns:112px minmax(0,1fr);align-items:stretch}.inspiration-art{min-height:100%;border-bottom:0;border-right:1px solid rgba(151,183,233,.11)}.inspiration-art svg{width:100px;height:112px}.inspiration-content{padding:14px 13px}.inspiration-card h3{font-size:.95rem}.inspiration-card p{font-size:.76rem}.inspiration-character{white-space:normal}.inspiration-note{font-size:.68rem}.quick{min-height:76px}}
 @media(prefers-reduced-motion:reduce){.inspiration-card:hover .inspiration-art svg{transform:none}}
+
+
+/* ===== REAL ANIME ARTWORK — clean, readable, responsive ===== */
+.hero-main-art-link{position:relative;z-index:2;display:grid;place-items:end center;width:100%;height:185px;max-width:410px;overflow:hidden;text-decoration:none}
+.hero-main-art{display:block;width:auto;height:100%;max-width:100%;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 14px 22px rgba(0,0,0,.28));transition:transform .28s ease}
+.hero-main-art-link:hover .hero-main-art{transform:translateY(-3px) scale(1.025)}
+.slf-sigil{height:auto!important;min-height:185px}
+.hero-main-art-link:focus-visible,.inspiration-art-link:focus-visible{outline:2px solid var(--gold);outline-offset:-3px;border-radius:12px}
+.inspiration-art{min-height:226px!important;align-items:stretch!important;justify-content:stretch!important;background:linear-gradient(145deg,#e9eef8,#dce5f2)!important}
+.inspiration-art-link{display:flex;align-items:flex-end;justify-content:center;width:100%;min-height:226px;height:226px;overflow:hidden;text-decoration:none}
+.inspiration-art img{display:block;max-width:100%;width:100%;height:100%;min-height:0;object-fit:contain;object-position:center bottom;padding:10px 13px 0;filter:drop-shadow(0 8px 12px rgba(13,24,41,.13));transition:transform .28s ease}
+.inspiration-card:hover .inspiration-art img{transform:translateY(-3px) scale(1.025)}
+.inspiration-art:after{z-index:1;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(58,88,130,.28),transparent)!important}
+.slf-sunraku .inspiration-art{background:radial-gradient(ellipse at 50% 75%,rgba(89,207,229,.22),transparent 64%),linear-gradient(145deg,#e8f2f7,#dce8f2)!important}
+.slf-maple .inspiration-art{background:radial-gradient(ellipse at 50% 75%,rgba(171,142,255,.20),transparent 64%),linear-gradient(145deg,#f0eaf9,#e3e5f3)!important}
+.slf-kirito .inspiration-art{background:radial-gradient(ellipse at 50% 75%,rgba(244,115,158,.16),transparent 64%),linear-gradient(145deg,#f7e9ef,#e8e2f0)!important}
+.slf-shiroe .inspiration-art{background:radial-gradient(ellipse at 50% 75%,rgba(233,203,123,.14),transparent 64%),linear-gradient(145deg,#f5f0e5,#e7e9f0)!important}
+.inspiration-character{cursor:pointer;text-decoration:none}
+.inspiration-character:hover{border-color:rgba(126,230,246,.4);color:#e3f8ff}
+.inspiration-note{max-width:80ch}
+@media(max-width:900px){.hero-main-art-link{height:170px}.inspiration-art,.inspiration-art-link{min-height:220px!important;height:220px}}
+@media(max-width:560px){
+ .hero-main-art-link{height:162px;max-width:100%}
+ .inspiration-card{grid-template-columns:116px minmax(0,1fr)!important}
+ .inspiration-art{min-height:100%!important}
+ .inspiration-art-link{height:100%;min-height:205px!important;align-items:center}
+ .inspiration-art img{height:100%;min-height:180px;padding:8px 2px 0}
+ .portrait-label{left:7px;top:8px;font-size:.59rem;padding:4px 6px}
+ .inspiration-content{min-width:0}
+}
+@media(prefers-reduced-motion:reduce){.hero-main-art,.inspiration-art img{transition:none!important}.hero-main-art-link:hover .hero-main-art,.inspiration-card:hover .inspiration-art img{transform:none}}
