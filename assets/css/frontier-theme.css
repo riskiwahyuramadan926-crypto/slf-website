@@ -265,3 +265,18 @@ input,textarea,select{font-size:16px}
  .inspiration-content{min-width:0}
 }
 @media(prefers-reduced-motion:reduce){.hero-main-art,.inspiration-art img{transition:none!important}.hero-main-art-link:hover .hero-main-art,.inspiration-card:hover .inspiration-art img{transform:none}}
+
+
+/* ===== CHARACTER ART FIX — image source updates and cleaner framing ===== */
+.hero-main-art-link{display:flex;align-items:flex-end;justify-content:center}
+.hero-main-art{max-width:100%;width:auto;height:100%;object-fit:contain;object-position:center bottom}
+.slf-sunraku .inspiration-art img{object-fit:cover;object-position:center 22%;padding:0;width:100%;height:100%;transform:scale(1.06)}
+.slf-maple .inspiration-art{background:radial-gradient(ellipse at 50% 68%,rgba(151,128,232,.25),transparent 65%),linear-gradient(145deg,#f3effb,#e2e8f5)!important}
+.slf-maple .inspiration-art img{object-fit:cover;object-position:center 36%;padding:0;width:100%;height:100%}
+.slf-kirito .inspiration-art{background:radial-gradient(ellipse at 50% 73%,rgba(94,142,213,.23),transparent 66%),linear-gradient(145deg,#eaf0fb,#dce4f2)!important}
+.slf-kirito .inspiration-art img{object-fit:contain;object-position:center bottom;padding:7px 4px 0}
+@media(max-width:560px){
+ .slf-sunraku .inspiration-art img{object-fit:cover;object-position:center 19%;transform:scale(1.08)}
+ .slf-maple .inspiration-art img{object-fit:cover;object-position:center 32%;padding:0}
+ .slf-kirito .inspiration-art img{object-fit:contain;padding:5px 1px 0}
+}
