@@ -122,6 +122,70 @@ const statements = [
   'CREATE INDEX IF NOT EXISTS idx_site_content_active ON site_content(active, page, kind)'
 ];
 
+// Existing D1 databases can keep older table layouts even when CREATE TABLE IF NOT EXISTS runs.
+// Add missing non-key columns before building indexes or using the Admin APIs.
+const legacyColumnDefinitions = {
+  orders: {
+    access_key_hash: 'TEXT', minecraft_name: 'TEXT', platform: "TEXT DEFAULT 'Java'",
+    whatsapp: "TEXT DEFAULT ''", email: 'TEXT', product_id: "TEXT DEFAULT ''",
+    product_name: "TEXT DEFAULT ''", details_json: "TEXT DEFAULT '{}'", promo_code: 'TEXT',
+    subtotal: 'INTEGER DEFAULT 0', discount: 'INTEGER DEFAULT 0', total: 'INTEGER DEFAULT 0',
+    status: "TEXT DEFAULT 'PENDING_PAYMENT'", partner_reference_no: 'TEXT', dana_reference_no: 'TEXT',
+    qr_content: 'TEXT', qr_image: 'TEXT', qr_url: 'TEXT', expires_at: 'TEXT',
+    created_at: 'TEXT', updated_at: 'TEXT', paid_at: 'TEXT', completed_at: 'TEXT', rated_at: 'TEXT'
+  },
+  reviews: { order_id: 'TEXT', player_name: "TEXT DEFAULT ''", rating: 'INTEGER DEFAULT 5', comment: 'TEXT', created_at: 'TEXT' },
+  review_replies: { review_order_id: 'TEXT', admin_name: "TEXT DEFAULT 'Tim SLF'", reply: "TEXT DEFAULT ''", created_at: 'TEXT', updated_at: 'TEXT' },
+  store_products: {
+    name: "TEXT DEFAULT ''", price: 'INTEGER DEFAULT 0', description: "TEXT DEFAULT ''",
+    icon: "TEXT DEFAULT '✦'", tag: "TEXT DEFAULT 'Store'", note: "TEXT DEFAULT ''",
+    active: 'INTEGER DEFAULT 1', created_at: 'TEXT', updated_at: 'TEXT'
+  },
+  promo_codes: { type: "TEXT DEFAULT 'percent'", value: 'REAL DEFAULT 1', active: 'INTEGER DEFAULT 1', expires_at: 'TEXT', max_uses: 'INTEGER', created_at: 'TEXT', updated_at: 'TEXT' },
+  admin_activity: { actor: "TEXT DEFAULT 'admin'", action: "TEXT DEFAULT ''", entity_type: "TEXT DEFAULT ''", entity_id: 'TEXT', details_json: "TEXT DEFAULT '{}'", created_at: 'TEXT' },
+  admin_auth_attempts: { attempts: 'INTEGER DEFAULT 0', window_started: 'INTEGER DEFAULT 0', blocked_until: 'INTEGER DEFAULT 0' },
+  reentry_tickets: {
+    order_id: 'TEXT', access_key_hash: "TEXT DEFAULT ''", minecraft_name: "TEXT DEFAULT ''",
+    product_name: "TEXT DEFAULT ''", season_id: "TEXT DEFAULT 'season-1'",
+    status: "TEXT DEFAULT 'WAITING_PAYMENT'", created_at: 'TEXT', updated_at: 'TEXT',
+    submitted_at: 'TEXT', completed_at: 'TEXT'
+  },
+  support_tickets: {
+    player_name: "TEXT DEFAULT ''", contact: "TEXT DEFAULT ''", category: "TEXT DEFAULT 'other'",
+    subject: "TEXT DEFAULT ''", message: "TEXT DEFAULT ''", request_hash: 'TEXT',
+    status: "TEXT DEFAULT 'OPEN'", admin_reply: 'TEXT', created_at: 'TEXT', updated_at: 'TEXT', resolved_at: 'TEXT'
+  },
+  announcements: { title: "TEXT DEFAULT ''", body: "TEXT DEFAULT ''", active: 'INTEGER DEFAULT 1', starts_at: 'TEXT', ends_at: 'TEXT', created_at: 'TEXT', updated_at: 'TEXT' },
+  finance_entries: {
+    entry_date: 'TEXT', kind: "TEXT DEFAULT 'INCOME'", category: "TEXT DEFAULT 'Lainnya'",
+    description: "TEXT DEFAULT ''", amount: 'INTEGER DEFAULT 1', reference: 'TEXT',
+    status: "TEXT DEFAULT 'POSTED'", created_by: "TEXT DEFAULT 'owner'", created_at: 'TEXT', updated_at: 'TEXT'
+  },
+  admin_notes: {
+    title: "TEXT DEFAULT ''", body: "TEXT DEFAULT ''", category: "TEXT DEFAULT 'Operasional'",
+    priority: "TEXT DEFAULT 'MEDIUM'", status: "TEXT DEFAULT 'OPEN'",
+    created_by: "TEXT DEFAULT 'admin'", created_at: 'TEXT', updated_at: 'TEXT'
+  },
+  site_content: {
+    kind: "TEXT DEFAULT 'slot'", page: "TEXT DEFAULT 'home'", slot_key: 'TEXT',
+    title: "TEXT DEFAULT ''", body: "TEXT DEFAULT ''", active: 'INTEGER DEFAULT 1',
+    starts_at: 'TEXT', ends_at: 'TEXT', created_by: "TEXT DEFAULT 'owner'", created_at: 'TEXT', updated_at: 'TEXT'
+  }
+};
+
+async function ensureLegacyColumns(db) {
+  for (const [table, columns] of Object.entries(legacyColumnDefinitions)) {
+    const { results = [] } = await db.prepare('PRAGMA table_info("' + table + '")').all();
+    const existing = new Set(results.map(row => row.name));
+    if (!results.length) throw new Error('Tabel ' + table + ' tidak ditemukan setelah tahap pembuatan tabel.');
+    for (const [column, definition] of Object.entries(columns)) {
+      if (existing.has(column)) continue;
+      await db.prepare('ALTER TABLE "' + table + '" ADD COLUMN "' + column + '" ' + definition).run();
+      existing.add(column);
+    }
+  }
+}
+
 export async function ensureStoreSchema(db) {
   if (!db || typeof db.prepare !== 'function') {
     throw new Error('Binding D1 tidak tersedia atau tidak valid.');
@@ -129,8 +193,37 @@ export async function ensureStoreSchema(db) {
   let task = initialized.get(db);
   if (!task) {
     task = (async () => {
-      for (const sql of statements) {
-        await db.prepare(sql).run();
+      const tableStatements = statements.filter(sql => /^\\s*CREATE TABLE IF NOT EXISTS/i.test(sql));
+      const indexStatements = statements.filter(sql => /^\\s*CREATE INDEX IF NOT EXISTS/i.test(sql));
+
+      // First create any missing tables. Existing tables are deliberately not dropped or rebuilt.
+      for (let i = 0; i < tableStatements.length; i += 1) {
+        const sql = tableStatements[i];
+        try {
+          await db.prepare(sql).run();
+        } catch (error) {
+          console.error('[SLF_SCHEMA] create-table-' + (i + 1) + ' failed:', error?.message || error);
+          throw new Error('SLF_SCHEMA_STEP:create-table-' + (i + 1) + ':' + String(error?.message || error).slice(0, 240));
+        }
+      }
+
+      // Upgrade legacy tables before indexes are created. This prevents a single old table
+      // missing a newly introduced column from blocking the entire Admin/Store API.
+      try {
+        await ensureLegacyColumns(db);
+      } catch (error) {
+        console.error('[SLF_SCHEMA] legacy-column-migration failed:', error?.message || error);
+        throw new Error('SLF_SCHEMA_STEP:legacy-column-migration:' + String(error?.message || error).slice(0, 240));
+      }
+
+      for (let i = 0; i < indexStatements.length; i += 1) {
+        const sql = indexStatements[i];
+        try {
+          await db.prepare(sql).run();
+        } catch (error) {
+          console.error('[SLF_SCHEMA] create-index-' + (i + 1) + ' failed:', error?.message || error);
+          throw new Error('SLF_SCHEMA_STEP:create-index-' + (i + 1) + ':' + String(error?.message || error).slice(0, 240));
+        }
       }
       // Safe schema migration for a deployment that created the ticket table before the rate-limit field existed.
       try { await db.prepare('ALTER TABLE support_tickets ADD COLUMN request_hash TEXT').run(); }
