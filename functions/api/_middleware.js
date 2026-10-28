@@ -21,7 +21,7 @@ export async function onRequest(context) {
   try {
     await ensureStoreSchema(env.DB);
   } catch (error) {
-    const diagnostic = String(error?.message || error || 'unknown schema error').replace(/[\\r\\n]/g, ' ').slice(0, 240);
+    const diagnostic = String(error?.message || error || 'unknown schema error').replace(/[\r\n]/g, ' ').slice(0, 240);
     const match = diagnostic.match(/^SLF_SCHEMA_STEP:([^:]+):(.*)$/);
     const stage = match ? match[1] : (diagnostic.startsWith('column-migration:') ? 'legacy-column-migration' : 'migration-or-seed');
     console.error('SLF Store database initialization failed [' + stage + ']:', diagnostic);
