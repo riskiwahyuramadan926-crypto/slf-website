@@ -193,8 +193,8 @@ export async function ensureStoreSchema(db) {
   let task = initialized.get(db);
   if (!task) {
     task = (async () => {
-      const tableStatements = statements.filter(sql => /^\\s*CREATE TABLE IF NOT EXISTS/i.test(sql));
-      const indexStatements = statements.filter(sql => /^\\s*CREATE INDEX IF NOT EXISTS/i.test(sql));
+      const tableStatements = statements.filter(sql => /^\s*CREATE TABLE IF NOT EXISTS/i.test(sql));
+      const indexStatements = statements.filter(sql => /^\s*CREATE INDEX IF NOT EXISTS/i.test(sql));
 
       // First create any missing tables. Existing tables are deliberately not dropped or rebuilt.
       for (let i = 0; i < tableStatements.length; i += 1) {
