@@ -124,7 +124,7 @@ async function adminAuthState(db, request, env) {
   if (!credentials.ready) return null;
 
   const actual = request.headers.get('authorization') || '';
-  const match = actual.match(/^Bearer\\s+(.+)$/i);
+  const match = actual.match(/^Bearer\s+(.+)$/i);
   if (!match) return null;
   const supplied = match[1].trim();
   if (supplied.length < 32 || supplied.length > 512) return null;
