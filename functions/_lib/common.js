@@ -139,11 +139,19 @@ export async function getAdminRole(request, env) {
 }
 
 export async function requireAdmin(request, env) {
-  return Boolean(await getAdminRole(request, env));
+  try { return Boolean(await getAdminRole(request, env)); }
+  catch (error) {
+    console.error('Admin authorization unavailable:', error?.message || error);
+    return false;
+  }
 }
 
 export async function requireOwner(request, env) {
-  return (await getAdminRole(request, env)) === 'owner';
+  try { return (await getAdminRole(request, env)) === 'owner'; }
+  catch (error) {
+    console.error('Owner authorization unavailable:', error?.message || error);
+    return false;
+  }
 }
 export async function notifyAdmin(env, order, orderUrl) {
   if (!env.WA_ACCESS_TOKEN || !env.WA_PHONE_NUMBER_ID || !env.WA_ADMIN_TO) return;
