@@ -180,8 +180,12 @@ async function ensureLegacyColumns(db) {
     if (!results.length) throw new Error('Tabel ' + table + ' tidak ditemukan setelah tahap pembuatan tabel.');
     for (const [column, definition] of Object.entries(columns)) {
       if (existing.has(column)) continue;
-      await db.prepare('ALTER TABLE "' + table + '" ADD COLUMN "' + column + '" ' + definition).run();
-      existing.add(column);
+      try {
+        await db.prepare('ALTER TABLE "' + table + '" ADD COLUMN "' + column + '" ' + definition).run();
+        existing.add(column);
+      } catch (error) {
+        throw new Error('column-migration:' + table + '.' + column + ':' + String(error?.message || error).slice(0, 180));
+      }
     }
   }
 }
