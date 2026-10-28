@@ -8,7 +8,7 @@
   const labels = {
     WAITING_PAYMENT: ['Menunggu transaksi selesai', 'Tiket sudah dibuat, tetapi belum aktif. Selesaikan pembayaran dan tunggu admin menandai transaksi selesai.', ''],
     ACTIVE: ['Tiket aktif', 'Tiket siap diajukan. Tekan tombol di bawah jika kamu benar-benar ingin meminta re-entry.', 'paid'],
-    PENDING: ['Pending · menunggu admin', 'Pengajuan sudah dikirim. Hubungi admin melalui WhatsApp jika perlu menambahkan informasi.', ''],
+    PENDING: ['Pending · menunggu admin', 'Pengajuan sudah tersimpan dan masuk ke antrean Admin SLF. Simpan nomor tiket ini untuk tindak lanjut; admin akan memperbarui statusnya setelah diproses.', ''],
     COMPLETED: ['Selesai · tiket terpakai', 'Admin sudah menandai proses re-entry selesai. Tiket ini tidak dapat diajukan lagi.', 'completed'],
     CANCELLED: ['Tiket dibatalkan', 'Tiket ini dibatalkan karena transaksi tidak dilanjutkan. Hubungi admin jika menurutmu ini keliru.', 'expired']
   };
@@ -53,11 +53,15 @@
   }
   $('apply-ticket').addEventListener('click', async () => {
     if (!current || current.status !== 'ACTIVE') return;
-    const phone = String(cfg.adminWhatsApp || '').replace(/\D/g, '');
-    if (!phone) { fail('Nomor WhatsApp admin belum diatur di konfigurasi Store.'); return; }
-    const waWindow = window.open('about:blank', '_blank');
-    const button = $('apply-ticket'); button.disabled = true; button.textContent = 'Mengajukan tiket…';
+    const phone = String(cfg.adminWhatsApp || '').replace(/\\D/g, '');
+    const button = $('apply-ticket');
+    const waWindow = phone ? window.open('about:blank', '_blank') : null;
+    button.disabled = true;
+    button.textContent = 'Mengajukan tiket…';
+    $('ticket-error').textContent = '';
+    $('ticket-error').classList.remove('show');
     try {
+      // Submit to D1 first. WhatsApp is optional and must never block a valid request.
       const response = await fetch('/api/tickets/' + encodeURIComponent(id), {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ key })
@@ -66,24 +70,30 @@
       if (!response.ok) throw new Error(data.error || 'Tiket belum dapat diajukan.');
       current.status = data.status || 'PENDING';
       render();
-      const link = location.href;
-      const message = [
-        'Halo Admin SLF, saya ingin mengajukan tiket re-entry.',
-        'Nomor tiket: ' + current.id,
-        'Nomor pesanan: ' + current.orderId,
-        'Nama Minecraft: ' + current.minecraftName,
-        'Paket: ' + current.productName,
-        'Jumlah nyawa mengikuti status rank/berlangganan: Member atau VIP biasa = 3 nyawa per tiket; VIP+ dengan langganan aktif = 5 nyawa per tiket.',
-        'Tautan tiket pribadi: ' + link,
-        'Mohon proses pengajuan re-entry saya.'
-      ].join('\n');
-      const target = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
-      if (waWindow && !waWindow.closed) waWindow.location.href = target;
-      else window.location.href = target;
+
+      if (phone) {
+        const message = [
+          'Halo Admin SLF, saya sudah mengajukan tiket re-entry melalui website.',
+          'Nomor tiket: ' + current.id,
+          'Nomor pesanan: ' + current.orderId,
+          'Nama Minecraft: ' + current.minecraftName,
+          'Paket: ' + current.productName,
+          'Jumlah nyawa mengikuti status rank/langganan yang berlaku saat diproses.',
+          'Tautan tiket pribadi: ' + location.href,
+          'Mohon periksa pengajuan pada panel Admin SLF.'
+        ].join('\\n');
+        const target = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
+        if (waWindow && !waWindow.closed) waWindow.location.href = target;
+        else window.location.href = target;
+      } else {
+        // The request is already stored in D1 and visible from Admin > Tiket Re-entry.
+        $('ticket-copy').textContent = 'Pengajuan berhasil tersimpan di sistem dan sudah masuk ke antrean Admin SLF. Nomor WhatsApp admin belum dikonfigurasi di website, tetapi pengajuanmu tetap tercatat. Simpan tautan ini dan nomor tiket untuk tindak lanjut.';
+      }
     } catch (error) {
       if (waWindow && !waWindow.closed) waWindow.close();
       fail(error.message || 'Pengajuan gagal. Coba muat ulang halaman.');
-      button.disabled = current.status !== 'ACTIVE'; button.textContent = 'Ajukan tiket ↗';
+      button.disabled = current.status !== 'ACTIVE';
+      button.textContent = 'Ajukan tiket ↗';
     }
   });
   function fail(message) {
