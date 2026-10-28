@@ -20,7 +20,7 @@
       if(data.database==='not_bound')parts.push('D1 belum terikat ke environment ini.');
       else if(data.database==='query_failed')parts.push('Binding D1 terdeteksi, tetapi query koneksi gagal.');
       else if(data.database==='connected')parts.push('Koneksi database berhasil.');
-      if(data.schema==='initialization_failed')parts.push('Inisialisasi tabel gagal. Periksa Logs Cloudflare untuk error rinci.');
+      if(data.schema==='initialization_failed')parts.push('Inisialisasi tabel gagal pada tahap '+String(data.schemaStep||'tidak diketahui')+'.');
       else if(data.schema==='incomplete')parts.push('Tabel belum lengkap: '+(data.missing||[]).join(', ')+'.');
       else if(data.schema==='ready')parts.push('Skema tabel siap.');
       if(data.ownerSecretSource||data.adminSecretSource)parts.push('Nama variabel yang terbaca: Owner='+String(data.ownerSecretSource||'missing')+', Admin='+String(data.adminSecretSource||'missing')+'. Nilainya tidak ditampilkan.');
@@ -32,6 +32,7 @@
       }
       status.textContent=parts.join(' ');
       if(data.error)status.textContent+=' Detail: '+data.error;
+      if(data.schemaDiagnostic)status.textContent+=' Diagnosis teknis: '+data.schemaDiagnostic;
       status.dataset.state=data.ok&&data.adminReady?'ok':'error';
       if(!response.ok&&!data.error)status.textContent+=' Health check mengembalikan HTTP '+response.status+'.';
     }catch(error){
