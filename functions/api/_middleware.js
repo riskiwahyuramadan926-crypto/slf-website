@@ -6,7 +6,9 @@ export async function onRequest(context) {
   const pathname = new URL(request.url).pathname;
   // Keep diagnostics reachable even when the shared schema bootstrap fails.
   // The health handler performs its own connection + schema checks and returns the actual failure stage.
-  if (pathname === '/api/support/chat' || pathname === '/api/health') return context.next();
+  // Keep health and credential verification reachable during D1/schema incidents.
+  // Store data endpoints remain protected by the normal database/schema gate.
+  if (pathname === '/api/support/chat' || pathname === '/api/health' || pathname === '/api/admin/me') return context.next();
   if (!env.DB) {
     return new Response(JSON.stringify({
       error: 'Database Store belum terikat. Binding Cloudflare D1 harus bernama DB.'
