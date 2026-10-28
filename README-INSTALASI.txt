@@ -25,7 +25,7 @@ ALUR PEMBELIAN
 KONFIGURASI WAJIB
 - `wrangler.toml` mengikat database D1 `slf-store-db` (`a5d20f54-37fe-495b-8608-dd7afa1a5a05`) dengan nama binding persis `DB`. Pastikan Pages menggunakan file Wrangler ini sebagai sumber konfigurasi; cek environment Production dan Preview secara terpisah jika keduanya digunakan.
 - Pastikan Cloudflare Pages menggunakan Wrangler config dari repository lalu buat deployment baru agar binding aktif.
-- Middleware API membuat tabel pesanan, ulasan, katalog, promo, aktivitas, tiket bantuan, dan pengumuman secara aman jika belum ada. `schema.sql` disimpan sebagai cadangan setup manual.
+- Middleware API menyiapkan tabel pesanan, ulasan, balasan ulasan, katalog, promo, aktivitas admin, pembatasan percobaan login, tiket re-entry, tiket bantuan, pengumuman, keuangan, catatan, dan konten situs secara idempoten. `schema.sql` menyertakan skema manual yang sama.
 - Cloudflare Secrets `OWNER_SECRET`, `ADMIN_SECRET`, dan `TICKET_LINK_SECRET` wajib dipasang dan berbeda; masing-masing minimal 32 karakter acak. `OWNER_SECRET` khusus Owner, `ADMIN_SECRET` khusus staf, dan `TICKET_LINK_SECRET` untuk tautan privat re-entry. Jangan simpan secret di GitHub.
 - Isi adminWhatsApp di assets/js/store-config.js dengan nomor WhatsApp admin dalam format internasional angka saja. Contoh format: 62812xxxxxxx (ganti dengan nomor admin asli).
 - Katalog tampilan dimuat dari `/api/store-products`; data produk dan harga utama berada di tabel D1 `store_products`. Harga dihitung server melalui `functions/_lib/catalog.js`.
@@ -33,7 +33,7 @@ KONFIGURASI WAJIB
 UJI
 - Buka `/api/health`. Status sehat harus menunjukkan `ok: true`, `database: connected`, `schema: ready`, dan `missing: []`. Endpoint ini juga memeriksa format konfigurasi secret tanpa menampilkan nilainya. Jika gagal login, tekan **Cek koneksi database** di halaman `/admin/` untuk mengetahui apakah masalahnya binding D1, query database, inisialisasi tabel, atau konfigurasi akses.
 - Buat pesanan uji dari /store/. Pastikan nomor pesanan, nominal, dan tautan status dikirim melalui WhatsApp admin.
-- Di /admin/, masukkan ADMIN_SECRET. Pesanan harus muncul.
+- Di `/admin/`, gunakan rahasia akses Owner untuk fitur Owner atau rahasia akses Admin untuk fitur staf. Pesanan harus muncul jika koneksi D1 dan tabel siap.
 - Jangan menekan verifikasi jika belum ada pembayaran nyata. Verifikasi setelah transaksi masuk DANA.
 - Setelah status PAID, uji tombol "Mulai Proses"; setelah produk benar-benar diberikan, tekan "Tandai Pesanan Selesai".
 - Pastikan halaman status menampilkan tautan ulasan. Kirim ulasan, lalu buka ulang tautan; sistem harus menolak kiriman kedua.
@@ -41,7 +41,7 @@ UJI
 KEAMANAN
 - Pembayaran tidak diverifikasi otomatis. Screenshot bukan bukti cukup; cek transaksi masuk dan nominal di aplikasi/dashboard DANA.
 - Situs tidak membuat QRIS dan tidak meminta PIN, OTP, kata sandi, token, atau kredensial DANA.
-- Endpoint admin memerlukan Authorization: Bearer ADMIN_SECRET.
+- Endpoint admin memerlukan token akses Owner atau Admin sesuai hak akses.
 - Tautan status mengandung token acak; jangan bagikan kepada orang lain.
 - VIP+ Rp55.000 termasuk Custom Rank permanen sesuai ketentuan SLF.
 
