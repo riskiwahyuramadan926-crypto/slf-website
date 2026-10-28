@@ -20,7 +20,7 @@ Store menggunakan Cloudflare Pages Functions dan D1. Pembayaran DANA Bisnis dila
 - Jangan masukkan token WhatsApp ke file frontend atau GitHub.
 
 ## Konfigurasi wajib
-- Binding D1 sudah ditetapkan di `wrangler.toml`: `DB` → database `slf-website` (`a5d20f54-37fe-495b-8608-dd7afa1a5a05`). Pastikan Pages memakai Wrangler config ini dan buat deployment baru.
+- Binding D1 yang ditetapkan di `wrangler.toml`: `DB` → database `slf-store-db` (`a5d20f54-37fe-495b-8608-dd7afa1a5a05`). Pastikan Pages memakai Wrangler config ini sebagai sumber konfigurasi, lalu buat deployment baru. Periksa environment Production dan Preview secara terpisah jika keduanya digunakan.
 - Middleware Store membuat tabel `orders` dan `reviews` secara aman saat API pertama kali diakses. `schema.sql` tetap tersedia untuk pemeriksaan atau pemasangan manual.
 - Wajib atur tiga Cloudflare Secrets: `OWNER_SECRET` khusus Owner, `ADMIN_SECRET` khusus staf, dan `TICKET_LINK_SECRET` untuk membuat tautan re-entry yang unik per tiket. Ketiganya harus berbeda dan minimal 32 karakter acak. Tidak ada fallback yang menjadikan `ADMIN_SECRET` sebagai Owner. Login panel memakai salah satu secret akses Owner/Admin, disimpan di `sessionStorage` tab aktif; 5 percobaan gagal per IP mengunci percobaan selama 15 menit. **Jangan mengganti `TICKET_LINK_SECRET` setelah tiket baru dibuat tanpa prosedur migrasi**, karena halaman pesanan perlu secret yang sama untuk menampilkan ulang tautan tiket yang benar.
 - Isi adminWhatsApp di assets/js/store-config.js dengan nomor admin format internasional angka saja (contoh format 62812xxxxxxx, ganti dengan nomor asli). Tanpa ini, checkout masih tercatat tetapi WhatsApp tidak terbuka otomatis.
@@ -28,4 +28,4 @@ Store menggunakan Cloudflare Pages Functions dan D1. Pembayaran DANA Bisnis dila
 - Konfigurasi musim: `SLF_CURRENT_SEASON` di `wrangler.toml` saat ini bernilai `season-1`. Pada awal season baru, ubah ke ID unik berikutnya (misalnya `season-2`) lalu deploy ulang agar kuota dihitung terpisah. Jangan memakai ulang ID season lama.
 - Harga ada di assets/js/store-config.js dan functions/_lib/catalog.js.
 
-Tes /api/health; hasil benar: {"ok":true,"database":"connected","tables":["orders","reviews"]}. Jangan simpan secret di file publik/GitHub.
+Tes `/api/health` untuk diagnosa database dan secret tanpa menampilkan nilainya. Hasil sehat harus menunjukkan `database: connected`, `schema: ready`, `ok: true`, dan `missing: []`. Jika login admin gagal, buka panel `/admin/` lalu tekan **Cek koneksi database**. Jika binding tidak tersedia, periksa Settings → Bindings pada Cloudflare Pages dan redeploy; jika inisialisasi skema gagal, periksa Logs deployment. Jangan simpan secret di file publik/GitHub.
