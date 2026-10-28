@@ -420,3 +420,7 @@ input,textarea,select{font-size:16px}
 /* Store catalog stays visually grouped inside the Store section */
 .store-catalog-panel{margin-top:24px;padding:clamp(16px,2.2vw,26px);border:1px solid rgba(229,211,255,.16);border-radius:18px;background:linear-gradient(145deg,rgba(29,22,48,.82),rgba(16,11,27,.72));box-shadow:0 18px 44px rgba(0,0,0,.13)}
 .store-catalog-panel .catalog-preview-head{margin-top:0}
+
+/* Text-only homepage hero; no character art or anime gallery */
+.hero-grid{grid-template-columns:minmax(0,1fr)!important}
+.hero-copy{max-width:820px}
