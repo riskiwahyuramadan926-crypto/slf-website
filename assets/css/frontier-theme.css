@@ -415,3 +415,8 @@ input,textarea,select{font-size:16px}
 .inspiration-note{max-width:80ch;margin-top:16px;color:#9aabc4;font-size:.73rem;line-height:1.75}
 @media(max-width:900px){.inspiration-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:580px){.inspiration-grid{grid-template-columns:1fr}.inspiration-card p{min-height:0}.inspiration-portrait{height:118px}}
+
+
+/* Store catalog stays visually grouped inside the Store section */
+.store-catalog-panel{margin-top:24px;padding:clamp(16px,2.2vw,26px);border:1px solid rgba(229,211,255,.16);border-radius:18px;background:linear-gradient(145deg,rgba(29,22,48,.82),rgba(16,11,27,.72));box-shadow:0 18px 44px rgba(0,0,0,.13)}
+.store-catalog-panel .catalog-preview-head{margin-top:0}
