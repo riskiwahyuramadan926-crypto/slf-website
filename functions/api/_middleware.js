@@ -3,7 +3,10 @@ import { ensureStoreSchema } from '../_lib/store-schema.js';
 export async function onRequest(context) {
   const { env, request } = context;
   // Static FAQ chat must remain available even while D1 is unavailable.
-  if (new URL(request.url).pathname === '/api/support/chat') return context.next();
+  const pathname = new URL(request.url).pathname;
+  // Keep diagnostics reachable even when the shared schema bootstrap fails.
+  // The health handler performs its own connection + schema checks and returns the actual failure stage.
+  if (pathname === '/api/support/chat' || pathname === '/api/health') return context.next();
   if (!env.DB) {
     return new Response(JSON.stringify({
       error: 'Database Store belum terikat. Binding Cloudflare D1 harus bernama DB.'
