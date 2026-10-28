@@ -23,8 +23,9 @@
       if(data.schema==='initialization_failed')parts.push('Inisialisasi tabel gagal. Periksa Logs Cloudflare untuk error rinci.');
       else if(data.schema==='incomplete')parts.push('Tabel belum lengkap: '+(data.missing||[]).join(', ')+'.');
       else if(data.schema==='ready')parts.push('Skema tabel siap.');
-      if(!data.adminReady)parts.push('Secret Owner/Admin belum lengkap, belum 32+ karakter, atau nilainya sama.');
-      if(!data.reentryReady)parts.push('Tautan tiket pribadi belum siap: TICKET_LINK_SECRET harus minimal 32 karakter dan berbeda dari OWNER_SECRET serta ADMIN_SECRET. Ini hanya memengaruhi pembuatan tautan tiket/checkout tiket baru, bukan login Admin.');
+      if(data.ownerSecretSource||data.adminSecretSource)parts.push('Nama variabel yang terbaca: Owner='+String(data.ownerSecretSource||'missing')+', Admin='+String(data.adminSecretSource||'missing')+'. Nilainya tidak ditampilkan.');
+      if(!data.adminReady)parts.push('Kode Owner/Admin belum terbaca dengan benar, belum 32+ karakter, atau nilainya sama. Nama yang didukung termasuk OWNER_SECRET/OWNER_CODE/OWNER_LOGIN_CODE dan ADMIN_SECRET/ADMIN_CODE/ADMIN_LOGIN_CODE.');
+      if(!data.reentryReady)parts.push('Tautan tiket pribadi belum siap: TICKET_LINK_SECRET/TICKET_SECRET/TICKET_CODE harus minimal 32 karakter dan berbeda dari kode Owner/Admin. Ini hanya memengaruhi pembuatan tautan tiket/checkout tiket baru, bukan login Admin.');
       if(!data.error&&data.ok&&data.adminReady){
         parts.push('Database dan akses Admin siap.');
         if(data.reentryReady)parts.push('Pembuatan tautan tiket pribadi juga siap.');
