@@ -16,30 +16,60 @@ export async function hmacSha256Hex(secret, value) {
   const signature = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value)));
   return [...signature].map(b => b.toString(16).padStart(2, '0')).join('');
 }
-// Resolve the canonical secret and a backwards-compatible legacy alias.
- // Both values remain server-only; never expose the selected secret to API responses.
-export function resolveTicketLinkSecret(env) {
-  const owner = typeof env.OWNER_SECRET === 'string' ? env.OWNER_SECRET : '';
-  const admin = typeof env.ADMIN_SECRET === 'string' ? env.ADMIN_SECRET : '';
+// Resolve configured secrets without exposing secret values to any API response.
+// Canonical names win when valid; code-style aliases are accepted for existing deployments.
+function resolveConfiguredSecret(env, names) {
+  const candidates = names.map(name => [name, typeof env?.[name] === 'string' ? env[name].trim() : '']);
+  const selected = candidates.find(([, value]) => value.length >= 32) || candidates.find(([, value]) => value.length > 0);
+  return {
+    value: selected?.[1] || '',
+    source: selected?.[0] || 'missing',
+    configured: candidates.some(([, value]) => value.length > 0)
+  };
+}
+
+export function resolveAdminSecrets(env = {}) {
+  const owner = resolveConfiguredSecret(env, ['OWNER_SECRET', 'OWNER_CODE', 'OWNER_LOGIN_CODE']);
+  const admin = resolveConfiguredSecret(env, ['ADMIN_SECRET', 'ADMIN_CODE', 'ADMIN_LOGIN_CODE']);
+  const ownerSecretFormatValid = owner.value.length >= 32;
+  const adminSecretFormatValid = admin.value.length >= 32;
+  const secretsDistinct = ownerSecretFormatValid && adminSecretFormatValid && owner.value !== admin.value;
+  return {
+    ownerSecret: owner.value,
+    adminSecret: admin.value,
+    ownerSource: owner.source,
+    adminSource: admin.source,
+    ownerConfigured: owner.configured,
+    adminConfigured: admin.configured,
+    ownerSecretFormatValid,
+    adminSecretFormatValid,
+    secretsDistinct,
+    ready: secretsDistinct
+  };
+}
+
+export function resolveTicketLinkSecret(env = {}) {
+  const adminSecrets = resolveAdminSecrets(env);
   const candidates = [
-    ['TICKET_LINK_SECRET', typeof env.TICKET_LINK_SECRET === 'string' ? env.TICKET_LINK_SECRET : ''],
-    ['TICKET_SECRET', typeof env.TICKET_SECRET === 'string' ? env.TICKET_SECRET : '']
+    ['TICKET_LINK_SECRET', typeof env.TICKET_LINK_SECRET === 'string' ? env.TICKET_LINK_SECRET.trim() : ''],
+    ['TICKET_SECRET', typeof env.TICKET_SECRET === 'string' ? env.TICKET_SECRET.trim() : ''],
+    ['TICKET_CODE', typeof env.TICKET_CODE === 'string' ? env.TICKET_CODE.trim() : ''],
+    ['REENTRY_TICKET_SECRET', typeof env.REENTRY_TICKET_SECRET === 'string' ? env.REENTRY_TICKET_SECRET.trim() : '']
   ];
   const validCandidates = candidates.filter(([, value]) =>
-    value.length >= 32 && value !== owner && value !== admin
+    value.length >= 32 && value !== adminSecrets.ownerSecret && value !== adminSecrets.adminSecret
   );
   const selected = validCandidates[0];
   const configured = candidates.some(([, value]) => value.length > 0);
   const diagnosticValue = candidates.find(([, value]) => value.length > 0)?.[1] || '';
   return {
     secret: selected ? selected[1] : '',
-    // Keep all valid namespaced secrets available for server-side lookup of
-    // existing ticket links during the transition from the legacy variable.
+    // Keep valid candidates available for server-side lookup of existing ticket links during migration.
     secrets: validCandidates.map(([, value]) => value),
     source: selected ? selected[0] : (configured ? candidates.find(([, value]) => value.length > 0)[0] : 'missing'),
     configured,
     formatValid: selected ? true : diagnosticValue.length >= 32,
-    distinct: selected ? true : diagnosticValue.length >= 32 && diagnosticValue !== owner && diagnosticValue !== admin,
+    distinct: selected ? true : diagnosticValue.length >= 32 && diagnosticValue !== adminSecrets.ownerSecret && diagnosticValue !== adminSecrets.adminSecret,
     ready: Boolean(selected)
   };
 }
@@ -90,32 +120,45 @@ function constantTimeHexEqual(a, b) {
 }
 
 async function adminAuthState(db, request, env) {
-  const ownerSecret = typeof env.OWNER_SECRET === 'string' ? env.OWNER_SECRET : '';
-  const adminSecret = typeof env.ADMIN_SECRET === 'string' ? env.ADMIN_SECRET : '';
-  // Fail closed: separate Owner and Admin credentials are mandatory. No legacy fallback.
-  const validSecret = value => typeof value === 'string' && value.length >= 32;
-  if (!env.DB || !db || !validSecret(ownerSecret) || !validSecret(adminSecret) || ownerSecret === adminSecret) return null;
+  const credentials = resolveAdminSecrets(env);
+  if (!credentials.ready) return null;
 
   const actual = request.headers.get('authorization') || '';
-  if (!actual.startsWith('Bearer ')) return null;
-  const supplied = actual.slice(7);
+  const match = actual.match(/^Bearer\\s+(.+)$/i);
+  if (!match) return null;
+  const supplied = match[1].trim();
   if (supplied.length < 32 || supplied.length > 512) return null;
+
+  const suppliedHash = await sha256Hex(supplied);
+  const ownerMatches = constantTimeHexEqual(suppliedHash, await sha256Hex(credentials.ownerSecret));
+  const adminMatches = constantTimeHexEqual(suppliedHash, await sha256Hex(credentials.adminSecret));
+
+  // Validate the secret first. A broken D1 rate-limit table must not reject a valid
+  // owner/admin credential; D1 is still required to load and operate on Store data.
+  if (ownerMatches || adminMatches) {
+    if (db && typeof db.prepare === 'function') {
+      try {
+        await ensureAdminAuthTable(db);
+        const ipHash = await sha256Hex(request.headers.get('cf-connecting-ip') || 'local-unknown');
+        await db.prepare('DELETE FROM admin_auth_attempts WHERE ip_hash = ?').bind(ipHash).run();
+      } catch (error) {
+        console.error('Valid admin login accepted, but failed-attempt counter could not be reset:', error?.message || error);
+      }
+    }
+    return ownerMatches ? 'owner' : 'admin';
+  }
+
+  if (!db || typeof db.prepare !== 'function') {
+    const authError = new Error('ADMIN_AUTH_STORAGE_UNAVAILABLE');
+    authError.code = 'ADMIN_AUTH_STORAGE_UNAVAILABLE';
+    throw authError;
+  }
 
   try {
     await ensureAdminAuthTable(db);
     const now = Math.floor(Date.now() / 1000);
     const ipHash = await sha256Hex(request.headers.get('cf-connecting-ip') || 'local-unknown');
     const attempt = await db.prepare('SELECT attempts, window_started, blocked_until FROM admin_auth_attempts WHERE ip_hash = ?').bind(ipHash).first();
-    const suppliedHash = await sha256Hex(supplied);
-    const ownerMatches = constantTimeHexEqual(suppliedHash, await sha256Hex(ownerSecret));
-    const adminMatches = constantTimeHexEqual(suppliedHash, await sha256Hex(adminSecret));
-
-    // Correct credentials can recover access after earlier failed attempts.
-    if (ownerMatches || adminMatches) {
-      await db.prepare('DELETE FROM admin_auth_attempts WHERE ip_hash = ?').bind(ipHash).run();
-      return ownerMatches ? 'owner' : 'admin';
-    }
-
     if (attempt && Number(attempt.blocked_until) > now) return null;
     const attempts = attempt && now - Number(attempt.window_started) < 900 ? Number(attempt.attempts) : 0;
     const windowStarted = attempts ? Number(attempt.window_started) : now;
