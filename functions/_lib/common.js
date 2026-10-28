@@ -128,7 +128,9 @@ async function adminAuthState(db, request, env) {
     return null;
   } catch (error) {
     console.error('Admin authentication rate-limit check failed:', error?.message || error);
-    return null;
+    const authError = new Error('ADMIN_AUTH_STORAGE_UNAVAILABLE');
+    authError.code = 'ADMIN_AUTH_STORAGE_UNAVAILABLE';
+    throw authError;
   }
 }
 
