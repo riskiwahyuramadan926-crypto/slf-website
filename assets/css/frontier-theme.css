@@ -280,3 +280,47 @@ input,textarea,select{font-size:16px}
  .slf-maple .inspiration-art img{object-fit:cover;object-position:center 32%;padding:0}
  .slf-kirito .inspiration-art img{object-fit:contain;padding:5px 1px 0}
 }
+
+
+/* ===== Inspiration gallery refresh: clearer character portraits ===== */
+.slf-sunraku .inspiration-art img{
+  object-fit:contain!important;
+  object-position:center bottom!important;
+  width:100%;
+  height:100%;
+  padding:8px 10px 0!important;
+  transform:none!important;
+}
+.slf-overlord .inspiration-art{
+  background:radial-gradient(ellipse at 50% 72%,rgba(157,108,255,.25),transparent 62%),linear-gradient(145deg,#25193a,#10162b)!important;
+}
+.slf-overlord .inspiration-art img{
+  object-fit:contain!important;
+  object-position:center bottom!important;
+  padding:8px 9px 0!important;
+  mix-blend-mode:screen;
+}
+.slf-jinwoo .inspiration-art{
+  background:radial-gradient(ellipse at 50% 72%,rgba(75,132,255,.3),transparent 62%),linear-gradient(145deg,#132b50,#0c162d)!important;
+}
+.slf-jinwoo .inspiration-art img{
+  object-fit:contain!important;
+  object-position:center bottom!important;
+  padding:8px 9px 0!important;
+  mix-blend-mode:screen;
+}
+.slf-overlord .inspiration-art:after{background:linear-gradient(90deg,transparent,rgba(177,138,255,.4),transparent)!important}
+.slf-jinwoo .inspiration-art:after{background:linear-gradient(90deg,transparent,rgba(103,169,255,.43),transparent)!important}
+.slf-overlord .portrait-label{border-color:rgba(177,138,255,.34);color:#f1e8ff}
+.slf-jinwoo .portrait-label{border-color:rgba(103,169,255,.34);color:#e7f0ff}
+.hero-main-art-link{height:218px;max-width:420px}
+.slf-sigil{min-height:218px!important}
+@media(max-width:900px){
+  .hero-main-art-link{height:190px}
+  .slf-sigil{min-height:190px!important}
+}
+@media(max-width:560px){
+  .hero-main-art-link{height:165px}
+  .slf-sigil{min-height:165px!important}
+  .slf-overlord .inspiration-art img,.slf-jinwoo .inspiration-art img{padding:8px 3px 0!important}
+}
