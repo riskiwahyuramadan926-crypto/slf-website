@@ -1,13 +1,11 @@
-import { json, fail, getAdminRole } from '../../_lib/common.js';
+import { json, fail, getAdminRole, resolveAdminSecrets } from '../../_lib/common.js';
 
 export async function onRequestGet({ request, env }) {
-  const ownerSecret = typeof env.OWNER_SECRET === 'string' ? env.OWNER_SECRET : '';
-  const adminSecret = typeof env.ADMIN_SECRET === 'string' ? env.ADMIN_SECRET : '';
-  const strongSecret = value => typeof value === 'string' && value.length >= 32;
+  const credentials = resolveAdminSecrets(env);
 
-  if (!strongSecret(ownerSecret) || !strongSecret(adminSecret) || ownerSecret === adminSecret) {
+  if (!credentials.ready) {
     return fail(
-      'Login Admin memerlukan OWNER_SECRET dan ADMIN_SECRET yang berbeda, masing-masing minimal 32 karakter acak, di Cloudflare Pages → Settings → Variables and Secrets. TICKET_LINK_SECRET bukan sandi login.',
+      'Login memerlukan kode Owner dan Admin yang berbeda, masing-masing minimal 32 karakter. Source menerima OWNER_SECRET/OWNER_CODE/OWNER_LOGIN_CODE dan ADMIN_SECRET/ADMIN_CODE/ADMIN_LOGIN_CODE. TICKET_LINK_SECRET/TICKET_CODE hanya untuk tiket, bukan login.',
       503
     );
   }
