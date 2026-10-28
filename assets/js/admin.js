@@ -140,12 +140,19 @@
       // If the dashboard has not opened yet, keep the failure visible on the login screen.
       // Previously, a successful /me followed by a failed /orders request wrote the error
       // inside the still-hidden dashboard, leaving the login form with no feedback.
-      if($('dashboard').hidden){
-        // Only the API's explicit 401 handler clears credentials. Keep them on 5xx so a database outage is not mistaken for a bad secret.
+      if($('dashboard').hidden && currentRole){
+        // Credentials were accepted by /api/admin/me. Keep the authenticated panel visible
+        // when D1/store loading fails, and report the data-layer failure separately.
+        $('login-panel').hidden=true;
+        $('dashboard').hidden=false;
+        $('role-pill').textContent=currentRole==='owner'?'Owner':'Admin';
+        $('last-updated').textContent='Akses terverifikasi; data belum termuat.';
+        showAdminError('Login berhasil dikenali, tetapi database Store belum siap: '+(e?.message||'permintaan data gagal')+' Periksa status koneksi di halaman ini.');
+      }else if($('dashboard').hidden){
+        // Only an explicit 401 clears credentials; 5xx is a server/database failure.
         $('login-panel').hidden=false;
         $('dashboard').hidden=true;
-        const prefix=currentRole?'Akses berhasil dikenali, tetapi data panel gagal dimuat: ':'Login gagal: ';
-        $('login-error').textContent=prefix+(e?.message||'Terjadi kesalahan tidak diketahui.');
+        $('login-error').textContent='Login gagal: '+(e?.message||'Terjadi kesalahan tidak diketahui.');
         $('login-error').classList.add('show');
       }else{
         showAdminError(e?.message||'Gagal memuat data admin.');
