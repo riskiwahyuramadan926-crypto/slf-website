@@ -66,6 +66,12 @@ const statements = [
     entity_type TEXT NOT NULL, entity_id TEXT, details_json TEXT NOT NULL DEFAULT '{}', created_at TEXT NOT NULL
   )`,
   'CREATE INDEX IF NOT EXISTS idx_admin_activity_created_at ON admin_activity(created_at DESC)',
+  `CREATE TABLE IF NOT EXISTS admin_auth_attempts (
+    ip_hash TEXT PRIMARY KEY,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    window_started INTEGER NOT NULL,
+    blocked_until INTEGER NOT NULL DEFAULT 0
+  )`,
   `CREATE TABLE IF NOT EXISTS reentry_tickets (
     id TEXT PRIMARY KEY,
     order_id TEXT NOT NULL REFERENCES orders(id),
