@@ -341,3 +341,35 @@ input,textarea,select{font-size:16px}
   object-fit:contain!important;object-position:center bottom!important;
   padding:8px 9px 0!important;mix-blend-mode:multiply;
 }
+
+
+/* ===== SLF / ANIME INSPIRED — minimal, balanced, mobile-first ===== */
+.slf-brand-sigil{height:190px!important;display:flex!important;flex-direction:column;gap:14px}
+.slf-brand-crest{width:102px;height:102px;display:grid;place-items:center;position:relative;border:1px solid rgba(126,230,246,.52);border-radius:28px;transform:rotate(45deg);background:linear-gradient(145deg,rgba(30,70,112,.8),rgba(48,35,102,.68));box-shadow:0 0 0 8px rgba(126,230,246,.035),0 0 45px rgba(126,190,255,.12),inset 0 0 25px rgba(155,141,255,.12)}
+.slf-brand-crest:before,.slf-brand-crest:after{content:"";position:absolute;inset:9px;border:1px solid rgba(210,240,255,.19);border-radius:22px}
+.slf-brand-crest:after{inset:-7px;border-color:rgba(155,141,255,.18);border-radius:32px}
+.slf-brand-crest span{transform:rotate(-45deg);font-size:2.5rem;color:#d7f9ff;text-shadow:0 0 22px rgba(126,230,246,.32)}
+.slf-brand-label{font-size:.63rem;letter-spacing:.17em;color:#c7d8f1;text-align:center;font-weight:700}
+.slf-brand-label b{color:#bdefff}
+.inspiration-section{padding-top:clamp(48px,6vw,70px)!important}
+.inspiration-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:15px!important}
+.inspiration-card{display:flex;flex-direction:column;min-height:100%;background:linear-gradient(150deg,rgba(20,35,60,.92),rgba(9,18,33,.97))!important}
+.inspiration-art{position:relative;display:flex;align-items:center;justify-content:center;min-width:0;height:240px;overflow:hidden;border-radius:12px;background:radial-gradient(ellipse at 50% 20%,rgba(126,230,246,.12),transparent 62%),linear-gradient(145deg,#101b30,#080f1d);border:1px solid rgba(151,183,233,.12)}
+.inspiration-art-link{display:flex;align-items:center;justify-content:center;width:100%;height:100%}
+.inspiration-art img{display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom;padding:9px;transition:transform .28s ease}
+.inspiration-card:hover .inspiration-art img{transform:scale(1.025)}
+.inspiration-content{display:flex;flex:1;flex-direction:column;align-items:flex-start;padding-top:17px}
+.inspiration-content p{max-width:42ch}
+.inspiration-character{margin-top:14px!important}
+.pin-embed-frame{min-height:240px;height:auto;padding:8px 9px;align-items:center;flex-direction:column;gap:8px}
+.pin-embed-frame>a[data-pin-do="embedPin"]{display:block;width:100%;max-width:345px;min-height:210px;text-align:center;color:#bdefff;font-size:.78rem;text-decoration:underline;text-underline-offset:4px}
+.pin-embed-frame iframe{display:block;max-width:100%!important;margin:0 auto!important;border-radius:10px}
+.pin-fallback{position:absolute;bottom:10px;right:10px;z-index:5;display:inline-flex;align-items:center;padding:6px 8px;border:1px solid rgba(126,230,246,.2);border-radius:999px;background:rgba(7,13,26,.88);color:#d5f7ff;font-size:.65rem}
+.pin-embed-frame:has(iframe) .pin-fallback{display:none}
+.slf-own-art .inspiration-art{background:radial-gradient(ellipse at 50% 30%,rgba(126,230,246,.12),transparent 70%),linear-gradient(145deg,#101e34,#0a1020)}
+.slf-sao .inspiration-art{background:radial-gradient(ellipse at 45% 20%,rgba(155,141,255,.12),transparent 68%),linear-gradient(145deg,#12172d,#0a1020)}
+.slf-loghorizon .inspiration-art{background:radial-gradient(ellipse at 45% 20%,rgba(126,230,246,.11),transparent 68%),linear-gradient(145deg,#102131,#0a1020)}
+.inspiration-note{max-width:850px;margin:20px auto 0!important;text-align:center!important;line-height:1.8!important}
+@media(max-width:900px){.inspiration-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.inspiration-art{height:230px}}
+@media(max-width:600px){.inspiration-grid{grid-template-columns:1fr!important}.inspiration-card{padding:16px!important}.inspiration-art{height:245px}.pin-embed-frame{min-height:230px}.slf-brand-sigil{height:165px!important}.slf-brand-crest{width:84px;height:84px;border-radius:24px}}
+@media(prefers-reduced-motion:reduce){.inspiration-card:hover .inspiration-art img{transform:none}}
