@@ -75,13 +75,18 @@ export async function onRequestGet({ env }) {
       ...secrets
     }, missing.length ? 503 : 200);
   } catch (error) {
-    console.error('SLF D1 schema health check failed:', error?.message || error);
+    const diagnostic = String(error?.message || error || 'unknown schema error').replace(/[\\r\\n]/g, ' ').slice(0, 240);
+    const match = diagnostic.match(/^SLF_SCHEMA_STEP:([^:]+):(.*)$/);
+    const schemaStep = match ? match[1] : (diagnostic.startsWith('column-migration:') ? 'legacy-column-migration' : 'migration-or-seed');
+    console.error('SLF D1 schema health check failed [' + schemaStep + ']:', diagnostic);
     return json({
       ok: false,
       database: connected ? 'connected' : 'query_failed',
       schema: 'initialization_failed',
+      schemaStep,
+      schemaDiagnostic: diagnostic,
       ...secrets,
-      error: 'D1 dapat dijangkau, tetapi inisialisasi tabel gagal. Buka Cloudflare Pages → Logs untuk melihat error skema spesifik.'
+      error: 'D1 terhubung, tetapi inisialisasi tabel gagal pada tahap ' + schemaStep + '. Buka detail pemeriksaan untuk melihat diagnosis aman.'
     }, 503);
   }
 }
