@@ -4,7 +4,7 @@ import { ensureStoreSchema } from '../_lib/store-schema.js';
 const requiredTables = [
   'orders', 'reviews', 'review_replies', 'store_products', 'promo_codes',
   'admin_activity', 'support_tickets', 'announcements', 'reentry_tickets',
-  'finance_entries', 'admin_notes', 'site_content'
+  'finance_entries', 'admin_notes', 'site_content', 'admin_auth_attempts'
 ];
 
 function secretDiagnostics(env) {
@@ -15,6 +15,7 @@ function secretDiagnostics(env) {
   const adminSecretFormatValid = admin.length >= 32;
   const secretsDistinct = ownerSecretFormatValid && adminSecretFormatValid && owner !== admin;
   const ticketLinkSecretFormatValid = ticket.length >= 32;
+  const ticketLinkSecretDistinct = ticketLinkSecretFormatValid && ticket !== owner && ticket !== admin;
   return {
     ownerSecretConfigured: owner.length > 0,
     ownerSecretFormatValid,
@@ -23,8 +24,9 @@ function secretDiagnostics(env) {
     secretsDistinct,
     ticketLinkSecretConfigured: ticket.length > 0,
     ticketLinkSecretFormatValid,
+    ticketLinkSecretDistinct,
     adminReady: secretsDistinct,
-    reentryReady: ticketLinkSecretFormatValid
+    reentryReady: ticketLinkSecretDistinct
   };
 }
 
