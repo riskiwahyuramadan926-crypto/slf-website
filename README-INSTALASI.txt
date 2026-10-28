@@ -27,6 +27,7 @@ KONFIGURASI WAJIB
 - Pastikan Cloudflare Pages menggunakan Wrangler config dari repository lalu buat deployment baru agar binding aktif.
 - Middleware API menyiapkan tabel pesanan, ulasan, balasan ulasan, katalog, promo, aktivitas admin, pembatasan percobaan login, tiket re-entry, tiket bantuan, pengumuman, keuangan, catatan, dan konten situs secara idempoten. `schema.sql` menyertakan skema manual yang sama.
 - Cloudflare Secrets `OWNER_SECRET`, `ADMIN_SECRET`, dan `TICKET_LINK_SECRET` wajib dipasang dan berbeda; masing-masing minimal 32 karakter acak. `OWNER_SECRET` khusus Owner, `ADMIN_SECRET` khusus staf, dan `TICKET_LINK_SECRET` untuk tautan privat re-entry. Jangan simpan secret di GitHub.
+- Penting: `TICKET_LINK_SECRET` bukan kode untuk masuk ke `/admin/`. Ia digunakan server untuk membuat tautan tiket pribadi agar pembeli dapat melihat status dan mengajukan re-entry. Jika secret tiket belum valid, login Admin tetap harus berfungsi selama `OWNER_SECRET`, `ADMIN_SECRET`, dan database benar; checkout tiket baru serta pembuatan ulang tautan tiket dapat gagal sampai secret tiket diperbaiki.
 - Isi adminWhatsApp di assets/js/store-config.js dengan nomor WhatsApp admin dalam format internasional angka saja. Contoh format: 62812xxxxxxx (ganti dengan nomor admin asli).
 - Katalog tampilan dimuat dari `/api/store-products`; data produk dan harga utama berada di tabel D1 `store_products`. Harga dihitung server melalui `functions/_lib/catalog.js`.
 

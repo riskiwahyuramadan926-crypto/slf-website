@@ -7,13 +7,13 @@ export async function onRequestGet({ request, env }) {
 
   if (!strongSecret(ownerSecret) || !strongSecret(adminSecret) || ownerSecret === adminSecret) {
     return fail(
-      'Login dikunci demi keamanan. Atur OWNER_SECRET dan ADMIN_SECRET yang berbeda, masing-masing minimal 32 karakter acak, di Cloudflare Pages → Settings → Variables and Secrets.',
+      'Login Admin memerlukan OWNER_SECRET dan ADMIN_SECRET yang berbeda, masing-masing minimal 32 karakter acak, di Cloudflare Pages → Settings → Variables and Secrets. TICKET_LINK_SECRET bukan sandi login.',
       503
     );
   }
 
   const role = await getAdminRole(request, env);
-  if (!role) return fail('Akses ditolak. Periksa rahasia Owner/Admin; percobaan salah dibatasi sementara.', 401);
+  if (!role) return fail('Akses ditolak. Gunakan OWNER_SECRET untuk Owner atau ADMIN_SECRET untuk staf. TICKET_LINK_SECRET hanya untuk tautan tiket member, bukan untuk login; percobaan salah dibatasi sementara.', 401);
 
   return json({
     role,

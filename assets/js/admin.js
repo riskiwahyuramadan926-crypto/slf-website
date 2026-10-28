@@ -24,8 +24,11 @@
       else if(data.schema==='incomplete')parts.push('Tabel belum lengkap: '+(data.missing||[]).join(', ')+'.');
       else if(data.schema==='ready')parts.push('Skema tabel siap.');
       if(!data.adminReady)parts.push('Secret Owner/Admin belum lengkap, belum 32+ karakter, atau nilainya sama.');
-      if(!data.reentryReady)parts.push('TICKET_LINK_SECRET harus minimal 32 karakter dan berbeda dari OWNER_SECRET serta ADMIN_SECRET.');
-      if(!data.error&&data.ok&&data.adminReady&&data.reentryReady)parts.push('Konfigurasi inti siap.');
+      if(!data.reentryReady)parts.push('Tautan tiket pribadi belum siap: TICKET_LINK_SECRET harus minimal 32 karakter dan berbeda dari OWNER_SECRET serta ADMIN_SECRET. Ini hanya memengaruhi pembuatan tautan tiket/checkout tiket baru, bukan login Admin.');
+      if(!data.error&&data.ok&&data.adminReady){
+        parts.push('Database dan akses Admin siap.');
+        if(data.reentryReady)parts.push('Pembuatan tautan tiket pribadi juga siap.');
+      }
       status.textContent=parts.join(' ');
       if(data.error)status.textContent+=' Detail: '+data.error;
       status.dataset.state=data.ok&&data.adminReady?'ok':'error';
