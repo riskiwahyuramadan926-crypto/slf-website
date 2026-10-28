@@ -26,10 +26,10 @@ export async function onRequest(context) {
     const stage = match ? match[1] : (diagnostic.startsWith('column-migration:') ? 'legacy-column-migration' : 'migration-or-seed');
     console.error('SLF Store database initialization failed [' + stage + ']:', diagnostic);
 
-    // If an optional/legacy schema migration fails, keep the password-protected
-    // order dashboard usable when its existing orders table is still readable.
-    // The handler still checks the supplied Admin/Owner credential itself.
-    if (pathname === '/api/admin/orders') {
+    // A failed optional/legacy migration must not lock every protected Admin tool.
+    // Each /api/admin/* handler performs its own Owner/Admin authorization check;
+    // only routes whose own tables are readable will succeed.
+    if (pathname.startsWith('/api/admin/')) {
       return context.next();
     }
 
