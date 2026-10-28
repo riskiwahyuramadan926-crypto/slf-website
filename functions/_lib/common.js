@@ -25,13 +25,17 @@ export function resolveTicketLinkSecret(env) {
     ['TICKET_LINK_SECRET', typeof env.TICKET_LINK_SECRET === 'string' ? env.TICKET_LINK_SECRET : ''],
     ['TICKET_SECRET', typeof env.TICKET_SECRET === 'string' ? env.TICKET_SECRET : '']
   ];
-  const selected = candidates.find(([, value]) =>
+  const validCandidates = candidates.filter(([, value]) =>
     value.length >= 32 && value !== owner && value !== admin
   );
+  const selected = validCandidates[0];
   const configured = candidates.some(([, value]) => value.length > 0);
   const diagnosticValue = candidates.find(([, value]) => value.length > 0)?.[1] || '';
   return {
     secret: selected ? selected[1] : '',
+    // Keep all valid namespaced secrets available for server-side lookup of
+    // existing ticket links during the transition from the legacy variable.
+    secrets: validCandidates.map(([, value]) => value),
     source: selected ? selected[0] : (configured ? candidates.find(([, value]) => value.length > 0)[0] : 'missing'),
     configured,
     formatValid: selected ? true : diagnosticValue.length >= 32,

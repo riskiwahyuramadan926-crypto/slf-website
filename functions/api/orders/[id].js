@@ -14,10 +14,13 @@ export async function onRequestGet({ request, env, params }) {
     order.tickets = await Promise.all(ticketRows.map(async ticket => {
       let ticketKey = '';
       const ticketSecretInfo = resolveTicketLinkSecret(env);
-      if (ticketSecretInfo.ready) {
+      for (const ticketSecret of ticketSecretInfo.secrets) {
         try {
-          const candidate = await hmacSha256Hex(ticketSecretInfo.secret, row.id + ':' + ticket.id + ':' + key);
-          if (await sha256Hex(candidate) === ticket.access_key_hash) ticketKey = candidate;
+          const candidate = await hmacSha256Hex(ticketSecret, row.id + ':' + ticket.id + ':' + key);
+          if (await sha256Hex(candidate) === ticket.access_key_hash) {
+            ticketKey = candidate;
+            break;
+          }
         } catch {}
       }
       // Legacy tickets used the order key; keep those existing links valid during migration.
