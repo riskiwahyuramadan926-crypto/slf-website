@@ -24,7 +24,7 @@
       else if(data.schema==='incomplete')parts.push('Tabel belum lengkap: '+(data.missing||[]).join(', ')+'.');
       else if(data.schema==='ready')parts.push('Skema tabel siap.');
       if(!data.adminReady)parts.push('Secret Owner/Admin belum lengkap, belum 32+ karakter, atau nilainya sama.');
-      if(!data.reentryReady)parts.push('TICKET_LINK_SECRET belum dikonfigurasi dengan panjang minimal 32 karakter.');
+      if(!data.reentryReady)parts.push('TICKET_LINK_SECRET harus minimal 32 karakter dan berbeda dari OWNER_SECRET serta ADMIN_SECRET.');
       if(!data.error&&data.ok&&data.adminReady&&data.reentryReady)parts.push('Konfigurasi inti siap.');
       status.textContent=parts.join(' ');
       if(data.error)status.textContent+=' Detail: '+data.error;
