@@ -134,14 +134,14 @@ const legacyColumnDefinitions = {
     qr_content: 'TEXT', qr_image: 'TEXT', qr_url: 'TEXT', expires_at: 'TEXT',
     created_at: 'TEXT', updated_at: 'TEXT', paid_at: 'TEXT', completed_at: 'TEXT', rated_at: 'TEXT'
   },
-  reviews: { order_id: 'TEXT', player_name: "TEXT DEFAULT ''", rating: 'INTEGER DEFAULT 5', comment: 'TEXT', created_at: 'TEXT' },
+  reviews: { order_id: 'TEXT', player_name: "TEXT DEFAULT ''", rating: 'INTEGER', comment: 'TEXT', created_at: 'TEXT' },
   review_replies: { review_order_id: 'TEXT', admin_name: "TEXT DEFAULT 'Tim SLF'", reply: "TEXT DEFAULT ''", created_at: 'TEXT', updated_at: 'TEXT' },
   store_products: {
     name: "TEXT DEFAULT ''", price: 'INTEGER DEFAULT 0', description: "TEXT DEFAULT ''",
     icon: "TEXT DEFAULT '✦'", tag: "TEXT DEFAULT 'Store'", note: "TEXT DEFAULT ''",
     active: 'INTEGER DEFAULT 1', created_at: 'TEXT', updated_at: 'TEXT'
   },
-  promo_codes: { type: "TEXT DEFAULT 'percent'", value: 'REAL DEFAULT 1', active: 'INTEGER DEFAULT 1', expires_at: 'TEXT', max_uses: 'INTEGER', created_at: 'TEXT', updated_at: 'TEXT' },
+  promo_codes: { type: "TEXT DEFAULT 'percent'", value: 'REAL DEFAULT 0', active: 'INTEGER DEFAULT 1', expires_at: 'TEXT', max_uses: 'INTEGER', created_at: 'TEXT', updated_at: 'TEXT' },
   admin_activity: { actor: "TEXT DEFAULT 'admin'", action: "TEXT DEFAULT ''", entity_type: "TEXT DEFAULT ''", entity_id: 'TEXT', details_json: "TEXT DEFAULT '{}'", created_at: 'TEXT' },
   admin_auth_attempts: { attempts: 'INTEGER DEFAULT 0', window_started: 'INTEGER DEFAULT 0', blocked_until: 'INTEGER DEFAULT 0' },
   reentry_tickets: {
@@ -158,7 +158,7 @@ const legacyColumnDefinitions = {
   announcements: { title: "TEXT DEFAULT ''", body: "TEXT DEFAULT ''", active: 'INTEGER DEFAULT 1', starts_at: 'TEXT', ends_at: 'TEXT', created_at: 'TEXT', updated_at: 'TEXT' },
   finance_entries: {
     entry_date: 'TEXT', kind: "TEXT DEFAULT 'INCOME'", category: "TEXT DEFAULT 'Lainnya'",
-    description: "TEXT DEFAULT ''", amount: 'INTEGER DEFAULT 1', reference: 'TEXT',
+    description: "TEXT DEFAULT ''", amount: 'INTEGER DEFAULT 0', reference: 'TEXT',
     status: "TEXT DEFAULT 'POSTED'", created_by: "TEXT DEFAULT 'owner'", created_at: 'TEXT', updated_at: 'TEXT'
   },
   admin_notes: {
