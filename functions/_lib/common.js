@@ -100,17 +100,22 @@ export async function rsaVerify(publicPem, message, signatureBase64) {
 }
 export function safeText(value, max = 200) { return typeof value === 'string' ? value.trim().slice(0, max) : ''; }
 export function currency(n) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n || 0); }
-let adminAuthSchemaPromise;
+const adminAuthSchemaPromises = new WeakMap();
 async function ensureAdminAuthTable(db) {
-  if (!adminAuthSchemaPromise) {
-    adminAuthSchemaPromise = db.prepare(`CREATE TABLE IF NOT EXISTS admin_auth_attempts (
+  let task = adminAuthSchemaPromises.get(db);
+  if (!task) {
+    task = db.prepare(`CREATE TABLE IF NOT EXISTS admin_auth_attempts (
       ip_hash TEXT PRIMARY KEY,
       attempts INTEGER NOT NULL DEFAULT 0,
       window_started INTEGER NOT NULL,
       blocked_until INTEGER NOT NULL DEFAULT 0
-    )`).run().catch(error => { adminAuthSchemaPromise = null; throw error; });
+    )`).run().catch(error => {
+      adminAuthSchemaPromises.delete(db);
+      throw error;
+    });
+    adminAuthSchemaPromises.set(db, task);
   }
-  return adminAuthSchemaPromise;
+  return task;
 }
 function constantTimeHexEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
