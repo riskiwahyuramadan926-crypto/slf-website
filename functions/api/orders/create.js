@@ -1,4 +1,4 @@
-import { json, fail, readJson, sha256Hex, hmacSha256Hex, randomHex, safeText, notifyAdmin } from '../../_lib/common.js';
+import { json, fail, readJson, sha256Hex, hmacSha256Hex, randomHex, safeText, notifyAdmin, resolveTicketLinkSecret } from '../../_lib/common.js';
 import { calculatePrice, RANK_COLORS, RANK_STYLES } from '../../_lib/catalog.js';
 
 export async function onRequestPost({ request, env }) {
@@ -7,8 +7,8 @@ export async function onRequestPost({ request, env }) {
     const data = await readJson(request);
     if (!data.agree) return fail('Centang persetujuan sebelum membuat pesanan.');
     const isReentryProduct = ['REENTRY_1','REENTRY_2','REENTRY_3'].includes(data.productId);
-    if (isReentryProduct && (typeof env.TICKET_LINK_SECRET !== 'string' || env.TICKET_LINK_SECRET.length < 32 || env.TICKET_LINK_SECRET === env.OWNER_SECRET || env.TICKET_LINK_SECRET === env.ADMIN_SECRET)) {
-      return fail('Checkout tiket sementara dinonaktifkan demi keamanan tautan pribadi. Owner perlu mengatur Cloudflare Secret TICKET_LINK_SECRET minimal 32 karakter acak dan berbeda dari OWNER_SECRET/ADMIN_SECRET sebelum tiket dapat dibeli.', 503);
+    if (isReentryProduct && !resolveTicketLinkSecret(env).ready) {
+      return fail('Checkout tiket sementara dinonaktifkan demi keamanan tautan pribadi. Owner perlu mengatur secret tiket minimal 32 karakter yang berbeda dari OWNER_SECRET/ADMIN_SECRET. Nama yang disarankan TICKET_LINK_SECRET; TICKET_SECRET juga diterima sebagai alias lama.', 503);
     }
     const minecraftName = safeText(data.minecraftName, 32);
     const platform = ['Java', 'Bedrock'].includes(data.platform) ? data.platform : '';
@@ -58,7 +58,7 @@ export async function onRequestPost({ request, env }) {
     for (let index = 0; index < ticketCount; index += 1) {
       const ticketId = 'TKT-' + date + '-' + randomHex(8).toUpperCase();
       // A ticket gets its own HMAC key; sharing it does not reveal the order's access key.
-      const ticketToken = await hmacSha256Hex(env.TICKET_LINK_SECRET, id + ':' + ticketId + ':' + token);
+      const ticketToken = await hmacSha256Hex(resolveTicketLinkSecret(env).secret, id + ':' + ticketId + ':' + token);
       const ticketHash = await sha256Hex(ticketToken);
       await env.DB.prepare(
         "INSERT INTO reentry_tickets (id, order_id, access_key_hash, minecraft_name, product_name, season_id, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'WAITING_PAYMENT', ?, ?)"

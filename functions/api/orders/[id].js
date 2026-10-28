@@ -1,4 +1,4 @@
-import { json, fail, sha256Hex, hmacSha256Hex } from '../../_lib/common.js';
+import { json, fail, sha256Hex, hmacSha256Hex, resolveTicketLinkSecret } from '../../_lib/common.js';
 export async function onRequestGet({ request, env, params }) {
   if (!env.DB) return fail('Database belum tersambung.', 503);
   const url = new URL(request.url), key = url.searchParams.get('key') || '', id = params.id;
@@ -13,10 +13,10 @@ export async function onRequestGet({ request, env, params }) {
     ).bind(id).all();
     order.tickets = await Promise.all(ticketRows.map(async ticket => {
       let ticketKey = '';
-      const ticketSecret = typeof env.TICKET_LINK_SECRET === 'string' ? env.TICKET_LINK_SECRET : '';
-      if (ticketSecret.length >= 32 && ticketSecret !== env.OWNER_SECRET && ticketSecret !== env.ADMIN_SECRET) {
+      const ticketSecretInfo = resolveTicketLinkSecret(env);
+      if (ticketSecretInfo.ready) {
         try {
-          const candidate = await hmacSha256Hex(ticketSecret, row.id + ':' + ticket.id + ':' + key);
+          const candidate = await hmacSha256Hex(ticketSecretInfo.secret, row.id + ':' + ticket.id + ':' + key);
           if (await sha256Hex(candidate) === ticket.access_key_hash) ticketKey = candidate;
         } catch {}
       }

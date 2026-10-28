@@ -1,4 +1,4 @@
-import { json } from '../_lib/common.js';
+import { json, resolveTicketLinkSecret } from '../_lib/common.js';
 import { ensureStoreSchema } from '../_lib/store-schema.js';
 
 const requiredTables = [
@@ -10,23 +10,24 @@ const requiredTables = [
 function secretDiagnostics(env) {
   const owner = typeof env.OWNER_SECRET === 'string' ? env.OWNER_SECRET : '';
   const admin = typeof env.ADMIN_SECRET === 'string' ? env.ADMIN_SECRET : '';
-  const ticket = typeof env.TICKET_LINK_SECRET === 'string' ? env.TICKET_LINK_SECRET : '';
+  const ticketInfo = resolveTicketLinkSecret(env);
   const ownerSecretFormatValid = owner.length >= 32;
   const adminSecretFormatValid = admin.length >= 32;
   const secretsDistinct = ownerSecretFormatValid && adminSecretFormatValid && owner !== admin;
-  const ticketLinkSecretFormatValid = ticket.length >= 32;
-  const ticketLinkSecretDistinct = ticketLinkSecretFormatValid && ticket !== owner && ticket !== admin;
+  const ticketLinkSecretFormatValid = ticketInfo.formatValid;
+  const ticketLinkSecretDistinct = ticketInfo.distinct;
   return {
     ownerSecretConfigured: owner.length > 0,
     ownerSecretFormatValid,
     adminSecretConfigured: admin.length > 0,
     adminSecretFormatValid,
     secretsDistinct,
-    ticketLinkSecretConfigured: ticket.length > 0,
+    ticketLinkSecretConfigured: ticketInfo.configured,
     ticketLinkSecretFormatValid,
     ticketLinkSecretDistinct,
+    ticketLinkSecretSource: ticketInfo.source,
     adminReady: secretsDistinct,
-    reentryReady: ticketLinkSecretDistinct
+    reentryReady: ticketInfo.ready
   };
 }
 

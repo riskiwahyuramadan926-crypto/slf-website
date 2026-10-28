@@ -16,6 +16,30 @@ export async function hmacSha256Hex(secret, value) {
   const signature = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value)));
   return [...signature].map(b => b.toString(16).padStart(2, '0')).join('');
 }
+// Resolve the canonical secret and a backwards-compatible legacy alias.
+ // Both values remain server-only; never expose the selected secret to API responses.
+export function resolveTicketLinkSecret(env) {
+  const owner = typeof env.OWNER_SECRET === 'string' ? env.OWNER_SECRET : '';
+  const admin = typeof env.ADMIN_SECRET === 'string' ? env.ADMIN_SECRET : '';
+  const candidates = [
+    ['TICKET_LINK_SECRET', typeof env.TICKET_LINK_SECRET === 'string' ? env.TICKET_LINK_SECRET : ''],
+    ['TICKET_SECRET', typeof env.TICKET_SECRET === 'string' ? env.TICKET_SECRET : '']
+  ];
+  const selected = candidates.find(([, value]) =>
+    value.length >= 32 && value !== owner && value !== admin
+  );
+  const configured = candidates.some(([, value]) => value.length > 0);
+  const diagnosticValue = candidates.find(([, value]) => value.length > 0)?.[1] || '';
+  return {
+    secret: selected ? selected[1] : '',
+    source: selected ? selected[0] : (configured ? candidates.find(([, value]) => value.length > 0)[0] : 'missing'),
+    configured,
+    formatValid: selected ? true : diagnosticValue.length >= 32,
+    distinct: selected ? true : diagnosticValue.length >= 32 && diagnosticValue !== owner && diagnosticValue !== admin,
+    ready: Boolean(selected)
+  };
+}
+
 export function randomHex(length = 16) {
   const bytes = new Uint8Array(Math.ceil(length / 2)); crypto.getRandomValues(bytes);
   return [...bytes].map(b => b.toString(16).padStart(2, '0')).join('').slice(0, length);
