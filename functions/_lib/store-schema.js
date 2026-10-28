@@ -184,7 +184,19 @@ async function ensureLegacyColumns(db) {
         await db.prepare('ALTER TABLE "' + table + '" ADD COLUMN "' + column + '" ' + definition).run();
         existing.add(column);
       } catch (error) {
-        throw new Error('column-migration:' + table + '.' + column + ':' + String(error?.message || error).slice(0, 180));
+        const message = String(error?.message || error);
+        // Concurrent Pages isolates may both observe a missing column. If another
+        // isolate adds it first, confirm the live schema and treat that as success.
+        if (/duplicate column/i.test(message)) {
+          try {
+            const { results: refreshed = [] } = await db.prepare('PRAGMA table_info("' + table + '")').all();
+            if (refreshed.some(row => row.name === column)) {
+              existing.add(column);
+              continue;
+            }
+          } catch {}
+        }
+        throw new Error('column-migration:' + table + '.' + column + ':' + message.slice(0, 180));
       }
     }
   }
