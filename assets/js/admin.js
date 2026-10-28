@@ -9,6 +9,34 @@
   const idr = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   $('logout').addEventListener('click',()=>{sessionStorage.removeItem(secretKey);location.href='/admin/';});
+  $('check-db-health').addEventListener('click',async()=>{
+    const button=$('check-db-health'),status=$('db-health-status');
+    button.disabled=true;button.textContent='Memeriksa koneksi…';
+    status.textContent='Memeriksa binding D1, tabel, dan konfigurasi akses…';
+    try{
+      const response=await fetch('/api/health',{cache:'no-store'});
+      const data=await response.json().catch(()=>({}));
+      const parts=[];
+      if(data.database==='not_bound')parts.push('D1 belum terikat ke environment ini.');
+      else if(data.database==='query_failed')parts.push('Binding D1 terdeteksi, tetapi query koneksi gagal.');
+      else if(data.database==='connected')parts.push('Koneksi database berhasil.');
+      if(data.schema==='initialization_failed')parts.push('Inisialisasi tabel gagal. Periksa Logs Cloudflare untuk error rinci.');
+      else if(data.schema==='incomplete')parts.push('Tabel belum lengkap: '+(data.missing||[]).join(', ')+'.');
+      else if(data.schema==='ready')parts.push('Skema tabel siap.');
+      if(!data.adminReady)parts.push('Secret Owner/Admin belum lengkap, belum 32+ karakter, atau nilainya sama.');
+      if(!data.reentryReady)parts.push('TICKET_LINK_SECRET belum dikonfigurasi dengan panjang minimal 32 karakter.');
+      if(!data.error&&data.ok&&data.adminReady&&data.reentryReady)parts.push('Konfigurasi inti siap.');
+      status.textContent=parts.join(' ');
+      if(data.error)status.textContent+=' Detail: '+data.error;
+      status.dataset.state=data.ok&&data.adminReady?'ok':'error';
+      if(!response.ok&&!data.error)status.textContent+=' Health check mengembalikan HTTP '+response.status+'.';
+    }catch(error){
+      status.textContent='Tidak dapat membaca /api/health. Periksa koneksi jaringan dan deployment Pages.';
+      status.dataset.state='error';
+    }finally{
+      button.disabled=false;button.textContent='Cek ulang koneksi database';
+    }
+  });
   $('login-form').addEventListener('submit',async e=>{
     e.preventDefault();
     const form=$('login-form'),button=form.querySelector('[type="submit"]');
