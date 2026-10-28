@@ -1,4 +1,4 @@
-import { json, resolveTicketLinkSecret } from '../_lib/common.js';
+import { json, resolveAdminSecrets, resolveTicketLinkSecret } from '../_lib/common.js';
 import { ensureStoreSchema } from '../_lib/store-schema.js';
 
 const requiredTables = [
@@ -8,29 +8,24 @@ const requiredTables = [
 ];
 
 function secretDiagnostics(env) {
-  const owner = typeof env.OWNER_SECRET === 'string' ? env.OWNER_SECRET : '';
-  const admin = typeof env.ADMIN_SECRET === 'string' ? env.ADMIN_SECRET : '';
+  const adminInfo = resolveAdminSecrets(env);
   const ticketInfo = resolveTicketLinkSecret(env);
-  const ownerSecretFormatValid = owner.length >= 32;
-  const adminSecretFormatValid = admin.length >= 32;
-  const secretsDistinct = ownerSecretFormatValid && adminSecretFormatValid && owner !== admin;
-  const ticketLinkSecretFormatValid = ticketInfo.formatValid;
-  const ticketLinkSecretDistinct = ticketInfo.distinct;
   return {
-    ownerSecretConfigured: owner.length > 0,
-    ownerSecretFormatValid,
-    adminSecretConfigured: admin.length > 0,
-    adminSecretFormatValid,
-    secretsDistinct,
+    ownerSecretConfigured: adminInfo.ownerConfigured,
+    ownerSecretFormatValid: adminInfo.ownerSecretFormatValid,
+    ownerSecretSource: adminInfo.ownerSource,
+    adminSecretConfigured: adminInfo.adminConfigured,
+    adminSecretFormatValid: adminInfo.adminSecretFormatValid,
+    adminSecretSource: adminInfo.adminSource,
+    secretsDistinct: adminInfo.secretsDistinct,
     ticketLinkSecretConfigured: ticketInfo.configured,
-    ticketLinkSecretFormatValid,
-    ticketLinkSecretDistinct,
+    ticketLinkSecretFormatValid: ticketInfo.formatValid,
+    ticketLinkSecretDistinct: ticketInfo.distinct,
     ticketLinkSecretSource: ticketInfo.source,
-    adminReady: secretsDistinct,
+    adminReady: adminInfo.ready,
     reentryReady: ticketInfo.ready
   };
 }
-
 export async function onRequestGet({ env }) {
   const secrets = secretDiagnostics(env);
   if (!env.DB || typeof env.DB.prepare !== 'function') {
