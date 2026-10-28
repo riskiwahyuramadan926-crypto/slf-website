@@ -12,7 +12,16 @@ export async function onRequestGet({ request, env }) {
     );
   }
 
-  const role = await getAdminRole(request, env);
+  let role;
+  try {
+    role = await getAdminRole(request, env);
+  } catch (error) {
+    console.error('Admin login verification failed:', error?.message || error);
+    if (error?.code === 'ADMIN_AUTH_STORAGE_UNAVAILABLE') {
+      return fail('Database terdeteksi, tetapi penyimpanan autentikasi Admin gagal dibaca. Ini bukan indikasi kode akses salah; periksa Logs deployment dan tabel admin_auth_attempts.', 503);
+    }
+    return fail('Verifikasi login Admin gagal karena masalah penyimpanan database. Periksa koneksi D1 dan Logs deployment.', 503);
+  }
   if (!role) return fail('Akses ditolak. Gunakan OWNER_SECRET untuk Owner atau ADMIN_SECRET untuk staf. TICKET_LINK_SECRET hanya untuk tautan tiket member, bukan untuk login; percobaan salah dibatasi sementara.', 401);
 
   return json({
