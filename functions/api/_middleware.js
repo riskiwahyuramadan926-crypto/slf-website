@@ -21,9 +21,22 @@ export async function onRequest(context) {
   try {
     await ensureStoreSchema(env.DB);
   } catch (error) {
-    console.error('SLF Store database initialization failed:', error?.message || error);
+    const diagnostic = String(error?.message || error || 'unknown schema error').replace(/[\\r\\n]/g, ' ').slice(0, 240);
+    const match = diagnostic.match(/^SLF_SCHEMA_STEP:([^:]+):(.*)$/);
+    const stage = match ? match[1] : (diagnostic.startsWith('column-migration:') ? 'legacy-column-migration' : 'migration-or-seed');
+    console.error('SLF Store database initialization failed [' + stage + ']:', diagnostic);
+
+    // If an optional/legacy schema migration fails, keep the password-protected
+    // order dashboard usable when its existing orders table is still readable.
+    // The handler still checks the supplied Admin/Owner credential itself.
+    if (pathname === '/api/admin/orders') {
+      return context.next();
+    }
+
     return new Response(JSON.stringify({
-      error: 'Database terdeteksi tetapi tabel Store gagal disiapkan. Periksa binding dan hak akses D1.'
+      error: 'Database terhubung tetapi persiapan skema Store gagal.',
+      schemaStep: stage,
+      schemaDiagnostic: diagnostic
     }), {
       status: 503,
       headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }
