@@ -3,7 +3,7 @@ import { json, fail, readJson, requireOwner, logAdminActivity } from '../../_lib
 const color=v=>/^#[0-9a-f]{6}$/i.test(String(v||''))?String(v).toLowerCase():'';
 const num=(v,min,max,fallback)=>{const n=Number(v);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;};
 const plain=(v,max)=>String(v==null?'':v).replace(/[<>]/g,'').replace(/[\u0000-\u001f]/g,' ').trim().slice(0,max);
-const pageOk=v=>['all','home','store','wiki','help','order','review','ticket'].includes(v);
+const pageOk=v=>['all','home','store','wiki','help','order','review','ticket'].includes(v)||(/^wiki-[a-z0-9-]{1,48}$/.test(String(v||'')));
 const selectorOk=v=>typeof v==='string'&&v.length<=280&&/^[A-Za-z0-9_#.:>()\[\]="\s-]+$/.test(v);
 const validImage=v=>/^https:\/\/[^\s"'<>]+$/i.test(v)||/^\/(?:api\/media\/slf-[a-f0-9]{24}\.(?:png|jpe?g|webp|gif|avif)|assets\/images\/(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+\.(?:png|jpe?g|webp|gif|avif))$/i.test(v);
 const fonts=new Set(['system','serif','sans','rounded','mono','fantasy']);

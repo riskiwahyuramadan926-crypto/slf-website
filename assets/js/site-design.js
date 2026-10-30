@@ -2,7 +2,7 @@
 'use strict';
 const isColor=v=>/^#[0-9a-f]{6}$/i.test(String(v||''));
 const clamp=(v,min,max,fallback)=>{const n=Number(v);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;};
-const pageName=()=>{const p=location.pathname.toLowerCase();if(p.startsWith('/store/order'))return'order';if(p.startsWith('/store/review'))return'review';if(p.startsWith('/store/ticket'))return'ticket';if(p.startsWith('/store'))return'store';if(p.startsWith('/wiki'))return'wiki';if(p.startsWith('/bantuan'))return'help';return'home';};
+const pageName=()=>{const p=location.pathname.toLowerCase();if(p.startsWith('/store/order'))return'order';if(p.startsWith('/store/review'))return'review';if(p.startsWith('/store/ticket'))return'ticket';if(p.startsWith('/store'))return'store';if(p.startsWith('/wiki/artikel/'))return'wiki-'+(p.split('/').pop()||'artikel').replace(/\.html$/,'');if(p.startsWith('/wiki'))return'wiki';if(p.startsWith('/bantuan'))return'help';return'home';};
 const studioMode=new URLSearchParams(location.search).get('slf_studio')==='1';
 const fontMap={
  system:'system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
@@ -94,7 +94,7 @@ function applyEffects(el,effects){
  (Array.isArray(effects)?effects:[]).forEach(name=>{const cls='slf-effect-'+name;if(all.includes(cls))el.classList.add(cls);});
 }
 function applyEdit(edit){
- if(!edit||edit.page!=='all'&&edit.page!==pageName())return;
+ if(!edit||edit.page!=='all'&&edit.page!==pageName()&&!(edit.page==='wiki'&&pageName().startsWith('wiki-')))return;
  let el;try{el=document.querySelector(edit.selector);}catch(_){return;}
  if(!el)return;
  remember(el);
@@ -104,7 +104,7 @@ function applyEdit(edit){
  applyStyle(el,edit.styles);applyEffects(el,edit.effects);
 }
 function insertElement(item){
- if(!item||item.page!=='all'&&item.page!==pageName()||!item.id||document.getElementById(item.id))return;
+ if(!item||item.page!=='all'&&item.page!==pageName()&&!(item.page==='wiki'&&pageName().startsWith('wiki-'))||!item.id||document.getElementById(item.id))return;
  let host;try{host=document.querySelector(item.containerSelector);}catch(_){return;}
  if(!host)return;
  const node=document.createElement(item.type==='image'?'img':'div');
@@ -121,7 +121,7 @@ function applyDesign(d){
  if(isColor(d.accent)){root.style.setProperty('--purple',d.accent);root.style.setProperty('--purple2',d.accent);root.style.setProperty('--accent',d.accent);}
  if(isColor(d.accent2)){root.style.setProperty('--gold',d.accent2);root.style.setProperty('--gold2',d.accent2);}
  (Array.isArray(d.insertedElements)?d.insertedElements:[]).forEach(insertElement);
- (Array.isArray(d.elementEdits)?d.elementEdits:[]).forEach(applyEdit);
+ const edits=Array.isArray(d.elementEdits)?d.elementEdits:[];edits.filter(x=>x.page==='all').forEach(applyEdit);if(pageName().startsWith('wiki-'))edits.filter(x=>x.page==='wiki').forEach(applyEdit);edits.filter(x=>x.page===pageName()).forEach(applyEdit);
  const page=pageName();
  if(d.page&&d.page!=='all'&&d.page!==page)return;
  const hero=page==='home'?(document.querySelector('#beranda.hero')||document.querySelector('.hero')):page==='wiki'?(document.querySelector('.wiki-hero')||document.querySelector('main .hero')):(document.querySelector('main .hero')||document.querySelector('.hero'));
@@ -200,7 +200,7 @@ async function init(){
   const response=await fetch('/api/site-design',{cache:'no-store'});
   if(response.ok){const data=await response.json();if(data.design)applyDesign(data.design);}
  }catch(_){}
- if(document.body){let scheduled=false;const observer=new MutationObserver(()=>{if(scheduled||!design)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;(Array.isArray(design.insertedElements)?design.insertedElements:[]).forEach(insertElement);(Array.isArray(design.elementEdits)?design.elementEdits:[]).forEach(applyEdit);});});observer.observe(document.body,{childList:true,subtree:true});}
+ if(document.body){let scheduled=false;const observer=new MutationObserver(()=>{if(scheduled||!design)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;(Array.isArray(design.insertedElements)?design.insertedElements:[]).forEach(insertElement);const edits=Array.isArray(design.elementEdits)?design.elementEdits:[];edits.filter(x=>x.page==='all').forEach(applyEdit);if(pageName().startsWith('wiki-'))edits.filter(x=>x.page==='wiki').forEach(applyEdit);edits.filter(x=>x.page===pageName()).forEach(applyEdit);});});observer.observe(document.body,{childList:true,subtree:true});}
  initStudioBridge();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();

@@ -10,8 +10,8 @@ function clone(v){return JSON.parse(JSON.stringify(v));}
 function snapshot(){history.push(clone(design));if(history.length>35)history.shift();redo=[];}
 function setDirty(){dirty=true;$('studio-dirty').textContent='● Ada perubahan belum diterbitkan';$('studio-live-status').textContent='Preview lokal aktif';}
 function msg(payload){if(frameReady&&$('studio-preview-frame').contentWindow)$('studio-preview-frame').contentWindow.postMessage(payload,location.origin);}
-function currentPage(){return pages[currentPath]||'home';}
-function entryFor(selector,page=currentPage()){return design.elementEdits.find(x=>x.selector===selector&&x.page===page)||design.elementEdits.find(x=>x.selector===selector&&x.page==='all');}
+function currentPage(){return pages[currentPath]||(currentPath.startsWith('/wiki/artikel/')?'wiki-'+currentPath.split('/').pop().replace(/\.html$/,''):'home');}
+function entryFor(selector,page=currentPage()){return design.elementEdits.find(x=>x.selector===selector&&x.page===page)||(page.startsWith('wiki-')?design.elementEdits.find(x=>x.selector===selector&&x.page==='wiki'):null)||design.elementEdits.find(x=>x.selector===selector&&x.page==='all');}
 function insertedFor(id){return design.insertedElements.find(x=>x.id===id);}
 function getActiveEdit(){if(!selected)return null;if(selected.created)return insertedFor(selected.id);return entryFor(selected.selector);}
 function selectPreview(path){currentPath=path;$('studio-preview-frame-wrap').classList.add('is-loading');frameReady=false;$('studio-preview-frame').src=path+(path.includes('?')?'&':'?')+'slf_studio=1&v='+Date.now();$('studio-preview-page').value=path;selected=null;renderSelection();}
@@ -45,7 +45,7 @@ function sendEdit(){
 function ensureEntry(){
  if(!selected)return null;
  if(selected.created)return insertedFor(selected.id);
- let entry=entryFor(selected.selector);
+ let entry=design.elementEdits.find(x=>x.selector===selected.selector&&x.page===currentPage());
  if(!entry){entry={page:currentPage(),selector:selected.selector,tag:selected.tag,styles:{},effects:[],hidden:false};design.elementEdits.push(entry);}
  return entry;
 }
@@ -76,7 +76,7 @@ function bindFields(){
 }
 function saveCreated(data){
  if(!design.insertedElements.some(x=>x.id===data.id)){
-  snapshot();design.insertedElements.push({id:data.id,page:currentPage(),containerSelector:data.containerSelector,type:data.kind==='image'?'image':'text',text:data.kind==='image'?'': 'Teks baru',src:data.src||'',alt:'Elemen tambahan SLF',styles:{},effects:[]});setDirty();
+  snapshot();design.insertedElements.push({id:data.id,page:data.page||currentPage(),containerSelector:data.containerSelector,type:data.kind==='image'?'image':'text',text:data.kind==='image'?'': 'Teks baru',src:data.src||'',alt:'Elemen tambahan SLF',styles:{},effects:[]});setDirty();
  }
 }
 
