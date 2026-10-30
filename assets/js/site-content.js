@@ -14,11 +14,12 @@
     const label=document.createElement('span');
     label.className='cms-content-label';
     label.textContent='INFO SLF';
+    let image=null;if(item.image_url){image=document.createElement('img');image.className='cms-content-image';image.src=escapeText(item.image_url);image.alt=escapeText(item.title||'Gambar SLF');image.loading='lazy';image.decoding='async';}
     const title=document.createElement('h3');
     title.textContent=escapeText(item.title);
     const body=document.createElement('p');
     body.textContent=escapeText(item.body);
-    card.append(label,title,body);
+    if(image)card.append(image);card.append(label,title,body);
     return card;
   }
   async function init(){
