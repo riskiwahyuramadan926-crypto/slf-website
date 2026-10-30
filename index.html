@@ -134,7 +134,7 @@
     document.querySelectorAll('[data-placeholder]').forEach(link=>link.addEventListener('click',event=>{event.preventDefault();showToast(link.dataset.placeholder);}));
     document.querySelectorAll('[data-copy-text]').forEach(button=>button.addEventListener('click',async()=>{const value=button.dataset.copyText;try{await navigator.clipboard.writeText(value);showToast('Berhasil disalin: '+value);}catch(error){showToast('Salin manual: '+value);}}));
   </script>
-  <script src="/assets/js/site-design.js?v=20261030-livebuilder4" defer></script><script src="/assets/js/site-content.js" defer></script>
+  <script src="/assets/js/site-design.js?v=20261030-livebuilder5" defer></script><script src="/assets/js/site-content.js" defer></script>
   <script src="/assets/js/support-widget.js" defer></script>
 </body>
 </html>
