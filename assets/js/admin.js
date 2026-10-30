@@ -3,8 +3,8 @@
   const $ = id => document.getElementById(id);
   const secretKey = 'slf_admin_secret_session';
   let allOrders = [], allReviews = [], allProducts = [], allPromos = [], allCustomers = [], allTickets = [], allAnnouncements = [], allNotes = [], allCmsItems = [], allFinanceEntries = [], currentFinance = {}, currentRole = '', ownerSecretConfigured = false, lastCmsKind = 'slot', knownOrderIds = new Set(), knownTicketIds = new Set(), firstLoad = true, firstTicketLoad = true, activeTab = 'orders';
-  const ownerOnlyTabs = new Set(['products','promos','reports','finance','site-content','access']);
-  const allTabNames = ['orders','tickets','reviews','products','promos','customers','reports','activity','support','announcements','notes','finance','site-content','access'];
+  const ownerOnlyTabs = new Set(['products','promos','reports','finance','site-content','studio','access']);
+  const allTabNames = ['orders','tickets','reviews','products','promos','customers','reports','activity','support','announcements','notes','finance','site-content','studio','access'];
   const statusLabels = {PENDING_PAYMENT:'Menunggu pembayaran',PAID:'Pembayaran berhasil',PROCESSING:'Sedang diproses',COMPLETED:'Selesai',EXPIRED:'Kedaluwarsa',CANCELLED:'Dibatalkan'};
   const idr = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -279,7 +279,7 @@
       showToast('Akses ditolak: fitur ini hanya tersedia untuk Owner.');
       return;
     }
-    const jobs={tickets:loadTickets,products:loadProducts,promos:loadPromos,customers:loadCustomers,reports:loadReports,activity:loadActivity,support:loadSupport,announcements:loadAnnouncements,notes:loadNotes,finance:loadFinance,'site-content':loadSiteContent,access:loadAccess};
+    const jobs={tickets:loadTickets,products:loadProducts,promos:loadPromos,customers:loadCustomers,reports:loadReports,activity:loadActivity,support:loadSupport,announcements:loadAnnouncements,notes:loadNotes,finance:loadFinance,'site-content':loadSiteContent,studio:()=>window.SLFStudioLoad&&window.SLFStudioLoad(),access:loadAccess};
     if(name==='reviews'){loadReviews();return;}
     if(jobs[name])jobs[name]();
   }
@@ -618,7 +618,7 @@
     }
     lastCmsKind=kind;
     const slot=kind==='slot';
-    $('cms-slot-wrap').hidden=!slot;$('cms-title-wrap').hidden=slot;
+    $('cms-slot-wrap').hidden=!slot;$('cms-title-wrap').hidden=slot;if($('cms-image-wrap'))$('cms-image-wrap').hidden=slot;
     if(slot)syncCmsSlots();
   }
   function syncCmsSlots(){
@@ -644,29 +644,30 @@
       const h=document.createElement('h3');h.textContent=x.kind==='slot'?'Slot teks · '+x.slot_key:x.title;
       const meta=document.createElement('p');meta.className='admin-muted';meta.textContent=x.page.toUpperCase()+' · '+(x.active?'Aktif':'Nonaktif')+' · '+(x.starts_at||'mulai sekarang')+' · '+(x.ends_at||'tanpa jadwal akhir');
       const body=document.createElement('p');body.textContent=x.body;
+      let image=null;if(x.image_url){image=document.createElement('img');image.src=x.image_url;image.alt=x.title||'Gambar konten SLF';image.loading='lazy';image.style.cssText='display:block;width:100%;max-height:180px;object-fit:cover;border-radius:10px;margin:10px 0';}
       const actions=document.createElement('div');actions.className='admin-inline-actions';
       const edit=document.createElement('button');edit.type='button';edit.className='btn';edit.textContent='Edit';edit.addEventListener('click',()=>editCmsItem(x.id));
       actions.append(edit);
       if(x.kind==='card'){const del=document.createElement('button');del.type='button';del.className='btn btn-quiet';del.textContent='Hapus kartu';del.addEventListener('click',async()=>{if(!confirm('Hapus kartu konten ini dari website?'))return;del.disabled=true;try{await api('/api/admin/site-content?id='+encodeURIComponent(x.id),{method:'DELETE'});await loadSiteContent();showToast('Kartu konten dihapus.');}catch(e){setError('cms-error',e.message);del.disabled=false;}});actions.append(del);}
-      card.append(h,meta,body,actions);root.append(card);
+      if(image)card.append(image);card.append(h,meta,body,actions);root.append(card);
     });
   }
   function editCmsItem(id){
     const x=allCmsItems.find(v=>v.id===id);if(!x)return;
     $('cms-id').value=x.id;$('cms-kind').value=x.kind;lastCmsKind=x.kind;$('cms-page').value=x.page;syncCmsSlots();
     if(x.slot_key)$('cms-slot').value=x.slot_key;
-    $('cms-title').value=x.title||'';$('cms-body').value=x.body;$('cms-active').value=x.active?'1':'0';
+    $('cms-title').value=x.title||'';$('cms-body').value=x.body;$('cms-image-url').value=x.image_url||'';$('cms-active').value=x.active?'1':'0';
     $('cms-start').value=toLocalDateTime(x.starts_at);$('cms-end').value=toLocalDateTime(x.ends_at);
     $('cms-form-title').textContent='Edit konten';syncCmsForm();$('cms-form').scrollIntoView({behavior:'smooth',block:'start'});
   }
   function resetCmsForm(){
-    $('cms-form').reset();$('cms-id').value='';$('cms-kind').value='slot';lastCmsKind='slot';$('cms-page').value='home';$('cms-active').value='1';
+    $('cms-form').reset();if($('cms-image-url'))$('cms-image-url').value='';$('cms-id').value='';$('cms-kind').value='slot';lastCmsKind='slot';$('cms-page').value='home';$('cms-active').value='1';
     $('cms-form-title').textContent='Tambah / edit konten';syncCmsSlots();syncCmsForm();setError('cms-error','');
   }
   async function saveCms(e){
     e.preventDefault();setError('cms-error','');
     const kind=$('cms-kind').value;
-    const payload={id:$('cms-id').value||undefined,kind,page:$('cms-page').value,slotKey:kind==='slot'?$('cms-slot').value:undefined,title:kind==='card'?$('cms-title').value.trim():'',body:$('cms-body').value.trim(),active:$('cms-active').value==='1',startsAt:$('cms-start').value?new Date($('cms-start').value).toISOString():null,endsAt:$('cms-end').value?new Date($('cms-end').value).toISOString():null};
+    const payload={id:$('cms-id').value||undefined,kind,page:$('cms-page').value,slotKey:kind==='slot'?$('cms-slot').value:undefined,title:kind==='card'?$('cms-title').value.trim():'',body:$('cms-body').value.trim(),imageUrl:kind==='card'?$('cms-image-url').value.trim():'',active:$('cms-active').value==='1',startsAt:$('cms-start').value?new Date($('cms-start').value).toISOString():null,endsAt:$('cms-end').value?new Date($('cms-end').value).toISOString():null};
     const btn=$('cms-form').querySelector('[type=submit]');btn.disabled=true;
     try{await api('/api/admin/site-content',{method:'POST',body:JSON.stringify(payload)});resetCmsForm();await loadSiteContent();showToast('Konten tersimpan. Muat ulang halaman publik untuk melihat hasilnya.');}
     catch(err){setError('cms-error',err.message);}finally{btn.disabled=false;}
