@@ -2,7 +2,7 @@
 'use strict';
 const $=id=>document.getElementById(id),secretKey='slf_admin_secret_session';
 const pages={'/':'home','/store/':'store','/wiki/':'wiki','/bantuan/':'help','/store/order.html':'order','/store/review.html':'review','/store/ticket.html':'ticket'};
-const defaults=()=>({version:2,page:'all',accent:'#9b6cff',accent2:'#f3cb82',background:'#100c18',overlayColor:'#100c18',overlayOpacity:0,layers:[],elementEdits:[],insertedElements:[]});
+const defaults=()=>({version:2,page:'all',accent:'#9b6cff',accent2:'#f3cb82',background:'#100c18',globalFont:'system',overlayColor:'#100c18',overlayOpacity:0,layers:[],elementEdits:[],insertedElements:[]});
 let design=defaults(),selected=null,frameReady=false,dirty=false,mode=true,inlineMode=false,currentPath='/',history=[],redo=[],outlineItems=[],suppress=false;
 const $id=selector=>document.querySelector(selector);
 function api(path,options={}){const headers={...(options.headers||{}),authorization:'Bearer '+(sessionStorage.getItem(secretKey)||'')};if(options.body&&!(options.body instanceof FormData))headers['content-type']='application/json';return fetch(path,{...options,headers,cache:'no-store'}).then(async r=>{const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||'Permintaan gagal ('+r.status+')');return data;});}
@@ -165,6 +165,7 @@ function bind(){
  $('studio-add-card').addEventListener('click',()=>{if(!selected){alert('Pilih bagian/area di preview terlebih dahulu.');return;}const title=prompt('Judul kartu:','Informasi baru');if(title===null)return;msg({type:'slf-studio-add',kind:'card',text:title.slice(0,180)});});
  $('studio-add-image').addEventListener('click',()=>{if(!selected){alert('Pilih bagian/area di preview terlebih dahulu.');return;}const src=prompt('Masukkan URL HTTPS atau path gambar, misalnya /assets/images/uploads/gambar.webp');if(src)msg({type:'slf-studio-add',kind:'image',src:src.trim()});});
  $('studio-remove-created').addEventListener('click',()=>{if(!selected||!selected.created)return;msg({type:'slf-studio-remove'});});
+ $('studio-global-font').addEventListener('focus',snapshot);$('studio-global-font').addEventListener('change',e=>{design.globalFont=e.target.value;setDirty();msg({type:'slf-studio-theme',globalFont:design.globalFont});});
  $('studio-global-accent').addEventListener('focus',snapshot);$('studio-global-accent2').addEventListener('focus',snapshot);$('studio-global-overlay').addEventListener('focus',snapshot);$('studio-global-overlay-opacity').addEventListener('focus',snapshot);
  $('studio-global-accent').addEventListener('input',e=>{design.accent=e.target.value;setDirty();msg({type:'slf-studio-theme',accent:design.accent});});
  $('studio-global-accent2').addEventListener('input',e=>{design.accent2=e.target.value;setDirty();msg({type:'slf-studio-theme',accent2:design.accent2});});
@@ -186,7 +187,7 @@ function bind(){
 async function loadDesign(showStatus=true){
  try{
   const data=await api('/api/admin/site-design');design=data.design||defaults();design.elementEdits=Array.isArray(design.elementEdits)?design.elementEdits:[];design.insertedElements=Array.isArray(design.insertedElements)?design.insertedElements:[];
-  $('studio-global-accent').value=design.accent||'#9b6cff';$('studio-global-accent2').value=design.accent2||'#f3cb82';$('studio-global-overlay').value=design.overlayColor||'#100c18';$('studio-global-overlay-opacity').value=design.overlayOpacity||0;
+  $('studio-global-font').value=design.globalFont||'system';$('studio-global-accent').value=design.accent||'#9b6cff';$('studio-global-accent2').value=design.accent2||'#f3cb82';$('studio-global-overlay').value=design.overlayColor||'#100c18';$('studio-global-overlay-opacity').value=design.overlayOpacity||0;
   dirty=false;$('studio-dirty').textContent='';if(showStatus)$('studio-live-status').textContent=data.storageMessage||'Desain dimuat.';await loadStudioMedia();
  }catch(error){$('studio-error').textContent=error.message||'Desain tidak bisa dimuat.';}
 }
