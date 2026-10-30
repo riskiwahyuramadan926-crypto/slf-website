@@ -29,7 +29,7 @@ export async function onRequestGet({ request, env }) {
   if(!(await requireOwner(request,env)))return fail('Akses Owner diperlukan.',403);
   const row=await env.DB.prepare("SELECT config_json,updated_at FROM site_design WHERE id='default'").first();
   let design=null;if(row){try{design=JSON.parse(row.config_json);}catch(_){}}
-  return json({design,storageReady:Boolean(env.MEDIA),storageMessage:env.MEDIA?'Penyimpanan R2 terhubung.':'Binding R2 MEDIA belum dipasang; URL gambar masih bisa digunakan.'});
+  return json({design,storageReady:typeof env.GITHUB_MEDIA_TOKEN==='string'&&env.GITHUB_MEDIA_TOKEN.trim().length>20,storageMessage:env.GITHUB_MEDIA_TOKEN?'Penyimpanan media GitHub aktif.':'Secret GITHUB_MEDIA_TOKEN belum dipasang; URL HTTPS dan aset lokal tetap bisa digunakan.'});
 }
 export async function onRequestPost({ request, env }) {
   if(!(await requireOwner(request,env)))return fail('Akses Owner diperlukan.',403);
