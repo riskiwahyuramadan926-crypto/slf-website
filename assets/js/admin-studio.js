@@ -30,7 +30,7 @@ function renderSelection(){
  $('studio-element-text').value=selected&&selected.textEditable?(active&&active.text!==undefined?active.text:selected.text):'';
  $('studio-element-src').disabled=!selected;
  $('studio-element-src').value=selected?(active&&active.src!==undefined?active.src:selected.src):'';
- for(const [key,id] of Object.entries(styleFields())){const el=$(id);if(!el)continue;const value=styles[key];el.value=value!==undefined?(key==='opacity'?Math.round(Number(value)*100):value):(selected?.computed?.[key]!==undefined?selected.computed[key]:styleDefaults[key]);}
+ for(const [key,id] of Object.entries(styleFields())){const el=$(id);if(!el)continue;const value=styles[key];el.value=value!==undefined?(key==='opacity'?Math.round(Number(value)*100):value):(selected?.computed?.[key]!==undefined?(key==='opacity'?Math.round(Number(selected.computed[key])*100):selected.computed[key]):styleDefaults[key]);}
  const effects=active&&active.effects||[];
  document.querySelectorAll('[data-effect]').forEach(el=>el.checked=effects.includes(el.dataset.effect));
  $('studio-remove-created').disabled=!(selected&&selected.created);
