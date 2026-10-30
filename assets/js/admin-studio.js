@@ -138,7 +138,7 @@ async function uploadStudioMedia(){
 
 function bind(){
  const frame=$('studio-preview-frame');
- frame.addEventListener('load',()=>{frameReady=true;$('studio-preview-frame-wrap').classList.remove('is-loading');msg({type:'slf-studio-mode',enabled:mode});$('studio-live-status').textContent='Preview siap · pilih elemen atau aktifkan edit teks langsung';});
+ frame.addEventListener('load',()=>{frameReady=true;$('studio-preview-frame-wrap').classList.remove('is-loading');msg({type:'slf-studio-mode',enabled:mode});msg({type:'slf-studio-inline-mode',enabled:inlineMode});$('studio-live-status').textContent='Preview siap · pilih elemen atau aktifkan edit teks langsung';});
  window.addEventListener('message',event=>{
   if(event.origin!==location.origin||event.source!==frame.contentWindow||!event.data)return;
   const m=event.data;
