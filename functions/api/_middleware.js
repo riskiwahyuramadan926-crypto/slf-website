@@ -8,7 +8,7 @@ export async function onRequest(context) {
   // The health handler performs its own connection + schema checks and returns the actual failure stage.
   // Keep health and credential verification reachable during D1/schema incidents.
   // Store data endpoints remain protected by the normal database/schema gate.
-  if (pathname === '/api/support/chat' || pathname === '/api/health' || pathname === '/api/admin/me') return context.next();
+  if (pathname === '/api/support/chat' || pathname === '/api/health' || pathname === '/api/admin/me' || pathname.startsWith('/api/media/')) return context.next();
   if (!env.DB) {
     return new Response(JSON.stringify({
       error: 'Database Store belum terikat. Binding Cloudflare D1 harus bernama DB.'

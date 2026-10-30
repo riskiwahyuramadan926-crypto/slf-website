@@ -70,7 +70,7 @@ function updateControls(){
  const layer=currentLayer();
  $('studio-properties').hidden=!layer;
  $('studio-text-properties').hidden=!layer||layer.type!=='text';
- $('studio-image-properties').hidden=!layer||layer.type!=='image';
+ $('studio-image-properties').hidden=!layer||layer.type!=='image';if($('studio-height-field'))$('studio-height-field').hidden=!layer||layer.type!=='image';if($('studio-weight-field'))$('studio-weight-field').hidden=!layer||layer.type!=='text';
  $('studio-delete-layer').disabled=!layer||layer.id==='wallpaper';
  if(layer){
   $('studio-layer-name').value=layer.name||'';$('studio-layer-x').value=layer.x;$('studio-layer-y').value=layer.y;
@@ -133,7 +133,7 @@ function bind(){
  on('studio-add-image','click',()=>{const source=prompt('Masukkan URL gambar HTTPS atau path /assets/images/ yang sudah tersedia:');if(source!==null)addLayer('image',source.trim());});
  on('studio-delete-layer','click',()=>{if(!currentLayer()||selectedId==='wallpaper')return;project.layers=project.layers.filter(x=>x.id!==selectedId);selectedId='title-main';renderLayerList();updateControls();renderStage();});
 on('studio-duplicate-layer','click',()=>{const layer=currentLayer();if(!layer||project.layers.length>=16)return;const copy=JSON.parse(JSON.stringify(layer));copy.id='copy-'+Math.random().toString(36).slice(2,9);copy.name=(layer.name||'Layer')+' copy';copy.x=clamp(copy.x+3,0,100,copy.x);copy.y=clamp(copy.y+3,0,100,copy.y);copy.z=clamp(copy.z+1,1,10,copy.z);project.layers.push(copy);selectLayer(copy.id);});
-const moveLayer=step=>{const items=project.layers.filter(x=>x.id!=='wallpaper').sort((a,b)=>(a.z||0)-(b.z||0));const index=items.findIndex(x=>x.id===selectedId);if(index<0)return;const next=clamp(index+step,0,items.length-1,index);if(next===index)return;const [item]=items.splice(index,1);items.splice(next,0,item);items.forEach((x,i)=>x.z=i+1);renderLayerList();renderStage();};on('studio-layer-up','click',()=>moveLayer(-1));on('studio-layer-down','click',()=>moveLayer(1));
+const moveLayer=step=>{const items=project.layers.filter(x=>x.id!=='wallpaper').sort((a,b)=>(a.z||0)-(b.z||0));const index=items.findIndex(x=>x.id===selectedId);if(index<0)return;const next=clamp(index+step,0,items.length-1,index);if(next===index)return;const [item]=items.splice(index,1);items.splice(next,0,item);items.forEach((x,i)=>x.z=i+1);renderLayerList();renderStage();};on('studio-layer-up','click',()=>moveLayer(1));on('studio-layer-down','click',()=>moveLayer(-1));
  on('studio-reset','click',()=>{if(!confirm('Reset desain lokal ke pengaturan awal?'))return;project=defaults();selectedId='title-main';renderLayerList();updateControls();renderStage();status('Desain lokal direset. Belum diterbitkan.',false);});
  on('studio-save','click',saveDesign);on('studio-upload','click',uploadImage);on('studio-reload-media','click',loadMedia);
  const stage=$('studio-stage');let movement=null;
@@ -141,7 +141,7 @@ const moveLayer=step=>{const items=project.layers.filter(x=>x.id!=='wallpaper').
   const node=event.target.closest('[data-layer-id]');if(!node)return;
   const layer=project.layers.find(x=>x.id===node.dataset.layerId);if(!layer)return;
   selectLayer(layer.id);movement={id:layer.id,pointerId:event.pointerId,rect:stage.getBoundingClientRect()};
-  node.setPointerCapture(event.pointerId);event.preventDefault();
+  stage.setPointerCapture(event.pointerId);event.preventDefault();
  });
  stage.addEventListener('pointermove',event=>{
   if(!movement||movement.pointerId!==event.pointerId)return;

@@ -25,6 +25,11 @@ export async function onRequestDelete({ request, env }) {
   if(!env.MEDIA)return fail('Penyimpanan gambar belum aktif.',503);
   const key=new URL(request.url).searchParams.get('key')||'';
   if(!validKey(key))return fail('Kunci media tidak valid.');
+  const publicUrl='/api/media/'+key;
+  const design=await env.DB.prepare("SELECT config_json FROM site_design WHERE id='default'").first();
+  if(design&&String(design.config_json||'').includes(publicUrl))return fail('Gambar masih dipakai oleh desain website. Lepaskan dari layer aktif sebelum menghapus.');
+  const usedCard=await env.DB.prepare('SELECT id FROM site_content WHERE image_url=? LIMIT 1').bind(publicUrl).first();
+  if(usedCard)return fail('Gambar masih dipakai oleh kartu informasi website. Ganti atau lepaskan gambarnya sebelum menghapus.');
   await env.MEDIA.delete(key);
   await logAdminActivity(env.DB,'media_deleted','media',key,{});
   return json({ok:true,key});

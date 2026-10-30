@@ -2,7 +2,7 @@ import { json, fail, readJson, requireOwner, logAdminActivity } from '../../_lib
 const color = (v, fallback) => /^#[0-9a-f]{6}$/i.test(String(v || '')) ? String(v).toLowerCase() : fallback;
 const num = (v, min, max, fallback) => { const n=Number(v); return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback; };
 const plain = (v,max) => String(v==null?'':v).replace(/[<>]/g,'').replace(/[\u0000-\u001f]/g,' ').trim().slice(0,max);
-const validImage = value => /^https:\/\/[^\s"'<>]+$/i.test(value) || /^\/api\/media\/slf-[a-f0-9]{24}\.(?:png|jpe?g|webp|gif|avif)$/i.test(value) || /^\/assets\/images\/[A-Za-z0-9_./-]+$/i.test(value);
+const validImage = value => /^https:\/\/[^\s"'<>]+$/i.test(value) || /^\/api\/media\/slf-[a-f0-9]{24}\.(?:png|jpe?g|webp|gif|avif)$/i.test(value) || /^\/assets\/images\/(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+\.(?:png|jpe?g|webp|gif|avif)$/i.test(value);
 function normalize(input) {
   const d=input&&typeof input==='object'?input:{};
   const page=['home','all','store','wiki'].includes(d.page)?d.page:'home';
