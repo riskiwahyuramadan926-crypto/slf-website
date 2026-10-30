@@ -12,3 +12,14 @@
 .slf-effect-border-glow{border:1px solid rgba(180,154,255,.55)!important;box-shadow:0 0 0 1px rgba(180,154,255,.1),0 0 24px rgba(126,230,246,.12)!important}
 @keyframes slfShine{0%,65%{left:-55%}100%{left:145%}}
 @media(prefers-reduced-motion:reduce){.slf-effect-shine:after{animation:none!important}.slf-effect-tilt{transform:none!important}}
+
+/* Navigator and expanded SLF Studio controls */
+.studio-element-navigator{display:grid;gap:5px;max-height:310px;overflow:auto;padding:4px;border:1px solid var(--line);border-radius:10px;background:#100c18}
+.studio-nav-item{display:flex;align-items:center;gap:9px;width:100%;min-width:0;padding:8px 9px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--text);text-align:left;cursor:pointer}
+.studio-nav-item:hover,.studio-nav-item.active{background:rgba(180,154,255,.12);border-color:rgba(180,154,255,.35)}
+.studio-nav-tag{flex:0 0 46px;color:var(--gold);font:700 .65rem ui-monospace,monospace}
+.studio-nav-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.78rem}
+.studio-inspector .studio-panel{scroll-margin-top:10px}
+.studio-inspector .studio-panel>label{display:block;margin:9px 0 5px;font-size:.8rem;color:var(--muted)}
+.studio-inspector .studio-panel input:not([type=checkbox]),.studio-inspector .studio-panel select,.studio-inspector .studio-panel textarea{max-width:100%}
+@media(max-width:650px){.studio-element-navigator{max-height:230px}.studio-nav-item{padding:10px}.studio-preview-toolbar button{min-width:42%}}
