@@ -58,6 +58,9 @@ SLF STUDIO — EDITOR VISUAL & MEDIA
 1. Buka /admin/ memakai OWNER_SECRET. Menu SLF Studio hanya tersedia untuk Owner.
 2. Pilih target Beranda, Store, Wiki, atau Semua halaman. Atur wallpaper, layer gambar/teks, posisi, ukuran, warna, opacity, blur, dan overlay. Geser objek langsung pada kanvas.
 3. Tekan Simpan & terbitkan. Konfigurasi visual tersimpan di D1 pada tabel site_design. Kartu informasi Editor Website dapat memakai image_url.
-4. Untuk upload gambar permanen, buat bucket R2 bernama slf-media. Di Workers & Pages → proyek slf-store → Settings → Bindings → Add → R2 bucket, gunakan Variable name MEDIA dan pilih bucket slf-media. Simpan dan deploy ulang. Lakukan pada Production, dan Preview bila digunakan.
-5. Tanpa R2, editor tetap mendukung URL HTTPS gambar dan file yang sudah ada di /assets/images/. Upload dari perangkat memerlukan binding MEDIA.
-6. Upload menerima PNG, JPG, WEBP, GIF, dan AVIF maksimal 5 MB. Jangan menghapus aset yang masih digunakan desain aktif.
+4. Penyimpanan media utama memakai repository GitHub (tanpa Cloudflare R2, kartu, PayPal, atau storage berbayar). File hasil upload masuk ke `assets/images/uploads/` dan disajikan sebagai aset statis website melalui Cloudflare Pages CDN.
+5. Untuk mengaktifkan upload perangkat, buat GitHub Fine-grained Personal Access Token. Batasi Repository access hanya ke `slf-website`; beri Repository permissions `Contents: Read and write` saja. Jangan memberi akses ke repository lain.
+6. Di Cloudflare Dashboard → Workers & Pages → proyek `slf-store` → Settings → Variables and Secrets, tambahkan Secret `GITHUB_MEDIA_TOKEN` berisi token tersebut. Jangan pernah menaruh token di kode frontend, GitHub, atau chat. Setelah disimpan, buat deployment Pages baru.
+7. SLF Studio mengoptimalkan gambar non-GIF menjadi WEBP (maksimal 1920 px); batas akhir upload 2 MB. GIF dipertahankan animasinya dengan batas 2 MB. Format yang didukung: PNG, JPG, WEBP, GIF.
+8. Setiap upload atau penghapusan media membuat commit GitHub baru dan dapat memicu deployment Pages. Untuk menjaga repository tetap ringan, unggah hanya gambar yang benar-benar dipakai, hindari duplikat, dan jangan unggah video. File publik memakai path `/assets/images/uploads/...`.
+9. Jika belum memasang secret, editor tetap dapat memakai URL HTTPS atau aset lokal yang telah ada di `/assets/images/`.
