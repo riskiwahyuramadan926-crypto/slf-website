@@ -23,3 +23,6 @@
 .studio-inspector .studio-panel>label{display:block;margin:9px 0 5px;font-size:.8rem;color:var(--muted)}
 .studio-inspector .studio-panel input:not([type=checkbox]),.studio-inspector .studio-panel select,.studio-inspector .studio-panel textarea{max-width:100%}
 @media(max-width:650px){.studio-element-navigator{max-height:230px}.studio-nav-item{padding:10px}.studio-preview-toolbar button{min-width:42%}}
+
+.studio-control-group{grid-column:1/-1;padding:8px 2px 3px;margin-top:5px;border-bottom:1px solid var(--line);color:var(--gold2);font-size:.72rem;font-weight:850;letter-spacing:.07em;text-transform:uppercase}
+.studio-inspector .studio-panel textarea:focus,.studio-inspector .studio-panel input:focus,.studio-inspector .studio-panel select:focus{outline:2px solid rgba(180,154,255,.5);outline-offset:1px}
