@@ -5,7 +5,7 @@ const pages={'/':'home','/store/':'store','/wiki/':'wiki','/bantuan/':'help','/s
 const defaults=()=>({version:2,page:'all',accent:'#9b6cff',accent2:'#f3cb82',background:'#100c18',overlayColor:'#100c18',overlayOpacity:0,layers:[],elementEdits:[],insertedElements:[]});
 let design=defaults(),selected=null,frameReady=false,dirty=false,mode=true,currentPath='/',history=[],redo=[],suppress=false;
 const $id=selector=>document.querySelector(selector);
-function api(path,options={}){const headers={...(options.headers||{}),authorization:'Bearer '+(sessionStorage.getItem(secretKey)||'')};if(options.body)headers['content-type']='application/json';return fetch(path,{...options,headers,cache:'no-store'}).then(async r=>{const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||'Permintaan gagal ('+r.status+')');return data;});}
+function api(path,options={}){const headers={...(options.headers||{}),authorization:'Bearer '+(sessionStorage.getItem(secretKey)||'')};if(options.body&&!(options.body instanceof FormData))headers['content-type']='application/json';return fetch(path,{...options,headers,cache:'no-store'}).then(async r=>{const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||'Permintaan gagal ('+r.status+')');return data;});}
 function clone(v){return JSON.parse(JSON.stringify(v));}
 function snapshot(){history.push(clone(design));if(history.length>35)history.shift();redo=[];}
 function setDirty(){dirty=true;$('studio-dirty').textContent='● Ada perubahan belum diterbitkan';$('studio-live-status').textContent='Preview lokal aktif';}
@@ -33,6 +33,7 @@ function renderSelection(){
  const effects=active&&active.effects||[];
  document.querySelectorAll('[data-effect]').forEach(el=>el.checked=effects.includes(el.dataset.effect));
  $('studio-remove-created').disabled=!(selected&&selected.created);
+ $('studio-element-hidden').checked=Boolean(active&&active.hidden);
 }
 function sendEdit(){
  if(!selected)return;
@@ -55,6 +56,7 @@ function change(mutator){
 function bindFields(){
  $('studio-element-text').addEventListener('focus',()=>{if(selected)snapshot();});$('studio-element-text').addEventListener('input',e=>change(x=>x.text=e.target.value));
  $('studio-element-src').addEventListener('focus',()=>{if(selected)snapshot();});$('studio-element-src').addEventListener('change',e=>change(x=>x.src=e.target.value.trim()));
+ $('studio-element-hidden').addEventListener('change',e=>change(x=>x.hidden=e.target.checked));
  for(const [key,id] of Object.entries(styleFields())){
   const el=$(id);if(!el)continue;
   el.addEventListener('focus',()=>{if(selected)snapshot();});
@@ -76,6 +78,51 @@ function saveCreated(data){
   snapshot();design.insertedElements.push({id:data.id,page:currentPage(),containerSelector:data.containerSelector,type:data.kind==='image'?'image':'text',text:data.kind==='image'?'': 'Teks baru',src:data.src||'',alt:'Elemen tambahan SLF',styles:{},effects:[]});setDirty();
  }
 }
+
+async function optimizeMedia(file){
+ if(file.type==='image/gif')return file;
+ if(typeof createImageBitmap!=='function')return file;
+ let bitmap;
+ try{bitmap=await createImageBitmap(file);const scale=Math.min(1,1920/Math.max(bitmap.width,bitmap.height));const width=Math.max(1,Math.round(bitmap.width*scale)),height=Math.max(1,Math.round(bitmap.height*scale));const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const context=canvas.getContext('2d',{alpha:true});if(!context)return file;context.drawImage(bitmap,0,0,width,height);const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.82));if(!blob||blob.size<1||blob.size>=file.size)return file;const name=String(file.name||'gambar').replace(/\.[^.]+$/,'').replace(/[^A-Za-z0-9_-]/g,'-').slice(0,48)||'gambar';return new File([blob],name+'.webp',{type:'image/webp',lastModified:Date.now()});}
+ catch(_){return file;}finally{if(bitmap&&typeof bitmap.close==='function')bitmap.close();}
+}
+async function loadStudioMedia(){
+ const root=$('studio-media-library');if(!root)return;
+ try{
+  const data=await api('/api/admin/media');root.replaceChildren();
+  $('studio-media-note').textContent=data.message||'Pilih gambar untuk memasukkannya ke preview.';
+  if(!data.storageReady&&!data.assets.length){const note=document.createElement('p');note.className='admin-muted';note.textContent='Upload langsung memerlukan GITHUB_MEDIA_TOKEN. Tanpa token, unggah file manual ke assets/images/ pada GitHub.';root.append(note);return;}
+  if(!data.assets.length){const note=document.createElement('p');note.className='admin-muted';note.textContent='Belum ada gambar di pustaka media.';root.append(note);return;}
+  data.assets.forEach(asset=>{
+   const card=document.createElement('article');card.className='studio-media-card';
+   const image=document.createElement('img');image.src=asset.url;image.alt='Media SLF';image.loading='lazy';image.decoding='async';
+   const name=document.createElement('small');name.textContent=asset.key+' · '+Math.max(1,Math.round((asset.size||0)/1024))+' KB';
+   const use=document.createElement('button');use.type='button';use.className='btn btn-quiet';use.textContent='Gunakan gambar';use.addEventListener('click',()=>{
+    if(!selected){alert('Pilih area pada preview terlebih dahulu.');return;}
+    if(selected.tag==='img')change(x=>x.src=asset.url);
+    else msg({type:'slf-studio-add',kind:'image',src:asset.url});
+   });
+   card.append(image,name,use);root.append(card);
+  });
+ }catch(error){root.textContent=error.message||'Pustaka media gagal dimuat.';}
+}
+async function uploadStudioMedia(){
+ const file=$('studio-media-file').files&&$('studio-media-file').files[0];if(!file){$('studio-media-note').textContent='Pilih gambar terlebih dahulu.';return;}
+ if(!['image/png','image/jpeg','image/webp','image/gif'].includes(file.type)){$('studio-media-note').textContent='Format: PNG, JPG, WEBP, atau GIF.';return;}
+ const button=$('studio-media-upload');button.disabled=true;
+ try{
+  $('studio-media-note').textContent='Mengoptimalkan gambar…';
+  const optimized=await optimizeMedia(file);if(optimized.size>2*1024*1024)throw new Error('Ukuran setelah optimasi harus maksimal 2 MB.');
+  const form=new FormData();form.append('file',optimized,optimized.name);
+  const result=await api('/api/admin/media',{method:'POST',body:form});
+  $('studio-media-file').value='';await loadStudioMedia();
+  $('studio-media-note').textContent='Gambar diunggah. Deployment Pages dipicu oleh commit GitHub.';
+  if(selected&&selected.tag==='img')change(x=>x.src=result.asset.url);
+  else if(selected)msg({type:'slf-studio-add',kind:'image',src:result.asset.url});
+ }catch(error){$('studio-media-note').textContent=error.message||'Upload gagal.';}
+ finally{button.disabled=false;}
+}
+
 function bind(){
  const frame=$('studio-preview-frame');
  frame.addEventListener('load',()=>{frameReady=true;$('studio-preview-frame-wrap').classList.remove('is-loading');msg({type:'slf-studio-mode',enabled:mode});$('studio-live-status').textContent='Preview siap · klik elemen untuk memilih';});
@@ -87,6 +134,8 @@ function bind(){
   if(m.type==='slf-studio-created'){saveCreated(m);}
   if(m.type==='slf-studio-removed'){design.insertedElements=design.insertedElements.filter(x=>x.id!==m.id);selected=null;renderSelection();setDirty();}
  });
+ $('studio-media-upload').addEventListener('click',uploadStudioMedia);
+ $('studio-media-reload').addEventListener('click',loadStudioMedia);
  $('studio-preview-page').addEventListener('change',e=>{if(dirty&&!confirm('Ada perubahan belum diterbitkan. Buang perubahan lokal sebelum pindah halaman?')){e.target.value=currentPath;return;}if(dirty)loadDesign(false);selectPreview(e.target.value);});
  $('studio-select-mode').addEventListener('click',()=>{mode=!mode;$('studio-select-mode').textContent='Pilih elemen: '+(mode?'ON':'OFF');msg({type:'slf-studio-mode',enabled:mode});});
  $('studio-preview-reload').addEventListener('click',()=>{if(dirty&&!confirm('Muat ulang akan membuang preview yang belum diterbitkan. Lanjutkan?'))return;if(dirty)loadDesign(false);selectPreview(currentPath);});
@@ -116,7 +165,7 @@ async function loadDesign(showStatus=true){
  try{
   const data=await api('/api/admin/site-design');design=data.design||defaults();design.elementEdits=Array.isArray(design.elementEdits)?design.elementEdits:[];design.insertedElements=Array.isArray(design.insertedElements)?design.insertedElements:[];
   $('studio-global-accent').value=design.accent||'#9b6cff';$('studio-global-accent2').value=design.accent2||'#f3cb82';$('studio-global-overlay').value=design.overlayColor||'#100c18';$('studio-global-overlay-opacity').value=design.overlayOpacity||0;
-  dirty=false;$('studio-dirty').textContent='';if(showStatus)$('studio-live-status').textContent=data.storageMessage||'Desain dimuat.';
+  dirty=false;$('studio-dirty').textContent='';if(showStatus)$('studio-live-status').textContent=data.storageMessage||'Desain dimuat.';await loadStudioMedia();
  }catch(error){$('studio-error').textContent=error.message||'Desain tidak bisa dimuat.';}
 }
 window.SLFStudioLoad=async()=>{if(!window.__slfStudioBound){window.__slfStudioBound=true;bind();}await loadDesign();selectPreview(currentPath);};
