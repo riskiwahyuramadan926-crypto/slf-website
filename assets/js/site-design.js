@@ -47,7 +47,7 @@ function textIsEditable(el){
 function colorHex(value,fallback){const m=String(value||'').match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);return m?'#'+[m[1],m[2],m[3]].map(x=>Math.max(0,Math.min(255,Number(x))).toString(16).padStart(2,'0')).join(''):fallback;}
 function describe(el){
  const cs=getComputedStyle(el),fam=cs.fontFamily.toLowerCase();
- const font=fam.includes('georgia')||fam.includes('times')?'serif':fam.includes('mono')||fam.includes('console')?'mono':fam.includes('trebuchet')?'rounded':fam.includes('arial')||fam.includes('helvetica')?'sans':'system';
+ const font=fam.includes('impact')||fam.includes('haettenschweiler')?'display':fam.includes('palatino')||fam.includes('book antiqua')?'book':fam.includes('georgia')||fam.includes('times')?'serif':fam.includes('mono')||fam.includes('console')?'mono':fam.includes('trebuchet')?'rounded':fam.includes('arial')||fam.includes('helvetica')?'sans':'system';
  const shadow=cs.boxShadow==='none'?'none':cs.boxShadow.includes('243, 203, 130')?'gold':cs.boxShadow.includes('126, 230, 246')?'glow':cs.boxShadow.includes('18px')?'deep':'soft';
  const tr=cs.translate&&cs.translate!=='none'?cs.translate.split(/\\s+/):[];
  const bg=cs.backgroundImage&&cs.backgroundImage!=='none'?(cs.backgroundImage.match(/url\(["']?(.*?)["']?\)/)||[])[1]||'':'';
