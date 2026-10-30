@@ -46,7 +46,10 @@ function describe(el){
  const cs=getComputedStyle(el),fam=cs.fontFamily.toLowerCase();
  const font=fam.includes('georgia')||fam.includes('times')?'serif':fam.includes('mono')||fam.includes('console')?'mono':fam.includes('trebuchet')?'rounded':fam.includes('arial')||fam.includes('helvetica')?'sans':'system';
  const shadow=cs.boxShadow==='none'?'none':cs.boxShadow.includes('243, 203, 130')?'gold':cs.boxShadow.includes('126, 230, 246')?'glow':cs.boxShadow.includes('18px')?'deep':'soft';
- return {type:'slf-studio-selected',selector:selectorFor(el),tag:el.tagName.toLowerCase(),text:textIsEditable(el)?el.textContent:'',textEditable:textIsEditable(el),src:el.tagName==='IMG'?el.getAttribute('src')||'':'',created:el.hasAttribute('data-slf-created'),id:el.id||'',label:(el.getAttribute('aria-label')||el.getAttribute('alt')||el.textContent||el.tagName).trim().replace(/\s+/g,' ').slice(0,100),page:pageName(),computed:{color:colorHex(cs.color,'#ffffff'),backgroundColor:colorHex(cs.backgroundColor,'#100c18'),fontFamily:font,fontSize:parseFloat(cs.fontSize)||16,fontWeight:parseInt(cs.fontWeight,10)||700,letterSpacing:parseFloat(cs.letterSpacing)||0,lineHeight:parseFloat(cs.lineHeight)||1.5,textAlign:cs.textAlign,textTransform:cs.textTransform,borderRadius:parseFloat(cs.borderRadius)||0,padding:parseFloat(cs.paddingTop)||0,marginBottom:parseFloat(cs.marginBottom)||0,maxWidth:parseFloat(cs.maxWidth)||800,opacity:parseFloat(cs.opacity)||1,boxShadow:shadow,filter:'none',objectFit:cs.objectFit||'cover'}};
+ const bg=cs.backgroundImage&&cs.backgroundImage!=='none'?(cs.backgroundImage.match(/url\(["']?(.*?)["']?\)/)||[])[1]||'':'';
+ const ancestors=[];let parent=el.parentElement;
+ while(parent&&ancestors.length<6&&parent!==document.body){if(canSelect(parent)&&(parent.matches('main,header,footer,section,article,.wrap,.hero,.section,.panel,.zone,.shop-card,.wiki-entry,.notice,.checkout,.products,.wiki-grid'))){ancestors.push({selector:selectorFor(parent),tag:parent.tagName.toLowerCase(),label:(parent.getAttribute('aria-label')||parent.querySelector('h1,h2,h3,h4')?.textContent||parent.className||parent.tagName).toString().trim().replace(/\s+/g,' ').slice(0,48)});}parent=parent.parentElement;}
+ return {type:'slf-studio-selected',selector:selectorFor(el),tag:el.tagName.toLowerCase(),text:textIsEditable(el)?el.textContent:'',textEditable:textIsEditable(el),src:el.tagName==='IMG'?(el.getAttribute('src')||''):bg,backgroundImage:el.tagName!=='IMG'&&Boolean(bg),created:el.hasAttribute('data-slf-created'),id:el.id||'',label:(el.getAttribute('aria-label')||el.getAttribute('alt')||el.textContent||el.tagName).trim().replace(/\s+/g,' ').slice(0,100),ancestors,page:pageName(),computed:{color:colorHex(cs.color,'#ffffff'),backgroundColor:colorHex(cs.backgroundColor,'#100c18'),fontFamily:font,fontSize:parseFloat(cs.fontSize)||16,fontWeight:parseInt(cs.fontWeight,10)||700,letterSpacing:parseFloat(cs.letterSpacing)||0,lineHeight:parseFloat(cs.lineHeight)||1.5,textAlign:cs.textAlign,textTransform:cs.textTransform,borderRadius:parseFloat(cs.borderRadius)||0,padding:parseFloat(cs.paddingTop)||0,marginBottom:parseFloat(cs.marginBottom)||0,maxWidth:parseFloat(cs.maxWidth)||800,opacity:parseFloat(cs.opacity)||1,boxShadow:shadow,filter:'none',objectFit:cs.objectFit||'cover'}};
 }
 function remember(el){
  if(!originState.has(el))originState.set(el,{style:el.getAttribute('style'),text:el.textContent,src:el.getAttribute('src'),hidden:el.hidden});
@@ -87,7 +90,7 @@ function applyEdit(edit){
  if(!el)return;
  remember(el);
  if(typeof edit.text==='string'&&textIsEditable(el))el.textContent=edit.text;
- if(typeof edit.src==='string'&&el.tagName==='IMG'&&edit.src)el.src=edit.src;
+ if(typeof edit.src==='string'&&edit.src){if(el.tagName==='IMG')el.src=edit.src;else if(edit.backgroundImage){el.style.backgroundImage='url("'+edit.src.replace(/["\\]/g,'')+'")';el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.style.backgroundRepeat='no-repeat';}}
  if(typeof edit.hidden==='boolean')el.hidden=edit.hidden;
  applyStyle(el,edit.styles);applyEffects(el,edit.effects);
 }
@@ -164,12 +167,13 @@ function initStudioBridge(){
   if(event.origin!==parentOrigin||event.source!==window.parent||!event.data)return;
   const m=event.data;
   if(m.type==='slf-studio-mode'){studioSelect=Boolean(m.enabled);}
+  if(m.type==='slf-studio-select-target'&&typeof m.selector==='string'){try{const target=document.querySelector(m.selector);if(target)selectElement(target);}catch(_){}}
   if(m.type==='slf-studio-theme'){const root=document.documentElement;const t=m;if(isColor(t.accent)){root.style.setProperty('--purple',t.accent);root.style.setProperty('--purple2',t.accent);root.style.setProperty('--accent',t.accent);}if(isColor(t.accent2)){root.style.setProperty('--gold',t.accent2);root.style.setProperty('--gold2',t.accent2);}const hero=document.querySelector('.hero');if(hero&&(t.overlayColor||t.overlayOpacity!==undefined)){let shade=hero.querySelector(':scope > .slf-preview-overlay');if(!shade){shade=document.createElement('div');shade.className='slf-preview-overlay';shade.style.cssText='position:absolute;inset:0;z-index:0;pointer-events:none';hero.prepend(shade);hero.style.position='relative';}shade.style.backgroundColor=isColor(t.overlayColor)?t.overlayColor:'#100c18';shade.style.opacity=String(clamp(t.overlayOpacity,0,100,0)/100);}}
   if(m.type==='slf-studio-edit'&&selected){
    const edit=m.edit||{};
    remember(selected);
    if(typeof edit.text==='string'&&textIsEditable(selected)&&selected.textContent!==edit.text)selected.textContent=edit.text;
-   if(typeof edit.src==='string'&&selected.tagName==='IMG')selected.src=edit.src;
+   if(typeof edit.src==='string'&&edit.src){if(selected.tagName==='IMG')selected.src=edit.src;else if(edit.backgroundImage){selected.style.backgroundImage='url("'+edit.src.replace(/["\\]/g,'')+'")';selected.style.backgroundSize='cover';selected.style.backgroundPosition='center';selected.style.backgroundRepeat='no-repeat';}}
    if(typeof edit.hidden==='boolean')selected.hidden=edit.hidden;
    if(edit.styles)applyStyle(selected,edit.styles);
    if(edit.effects)applyEffects(selected,edit.effects);

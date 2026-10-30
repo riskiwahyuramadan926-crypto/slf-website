@@ -39,7 +39,7 @@ function normalize(input){
   if(!x||!pageOk(x.page)||!selectorOk(x.selector))throw new Error('Target elemen tidak valid. Pilih ulang elemen pada preview.');
   const edit={page:x.page,selector:x.selector,tag:plain(x.tag,20),styles:normalizeStyles(x.styles),effects:Array.isArray(x.effects)?x.effects.filter(v=>effects.has(v)).slice(0,7):[],hidden:x.hidden===true};
   if(typeof x.text==='string')edit.text=plain(x.text,4000);
-  if(typeof x.src==='string'){const src=plain(x.src,500);if(src&&!validImage(src))throw new Error('URL gambar tidak valid.');edit.src=src;}
+  if(typeof x.src==='string'){const src=plain(x.src,500);if(src&&!validImage(src))throw new Error('URL gambar tidak valid.');edit.src=src;edit.backgroundImage=x.backgroundImage===true;}
   return edit;
  });
  const insertedElements=(Array.isArray(d.insertedElements)?d.insertedElements:[]).slice(0,40).map(x=>{

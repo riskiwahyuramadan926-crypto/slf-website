@@ -22,12 +22,13 @@ function styleState(edit){return edit&&edit.styles||{};}
 function renderSelection(){
  $('studio-selected-label').textContent=selected?selected.label:'Belum ada elemen dipilih';
  $('studio-selected-path').textContent=selected?selected.selector:'Pilih elemen di preview website.';
+ const crumbs=$('studio-breadcrumbs');crumbs.replaceChildren();(selected&&selected.ancestors||[]).forEach(item=>{const button=document.createElement('button');button.type='button';button.className='btn btn-quiet';button.textContent=item.tag+' · '+item.label;button.addEventListener('click',()=>msg({type:'slf-studio-select-target',selector:item.selector}));crumbs.append(button);});
  $('studio-selected-note').textContent=selected?(selected.tag.toUpperCase()+' · '+(selected.textEditable?'Teks dapat diedit':'Konten teks bukan elemen tunggal; ubah tampilannya dari properti.')+(selected.created?' · Elemen baru':'')):'Perubahan diterapkan langsung pada preview.';
  const active=getActiveEdit(),styles=styleState(active);
  const styleDefaults={color:selected?.computed?.color||'#ffffff',backgroundColor:selected?.computed?.backgroundColor||'#100c18',fontFamily:selected?.computed?.fontFamily||'system',fontStyle:'normal',textDecoration:'none',fontSize:16,fontWeight:700,letterSpacing:0,lineHeight:1.5,textAlign:'left',textTransform:'none',borderRadius:0,padding:0,marginBottom:0,maxWidth:800,opacity:Math.round((selected?.computed?.opacity??1)*100),boxShadow:'none',filter:'none',objectFit:'cover'};
  $('studio-element-text').disabled=!selected||!selected.textEditable;
  $('studio-element-text').value=selected&&selected.textEditable?(active&&active.text!==undefined?active.text:selected.text):'';
- $('studio-element-src').disabled=!selected||selected.tag!=='img';
+ $('studio-element-src').disabled=!selected;
  $('studio-element-src').value=selected?(active&&active.src!==undefined?active.src:selected.src):'';
  for(const [key,id] of Object.entries(styleFields())){const el=$(id);if(!el)continue;const value=styles[key];el.value=value!==undefined?(key==='opacity'?Math.round(Number(value)*100):value):(selected?.computed?.[key]!==undefined?selected.computed[key]:styleDefaults[key]);}
  const effects=active&&active.effects||[];
@@ -39,7 +40,7 @@ function sendEdit(){
  if(!selected)return;
  const active=getActiveEdit();
  if(!active)return;
- msg({type:'slf-studio-edit',edit:{text:active.text,src:active.src,hidden:active.hidden,styles:active.styles,effects:active.effects}});
+ msg({type:'slf-studio-edit',edit:{text:active.text,src:active.src,backgroundImage:active.backgroundImage,hidden:active.hidden,styles:active.styles,effects:active.effects}});
 }
 function ensureEntry(){
  if(!selected)return null;
@@ -55,7 +56,7 @@ function change(mutator){
 }
 function bindFields(){
  $('studio-element-text').addEventListener('focus',()=>{if(selected)snapshot();});$('studio-element-text').addEventListener('input',e=>change(x=>x.text=e.target.value));
- $('studio-element-src').addEventListener('focus',()=>{if(selected)snapshot();});$('studio-element-src').addEventListener('change',e=>change(x=>x.src=e.target.value.trim()));
+ $('studio-element-src').addEventListener('focus',()=>{if(selected)snapshot();});$('studio-element-src').addEventListener('change',e=>change(x=>{x.src=e.target.value.trim();x.backgroundImage=selected.tag!=='img';}));
  $('studio-element-hidden').addEventListener('change',e=>change(x=>x.hidden=e.target.checked));
  for(const [key,id] of Object.entries(styleFields())){
   const el=$(id);if(!el)continue;
