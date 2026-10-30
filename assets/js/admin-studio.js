@@ -152,7 +152,7 @@ const moveLayer=step=>{const items=project.layers.filter(x=>x.id!=='wallpaper').
   layer.y=clamp((event.clientY-movement.rect.top)/movement.rect.height*100,0,100,layer.y);
   node.style.left=layer.x+'%';node.style.top=layer.y+'%';
  });
- stage.addEventListener('pointerup',()=>{if(!movement)return;movement=null;updateControls();renderLayerList();});
+ stage.addEventListener('pointerup',()=>{if(!movement)return;movement=null;markDirty();updateControls();renderLayerList();});
  stage.addEventListener('pointercancel',()=>movement=null);
 }
 async function saveDesign(){
