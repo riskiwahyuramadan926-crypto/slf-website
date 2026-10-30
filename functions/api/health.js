@@ -4,7 +4,7 @@ import { ensureStoreSchema } from '../_lib/store-schema.js';
 const requiredTables = [
   'orders', 'reviews', 'review_replies', 'store_products', 'promo_codes',
   'admin_activity', 'support_tickets', 'announcements', 'reentry_tickets',
-  'finance_entries', 'admin_notes', 'site_content', 'admin_auth_attempts'
+  'finance_entries', 'admin_notes', 'site_content', 'site_design', 'admin_auth_attempts'
 ];
 
 function secretDiagnostics(env) {
@@ -58,7 +58,7 @@ export async function onRequestGet({ env }) {
     // initialization failures can be reported here instead of hidden by its generic 503.
     await ensureStoreSchema(env.DB);
     const { results = [] } = await env.DB.prepare(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('orders','reviews','review_replies','store_products','promo_codes','admin_activity','support_tickets','announcements','reentry_tickets','finance_entries','admin_notes','site_content','admin_auth_attempts') ORDER BY name"
+      "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('orders','reviews','review_replies','store_products','promo_codes','admin_activity','support_tickets','announcements','reentry_tickets','finance_entries','admin_notes','site_content','site_design','admin_auth_attempts') ORDER BY name"
     ).all();
     const tables = results.map(row => row.name);
     const missing = requiredTables.filter(name => !tables.includes(name));

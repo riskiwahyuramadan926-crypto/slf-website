@@ -5,10 +5,11 @@ const slotPages = {
   'wiki.lead':'wiki','store.lead':'store'
 };
 const validDate = value => !value || Number.isFinite(Date.parse(value));
+const validImageUrl = value => !value || /^https:\/\/[^\\s<>"']+$/i.test(value) || /^\/(?:api\/media\/slf-[a-f0-9]{24}\\.(?:png|jpe?g|webp|gif|avif)|assets\/images\/[A-Za-z0-9_./-]+)$/i.test(value);
 
 export async function onRequestGet({ request, env }) {
   if (!(await requireOwner(request, env))) return fail('Editor website hanya dapat diakses Owner.',403);
-  const {results=[]}=await env.DB.prepare('SELECT id,kind,page,slot_key,title,body,active,starts_at,ends_at,created_by,created_at,updated_at FROM site_content ORDER BY kind, page, updated_at DESC LIMIT 500').all();
+  const {results=[]}=await env.DB.prepare('SELECT id,kind,page,slot_key,title,body,image_url,active,starts_at,ends_at,created_by,created_at,updated_at FROM site_content ORDER BY kind, page, updated_at DESC LIMIT 500').all();
   return json({items:results.map(x=>({...x,active:Boolean(x.active)})),allowedSlots:Object.keys(slotPages)});
 }
 export async function onRequestPost({ request, env }) {
@@ -18,6 +19,8 @@ export async function onRequestPost({ request, env }) {
   const page=['home','store','wiki'].includes(d.page)?d.page:'';
   const title=safeText(d.title,120);
   const body=safeText(d.body,2500);
+  const imageUrl=safeText(d.imageUrl,500);
+  if(imageUrl&&!validImageUrl(imageUrl)) return fail('URL gambar harus berupa HTTPS atau aset lokal SLF yang diizinkan.');
   const active=d.active===false||d.active===0||d.active==='0'?0:1;
   const startsAt=safeText(d.startsAt,40)||null;
   const endsAt=safeText(d.endsAt,40)||null;
@@ -41,10 +44,10 @@ export async function onRequestPost({ request, env }) {
   }
   const id=safeText(d.id,60)||'WEB-'+randomHex(8).toUpperCase();
   const old=await env.DB.prepare('SELECT id FROM site_content WHERE id=?').bind(id).first();
-  await env.DB.prepare(`INSERT INTO site_content(id,kind,page,slot_key,title,body,active,starts_at,ends_at,created_by,created_at,updated_at)
-    VALUES(?,'card',?,NULL,?,?,?,?,?,'owner',?,?)
-    ON CONFLICT(id) DO UPDATE SET page=excluded.page,title=excluded.title,body=excluded.body,active=excluded.active,starts_at=excluded.starts_at,ends_at=excluded.ends_at,updated_at=excluded.updated_at`)
-    .bind(id,page,title,body,active,startsAt,endsAt,now,now).run();
+  await env.DB.prepare(`INSERT INTO site_content(id,kind,page,slot_key,title,body,image_url,active,starts_at,ends_at,created_by,created_at,updated_at)
+    VALUES(?,'card',?,NULL,?,?,?,?,?,?,'owner',?,?)
+    ON CONFLICT(id) DO UPDATE SET page=excluded.page,title=excluded.title,body=excluded.body,image_url=excluded.image_url,active=excluded.active,starts_at=excluded.starts_at,ends_at=excluded.ends_at,updated_at=excluded.updated_at`)
+    .bind(id,page,title,body,imageUrl||null,active,startsAt,endsAt,now,now).run();
   await logAdminActivity(env.DB,old?'site_card_updated':'site_card_created','site_content',id,{page,title,active:Boolean(active),role});
   return json({ok:true,id,kind,page,title});
 }

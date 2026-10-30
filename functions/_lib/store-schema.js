@@ -115,11 +115,15 @@ const statements = [
   'CREATE INDEX IF NOT EXISTS idx_admin_notes_status ON admin_notes(status, priority, updated_at DESC)',
   `CREATE TABLE IF NOT EXISTS site_content (
     id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('slot','card')), page TEXT NOT NULL CHECK(page IN ('home','store','wiki')),
-    slot_key TEXT UNIQUE, title TEXT NOT NULL DEFAULT '', body TEXT NOT NULL,
+    slot_key TEXT UNIQUE, title TEXT NOT NULL DEFAULT '', body TEXT NOT NULL, image_url TEXT,
     active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1)), starts_at TEXT, ends_at TEXT,
     created_by TEXT NOT NULL DEFAULT 'owner', created_at TEXT NOT NULL, updated_at TEXT NOT NULL
   )`,
-  'CREATE INDEX IF NOT EXISTS idx_site_content_active ON site_content(active, page, kind)'
+  'CREATE INDEX IF NOT EXISTS idx_site_content_active ON site_content(active, page, kind)',
+  `CREATE TABLE IF NOT EXISTS site_design (
+    id TEXT PRIMARY KEY CHECK(id='default'), config_json TEXT NOT NULL DEFAULT '{}',
+    updated_by TEXT NOT NULL DEFAULT 'owner', updated_at TEXT NOT NULL
+  )`
 ];
 
 // Existing D1 databases can keep older table layouts even when CREATE TABLE IF NOT EXISTS runs.
@@ -155,7 +159,7 @@ const legacyColumnDefinitions = {
     subject: "TEXT DEFAULT ''", message: "TEXT DEFAULT ''", request_hash: 'TEXT',
     status: "TEXT DEFAULT 'OPEN'", admin_reply: 'TEXT', created_at: 'TEXT', updated_at: 'TEXT', resolved_at: 'TEXT'
   },
-  announcements: { title: "TEXT DEFAULT ''", body: "TEXT DEFAULT ''", active: 'INTEGER DEFAULT 1', starts_at: 'TEXT', ends_at: 'TEXT', created_at: 'TEXT', updated_at: 'TEXT' },
+  announcements: { title: "TEXT DEFAULT ''", body: "TEXT DEFAULT ''", image_url: 'TEXT', active: 'INTEGER DEFAULT 1', starts_at: 'TEXT', ends_at: 'TEXT', created_at: 'TEXT', updated_at: 'TEXT' },
   finance_entries: {
     entry_date: 'TEXT', kind: "TEXT DEFAULT 'INCOME'", category: "TEXT DEFAULT 'Lainnya'",
     description: "TEXT DEFAULT ''", amount: 'INTEGER DEFAULT 0', reference: 'TEXT',

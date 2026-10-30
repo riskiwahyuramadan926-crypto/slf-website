@@ -97,9 +97,15 @@ CREATE INDEX IF NOT EXISTS idx_admin_notes_status ON admin_notes(status,priority
 
 CREATE TABLE IF NOT EXISTS site_content (
   id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('slot','card')), page TEXT NOT NULL CHECK(page IN ('home','store','wiki')),
-  slot_key TEXT UNIQUE, title TEXT NOT NULL DEFAULT '', body TEXT NOT NULL,
+  slot_key TEXT UNIQUE, title TEXT NOT NULL DEFAULT '', body TEXT NOT NULL, image_url TEXT,
   active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1)), starts_at TEXT, ends_at TEXT,
   created_by TEXT NOT NULL DEFAULT 'owner', created_at TEXT NOT NULL, updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_site_content_active ON site_content(active,page,kind);
 
+
+
+CREATE TABLE IF NOT EXISTS site_design (
+  id TEXT PRIMARY KEY CHECK(id='default'), config_json TEXT NOT NULL DEFAULT '{}',
+  updated_by TEXT NOT NULL DEFAULT 'owner', updated_at TEXT NOT NULL
+);
