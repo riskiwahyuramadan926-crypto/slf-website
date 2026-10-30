@@ -6,10 +6,10 @@ const plain=(v,max)=>String(v==null?'':v).replace(/[<>]/g,'').replace(/[\u0000-\
 const pageOk=v=>['all','home','store','wiki','help','order','review','ticket'].includes(v)||(/^wiki-[a-z0-9-]{1,48}$/.test(String(v||'')));
 const selectorOk=v=>typeof v==='string'&&v.length<=280&&/^[A-Za-z0-9_#.:>()\[\]="\s-]+$/.test(v);
 const validImage=v=>/^https:\/\/[^\s"'<>]+$/i.test(v)||/^\/(?:api\/media\/slf-[a-f0-9]{24}\.(?:png|jpe?g|webp|gif|avif)|assets\/images\/(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+\.(?:png|jpe?g|webp|gif|avif))$/i.test(v);
-const fonts=new Set(['system','serif','sans','rounded','mono','fantasy']);
+const fonts=new Set(['system','serif','sans','rounded','mono','fantasy','display','book']);
 const shadows=new Set(['none','soft','deep','glow','gold']);
 const filters=new Set(['none','softBlur','gray','warm','vivid']);
-const effects=new Set(['glass','glow','float','pulse','gradient','hover','outline']);
+const effects=new Set(['glass','glow','float','pulse','gradient','hover','outline','neon','shine','tilt','soft','border-glow']);
 function normalizeStyles(input){
  const x=input&&typeof input==='object'?input:{},out={};
  if(color(x.color))out.color=color(x.color);
@@ -47,11 +47,11 @@ function normalize(input){
  });
  const insertedElements=(Array.isArray(d.insertedElements)?d.insertedElements:[]).slice(0,40).map(x=>{
   if(!x||!pageOk(x.page)||!selectorOk(x.containerSelector)||!/^slf-added-[a-z0-9]{5,12}$/.test(String(x.id||'')))throw new Error('Elemen tambahan tidak valid.');
-  const type=x.type==='image'?'image':'text',src=plain(x.src,500);
+  const type=['image','button','divider','card'].includes(x.type)?x.type:'text',src=plain(x.src,500);
   if(type==='image'&&(!src||!validImage(src)))throw new Error('Gambar tambahan membutuhkan URL gambar yang valid.');
-  return {id:x.id,page:x.page,containerSelector:x.containerSelector,type,text:plain(x.text,1000),src,alt:plain(x.alt,120),styles:normalizeStyles(x.styles),effects:Array.isArray(x.effects)?x.effects.filter(v=>effects.has(v)).slice(0,7):[]};
+  const href=plain(x.href,500);if(type==='button'&&href&&!(/^(https:\/\/|\/(?!\/)|#)/i.test(href)))throw new Error('Tujuan tombol harus berupa path lokal atau HTTPS.');return {id:x.id,page:x.page,containerSelector:x.containerSelector,type,text:plain(x.text,1000),src,href,alt:plain(x.alt,120),styles:normalizeStyles(x.styles),effects:Array.isArray(x.effects)?x.effects.filter(v=>effects.has(v)).slice(0,12):[]};
  });
- return {version:2,page,accent:color(d.accent)||'#9b6cff',accent2:color(d.accent2)||'#f3cb82',background:color(d.background)||'#100c18',overlayColor:color(d.overlayColor)||'#100c18',overlayOpacity:num(d.overlayOpacity,0,100,65),layers,elementEdits,insertedElements};
+ return {version:2,page,accent:color(d.accent)||'#9b6cff',accent2:color(d.accent2)||'#f3cb82',background:color(d.background)||'#100c18',globalFont:fonts.has(d.globalFont)?d.globalFont:'system',overlayColor:color(d.overlayColor)||'#100c18',overlayOpacity:num(d.overlayOpacity,0,100,65),layers,elementEdits,insertedElements};
 }
 export async function onRequestGet({request,env}){
  if(!(await requireOwner(request,env)))return fail('Akses Owner diperlukan.',403);
