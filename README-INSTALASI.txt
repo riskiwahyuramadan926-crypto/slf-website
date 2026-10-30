@@ -52,3 +52,12 @@ Custom Rank Rp20.000
 Tiket masuk kembali 1 Rp15.000
 Tiket masuk kembali 2 Rp28.000
 Tiket masuk kembali 3 Rp35.000
+
+
+SLF STUDIO — EDITOR VISUAL & MEDIA
+1. Buka /admin/ memakai OWNER_SECRET. Menu SLF Studio hanya tersedia untuk Owner.
+2. Pilih target Beranda, Store, Wiki, atau Semua halaman. Atur wallpaper, layer gambar/teks, posisi, ukuran, warna, opacity, blur, dan overlay. Geser objek langsung pada kanvas.
+3. Tekan Simpan & terbitkan. Konfigurasi visual tersimpan di D1 pada tabel site_design. Kartu informasi Editor Website dapat memakai image_url.
+4. Untuk upload gambar permanen, buat bucket R2 bernama slf-media. Di Workers & Pages → proyek slf-store → Settings → Bindings → Add → R2 bucket, gunakan Variable name MEDIA dan pilih bucket slf-media. Simpan dan deploy ulang. Lakukan pada Production, dan Preview bila digunakan.
+5. Tanpa R2, editor tetap mendukung URL HTTPS gambar dan file yang sudah ada di /assets/images/. Upload dari perangkat memerlukan binding MEDIA.
+6. Upload menerima PNG, JPG, WEBP, GIF, dan AVIF maksimal 5 MB. Jangan menghapus aset yang masih digunakan desain aktif.

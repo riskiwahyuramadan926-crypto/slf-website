@@ -5,7 +5,7 @@ const slotPages = {
   'wiki.lead':'wiki','store.lead':'store'
 };
 const validDate = value => !value || Number.isFinite(Date.parse(value));
-const validImageUrl = value => !value || /^https:\/\/[^\\s<>"']+$/i.test(value) || /^\/(?:api\/media\/slf-[a-f0-9]{24}\\.(?:png|jpe?g|webp|gif|avif)|assets\/images\/[A-Za-z0-9_./-]+)$/i.test(value);
+const validImageUrl = value => !value || /^https:\/\/[^\s<>"']+$/i.test(value) || /^\/(?:api\/media\/slf-[a-f0-9]{24}\.(?:png|jpe?g|webp|gif|avif)|assets\/images\/[A-Za-z0-9_./-]+)$/i.test(value);
 
 export async function onRequestGet({ request, env }) {
   if (!(await requireOwner(request, env))) return fail('Editor website hanya dapat diakses Owner.',403);

@@ -74,7 +74,7 @@ function updateControls(){
  $('studio-delete-layer').disabled=!layer||layer.id==='wallpaper';
  if(layer){
   $('studio-layer-name').value=layer.name||'';$('studio-layer-x').value=layer.x;$('studio-layer-y').value=layer.y;
-  $('studio-layer-width').value=layer.width;$('studio-layer-opacity').value=layer.opacity;
+  $('studio-layer-width').value=layer.width;$('studio-layer-height').value=layer.height||40;$('studio-layer-weight').value=layer.weight||800;$('studio-layer-opacity').value=layer.opacity;
   $('studio-layer-opacity-value').textContent=layer.opacity+'%';$('studio-layer-visible').checked=layer.visible!==false;
   if(layer.type==='text'){
    $('studio-layer-text').value=layer.text||'';$('studio-layer-color').value=validColor(layer.color,'#fff1d4');
@@ -93,7 +93,7 @@ function updateControls(){
 function selectLayer(id){selectedId=id;renderLayerList();updateControls();renderStage();}
 function updateLayer(key,value){
  const layer=currentLayer();if(!layer)return;
- const ranges={x:[0,100],y:[0,100],width:[5,100],opacity:[0,100],blur:[0,20],fontSize:[12,120]};
+ const ranges={x:[0,100],y:[0,100],width:[5,100],height:[5,100],opacity:[0,100],blur:[0,20],fontSize:[12,120],weight:[300,900]};
  if(ranges[key])layer[key]=clamp(value,ranges[key][0],ranges[key][1],layer[key]||0);
  else if(key==='visible')layer.visible=Boolean(value);
  else if(key==='color')layer.color=validColor(value,'#fff1d4');
@@ -122,16 +122,18 @@ function bind(){
  on('studio-layer-source','change',e=>updateLayer('src',e.target.value));
  on('studio-layer-fit','change',e=>updateLayer('fit',e.target.value));
  on('studio-layer-blur','input',e=>{updateLayer('blur',e.target.value);$('studio-layer-blur-value').textContent=e.target.value+' px';});
- [['x','studio-layer-x'],['y','studio-layer-y'],['width','studio-layer-width']].forEach(pair=>on(pair[1],'change',e=>updateLayer(pair[0],e.target.value)));
+ [['x','studio-layer-x'],['y','studio-layer-y'],['width','studio-layer-width'],['height','studio-layer-height']].forEach(pair=>on(pair[1],'change',e=>updateLayer(pair[0],e.target.value)));on('studio-layer-weight','input',e=>updateLayer('weight',e.target.value));
  on('studio-layer-opacity','input',e=>{updateLayer('opacity',e.target.value);$('studio-layer-opacity-value').textContent=e.target.value+'%';});
  on('studio-layer-visible','change',e=>updateLayer('visible',e.target.checked));
- on('studio-accent','input',e=>project.accent=e.target.value);on('studio-accent2','input',e=>project.accent2=e.target.value);
+ on('studio-accent','input',e=>{project.accent=e.target.value;const accent=project.layers.find(x=>x.id==='title-accent');if(accent)accent.color=e.target.value;renderStage();});on('studio-accent2','input',e=>{project.accent2=e.target.value;renderStage();});
  on('studio-background','input',e=>{project.background=e.target.value;renderStage();});
  on('studio-overlay-color','input',e=>{project.overlayColor=e.target.value;renderStage();});
  on('studio-overlay-opacity','input',e=>{project.overlayOpacity=Number(e.target.value);$('studio-overlay-value').textContent=e.target.value+'%';renderStage();});
  on('studio-add-text','click',()=>addLayer('text'));
  on('studio-add-image','click',()=>{const source=prompt('Masukkan URL gambar HTTPS atau path /assets/images/ yang sudah tersedia:');if(source!==null)addLayer('image',source.trim());});
  on('studio-delete-layer','click',()=>{if(!currentLayer()||selectedId==='wallpaper')return;project.layers=project.layers.filter(x=>x.id!==selectedId);selectedId='title-main';renderLayerList();updateControls();renderStage();});
+on('studio-duplicate-layer','click',()=>{const layer=currentLayer();if(!layer||project.layers.length>=16)return;const copy=JSON.parse(JSON.stringify(layer));copy.id='copy-'+Math.random().toString(36).slice(2,9);copy.name=(layer.name||'Layer')+' copy';copy.x=clamp(copy.x+3,0,100,copy.x);copy.y=clamp(copy.y+3,0,100,copy.y);copy.z=clamp(copy.z+1,1,10,copy.z);project.layers.push(copy);selectLayer(copy.id);});
+const moveLayer=step=>{const items=project.layers.filter(x=>x.id!=='wallpaper').sort((a,b)=>(a.z||0)-(b.z||0));const index=items.findIndex(x=>x.id===selectedId);if(index<0)return;const next=clamp(index+step,0,items.length-1,index);if(next===index)return;const [item]=items.splice(index,1);items.splice(next,0,item);items.forEach((x,i)=>x.z=i+1);renderLayerList();renderStage();};on('studio-layer-up','click',()=>moveLayer(-1));on('studio-layer-down','click',()=>moveLayer(1));
  on('studio-reset','click',()=>{if(!confirm('Reset desain lokal ke pengaturan awal?'))return;project=defaults();selectedId='title-main';renderLayerList();updateControls();renderStage();status('Desain lokal direset. Belum diterbitkan.',false);});
  on('studio-save','click',saveDesign);on('studio-upload','click',uploadImage);on('studio-reload-media','click',loadMedia);
  const stage=$('studio-stage');let movement=null;
@@ -160,7 +162,7 @@ async function uploadImage(){
  const file=$('studio-file').files&&$('studio-file').files[0];if(!file){status('Pilih file gambar terlebih dahulu.',true);return;}
  if(file.size>5*1024*1024){status('Ukuran gambar maksimal 5 MB.',true);return;}
  const button=$('studio-upload');button.disabled=true;
- try{const form=new FormData();form.append('file',file);const result=await api('/api/admin/media',{method:'POST',body:form});await loadMedia();addLayer('image',result.asset.url);$('studio-file').value='';status('Gambar berhasil diunggah dan ditambahkan ke kanvas.',false);}
+ try{const form=new FormData();form.append('file',file);const result=await api('/api/admin/media',{method:'POST',body:form});await loadMedia();const wallpaper=project.layers.find(x=>x.id==='wallpaper');if(wallpaper&&!wallpaper.src){wallpaper.src=result.asset.url;selectLayer('wallpaper');}else addLayer('image',result.asset.url);$('studio-file').value='';status('Gambar berhasil diunggah dan ditambahkan ke kanvas.',false);}
  catch(error){status(error.message||'Upload gambar gagal.',true);}finally{button.disabled=false;}
 }
 async function loadMedia(){
@@ -177,7 +179,8 @@ async function loadMedia(){
    const use=document.createElement('button');use.type='button';use.className='btn btn-quiet';use.textContent='Pakai di kanvas';use.addEventListener('click',()=>addLayer('image',asset.url));
    const remove=document.createElement('button');remove.type='button';remove.className='btn btn-quiet';remove.textContent='Hapus';
    remove.addEventListener('click',async()=>{if(!confirm('Hapus gambar dari media? Desain yang memakai file ini akan kehilangan gambar.'))return;remove.disabled=true;try{await api('/api/admin/media?key='+encodeURIComponent(asset.key),{method:'DELETE'});await loadMedia();}catch(error){status(error.message,true);remove.disabled=false;}});
-   card.append(image,meta,use,remove);root.append(card);
+   const wall=document.createElement('button');wall.type='button';wall.className='btn btn-quiet';wall.textContent='Jadikan wallpaper';wall.addEventListener('click',()=>{const layer=project.layers.find(x=>x.id==='wallpaper');if(layer){layer.src=asset.url;selectLayer(layer.id);}else addLayer('image',asset.url);});
+   card.append(image,meta,use,wall,remove);root.append(card);
   });
  }catch(error){root.textContent=error.message||'Pustaka media tidak dapat dimuat.';}
 }
