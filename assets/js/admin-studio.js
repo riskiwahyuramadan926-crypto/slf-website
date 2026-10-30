@@ -160,18 +160,46 @@ async function saveDesign(){
  try{const result=await api('/api/admin/site-design',{method:'POST',body:JSON.stringify({design:project})});project=result.design;dirty=false;renderLayerList();updateControls();renderStage();status('Desain tersimpan dan diterbitkan. Muat ulang website untuk melihat hasilnya.',false);}
  catch(error){status(error.message||'Desain gagal disimpan.',true);}finally{button.disabled=false;}
 }
+async function optimizeImage(file){
+ if(file.type==='image/gif')return file;
+ if(typeof createImageBitmap!=='function')return file;
+ let bitmap;
+ try{
+  bitmap=await createImageBitmap(file);
+  const scale=Math.min(1,1920/Math.max(bitmap.width,bitmap.height));
+  const width=Math.max(1,Math.round(bitmap.width*scale)),height=Math.max(1,Math.round(bitmap.height*scale));
+  const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+  const context=canvas.getContext('2d',{alpha:true});if(!context)return file;
+  context.drawImage(bitmap,0,0,width,height);
+  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.82));
+  if(!blob||blob.size<1||blob.size>=file.size)return file;
+  const base=String(file.name||'gambar').replace(/\\.[^.]+$/,'').replace(/[^A-Za-z0-9_-]/g,'-').slice(0,48)||'gambar';
+  return new File([blob],base+'.webp',{type:'image/webp',lastModified:Date.now()});
+ }catch(_){return file;}
+ finally{if(bitmap&&typeof bitmap.close==='function')bitmap.close();}
+}
 async function uploadImage(){
- const file=$('studio-file').files&&$('studio-file').files[0];if(!file){status('Pilih file gambar terlebih dahulu.',true);return;}
- if(file.size>5*1024*1024){status('Ukuran gambar maksimal 5 MB.',true);return;}
+ const source=$('studio-file').files&&$('studio-file').files[0];if(!source){status('Pilih file gambar terlebih dahulu.',true);return;}
+ if(!['image/png','image/jpeg','image/webp','image/gif'].includes(source.type)){status('Gunakan PNG, JPG, WEBP, atau GIF.',true);return;}
  const button=$('studio-upload');button.disabled=true;
- try{const form=new FormData();form.append('file',file);const result=await api('/api/admin/media',{method:'POST',body:form});await loadMedia();const wallpaper=project.layers.find(x=>x.id==='wallpaper');if(wallpaper&&!wallpaper.src){wallpaper.src=result.asset.url;markDirty();selectLayer('wallpaper');}else addLayer('image',result.asset.url);$('studio-file').value='';status('Gambar berhasil diunggah dan ditambahkan ke kanvas.',false);}
- catch(error){status(error.message||'Upload gambar gagal.',true);}finally{button.disabled=false;}
+ try{
+  status('Mengoptimalkan gambar…',false);
+  const file=await optimizeImage(source);
+  if(file.size>2*1024*1024)throw new Error('Ukuran gambar harus maksimal 2 MB setelah optimasi.');
+  const form=new FormData();form.append('file',file,file.name);
+  const result=await api('/api/admin/media',{method:'POST',body:form});await loadMedia();
+  const wallpaper=project.layers.find(x=>x.id==='wallpaper');
+  if(wallpaper&&!wallpaper.src){wallpaper.src=result.asset.url;markDirty();selectLayer('wallpaper');}
+  else addLayer('image',result.asset.url);
+  $('studio-file').value='';
+  status('Gambar tersimpan di GitHub. Cloudflare Pages akan menerbitkan aset statis; gambar tersedia setelah deployment selesai.',false);
+ }catch(error){status(error.message||'Upload gambar gagal.',true);}finally{button.disabled=false;}
 }
 async function loadMedia(){
  const root=$('studio-media-library');
  try{
   const result=await api('/api/admin/media');assets=result.assets||[];
-  $('studio-storage-note').textContent=result.storageReady?'R2 aktif. PNG/JPG/WEBP/GIF/AVIF · maksimal 5 MB.':'Upload menunggu binding Cloudflare R2 bernama MEDIA. URL HTTPS tetap bisa digunakan.';
+  $('studio-storage-note').textContent=result.storageReady?'Penyimpanan GitHub aktif. Gambar dioptimalkan maksimal 1920 px dan 2 MB. Upload memicu deployment Pages.':(result.message||'GitHub Media belum dikonfigurasi. URL HTTPS dan aset lokal tetap bisa digunakan.');
   root.replaceChildren();
   if(!assets.length){const p=document.createElement('p');p.className='admin-muted';p.textContent=result.storageReady?'Belum ada gambar di pustaka media.':'Pustaka media menunggu koneksi R2.';root.append(p);return;}
   assets.forEach(asset=>{
