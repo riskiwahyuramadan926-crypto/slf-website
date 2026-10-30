@@ -41,7 +41,7 @@ function renderSelection(){
  $('studio-element-text').disabled=!selected||!selected.textEditable;
  $('studio-element-text').value=selected&&selected.textEditable?(active&&active.text!==undefined?active.text:selected.text):'';
  $('studio-element-src').disabled=!selected;
- $('studio-element-src').value=selected?(active&&active.src!==undefined?active.src:selected.src):'';
+ $('studio-element-src').value=selected?(active&&active.src!==undefined?active.src:selected.src):'';$('studio-element-link').disabled=!selected||selected.tag!=='a';$('studio-element-link').value=selected&&selected.tag==='a'?(active&&active.href!==undefined?active.href:selected.href||''):'';
  for(const [key,id] of Object.entries(styleFields())){const el=$(id);if(!el)continue;const value=styles[key];el.value=value!==undefined?(key==='opacity'?Math.round(Number(value)*100):value):(selected?.computed?.[key]!==undefined?(key==='opacity'?Math.round(Number(selected.computed[key])*100):selected.computed[key]):styleDefaults[key]);}
  const effects=active&&active.effects||[];
  document.querySelectorAll('[data-effect]').forEach(el=>el.checked=effects.includes(el.dataset.effect));
@@ -52,7 +52,7 @@ function sendEdit(){
  if(!selected)return;
  const active=getActiveEdit();
  if(!active)return;
- msg({type:'slf-studio-edit',edit:{text:active.text,src:active.src,backgroundImage:active.backgroundImage,hidden:active.hidden,styles:active.styles,effects:active.effects}});
+ msg({type:'slf-studio-edit',edit:{text:active.text,src:active.src,href:active.href,backgroundImage:active.backgroundImage,hidden:active.hidden,styles:active.styles,effects:active.effects}});
 }
 function ensureEntry(){
  if(!selected)return null;
@@ -69,7 +69,7 @@ function change(mutator){
 function bindFields(){
  $('studio-element-text').addEventListener('focus',()=>{if(selected)snapshot();});$('studio-element-text').addEventListener('input',e=>change(x=>x.text=e.target.value));
  $('studio-element-src').addEventListener('focus',()=>{if(selected)snapshot();});$('studio-element-src').addEventListener('change',e=>change(x=>{x.src=e.target.value.trim();x.backgroundImage=selected.tag!=='img';}));
- $('studio-element-hidden').addEventListener('change',e=>change(x=>x.hidden=e.target.checked));
+ $('studio-element-hidden').addEventListener('change',e=>change(x=>x.hidden=e.target.checked));$('studio-element-link').addEventListener('focus',()=>{if(selected)snapshot();});$('studio-element-link').addEventListener('change',e=>change(x=>x.href=e.target.value.trim()));
  for(const [key,id] of Object.entries(styleFields())){
   const el=$(id);if(!el)continue;
   el.addEventListener('focus',()=>{if(selected)snapshot();});
