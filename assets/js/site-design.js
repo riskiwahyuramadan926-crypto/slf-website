@@ -141,14 +141,16 @@ function addElement(data){
  if(data.kind==='image'){node=document.createElement('img');node.src=data.src||'';node.alt='Gambar baru SLF';node.loading='lazy';node.style.maxWidth='100%';node.style.height='auto';}
  else {node=document.createElement('div');node.textContent='Teks baru';node.style.whiteSpace='pre-wrap';}
  const id='slf-added-'+Math.random().toString(36).slice(2,10);node.id=id;node.setAttribute('data-slf-created','1');node.className='slf-created-element';node.style.display='block';node.style.position='relative';node.style.margin='12px 0';host.append(node);
- selectElement(node);sendToParent({type:'slf-studio-created',id,kind:data.kind,containerSelector:selectorFor(host),page:pageName()});
+ selectElement(node);sendToParent({type:'slf-studio-created',id,kind:data.kind,src:data.src||'',containerSelector:selectorFor(host),page:pageName()});
+}
+function ensureEffectStyles(){if(document.getElementById('slf-published-effects'))return;const style=document.createElement('style');style.id='slf-published-effects';style.textContent='.slf-studio-mode *{cursor:crosshair!important}.slf-studio-mode .slf-studio-selected{outline:2px solid #f3cb82!important;outline-offset:2px!important;box-shadow:0 0 0 4px rgba(243,203,130,.18)!important}.slf-effect-glass{background:rgba(255,255,255,.08)!important;backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.18)}.slf-effect-glow{filter:drop-shadow(0 0 15px rgba(126,230,246,.65))}.slf-effect-float{animation:slfFloat 4s ease-in-out infinite}.slf-effect-pulse{animation:slfPulse 2.6s ease-in-out infinite}.slf-effect-gradient{background-image:linear-gradient(115deg,rgba(126,230,246,.18),rgba(172,157,255,.18),rgba(243,203,130,.16))!important}.slf-effect-hover{transition:transform .2s,box-shadow .2s}.slf-effect-hover:hover{transform:translateY(-4px);box-shadow:0 14px 32px rgba(0,0,0,.25)}.slf-effect-outline{outline:1px solid rgba(126,230,246,.5);outline-offset:3px}@keyframes slfFloat{50%{transform:translateY(-7px)}}@keyframes slfPulse{50%{filter:brightness(1.18)}}@media(prefers-reduced-motion:reduce){.slf-effect-float,.slf-effect-pulse{animation:none!important}}';
+ document.head.append(style);
 }
 function initStudioBridge(){
  if(!studioMode||window.parent===window)return;
  document.documentElement.classList.add('slf-studio-mode');
  studioSelect=true;
- const style=document.createElement('style');style.textContent='.slf-studio-mode *{cursor:crosshair!important}.slf-studio-mode .slf-studio-selected{outline:2px solid #f3cb82!important;outline-offset:2px!important;box-shadow:0 0 0 4px rgba(243,203,130,.18)!important}.slf-effect-glass{background:rgba(255,255,255,.08)!important;backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.18)}.slf-effect-glow{filter:drop-shadow(0 0 15px rgba(126,230,246,.65))}.slf-effect-float{animation:slfFloat 4s ease-in-out infinite}.slf-effect-pulse{animation:slfPulse 2.6s ease-in-out infinite}.slf-effect-gradient{background-image:linear-gradient(115deg,rgba(126,230,246,.18),rgba(172,157,255,.18),rgba(243,203,130,.16))!important}.slf-effect-hover{transition:transform .2s,box-shadow .2s}.slf-effect-hover:hover{transform:translateY(-4px);box-shadow:0 14px 32px rgba(0,0,0,.25)}.slf-effect-outline{outline:1px solid rgba(126,230,246,.5);outline-offset:3px}@keyframes slfFloat{50%{transform:translateY(-7px)}}@keyframes slfPulse{50%{filter:brightness(1.18)}}@media(prefers-reduced-motion:reduce){.slf-effect-float,.slf-effect-pulse{animation:none!important}}';
- document.head.append(style);
+ ensureEffectStyles();
  document.addEventListener('click',event=>{if(!studioSelect)return;const el=event.target.closest('*');if(!canSelect(el))return;event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();selectElement(el);},true);
  document.addEventListener('pointerover',event=>{if(!studioSelect)return;const el=event.target.closest('*');if(canSelect(el)&&el!==selected)el.style.outline='1px dashed rgba(126,230,246,.65)';},true);
  document.addEventListener('pointerout',event=>{const el=event.target.closest('*');if(el&&el!==selected)el.style.outline='';},true);
@@ -156,10 +158,11 @@ function initStudioBridge(){
   if(event.origin!==parentOrigin||event.source!==window.parent||!event.data)return;
   const m=event.data;
   if(m.type==='slf-studio-mode'){studioSelect=Boolean(m.enabled);}
+  if(m.type==='slf-studio-theme'){const root=document.documentElement;const t=m;if(isColor(t.accent)){root.style.setProperty('--purple',t.accent);root.style.setProperty('--purple2',t.accent);root.style.setProperty('--accent',t.accent);}if(isColor(t.accent2)){root.style.setProperty('--gold',t.accent2);root.style.setProperty('--gold2',t.accent2);}if(selected){const hero=selected.closest('.hero');if(hero&&(t.overlayColor||t.overlayOpacity!==undefined)){const c=isColor(t.overlayColor)?t.overlayColor:'#100c18';const n=parseInt(c.slice(1),16);const a=clamp(t.overlayOpacity,0,100,65)/100;hero.style.backgroundColor='rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}}}
   if(m.type==='slf-studio-edit'&&selected){
    const edit=m.edit||{};
    remember(selected);
-   if(typeof edit.text==='string'&&textIsEditable(selected))selected.textContent=edit.text;
+   if(typeof edit.text==='string'&&textIsEditable(selected)&&selected.textContent!==edit.text)selected.textContent=edit.text;
    if(typeof edit.src==='string'&&selected.tagName==='IMG')selected.src=edit.src;
    if(typeof edit.hidden==='boolean')selected.hidden=edit.hidden;
    if(edit.styles)applyStyle(selected,edit.styles);
@@ -171,10 +174,12 @@ function initStudioBridge(){
  sendToParent({type:'slf-studio-ready',page:pageName(),title:document.title});
 }
 async function init(){
+ ensureEffectStyles();
  try{
   const response=await fetch('/api/site-design',{cache:'no-store'});
   if(response.ok){const data=await response.json();if(data.design)applyDesign(data.design);}
  }catch(_){}
+ if(document.body){const observer=new MutationObserver(()=>{if(!design)return;(Array.isArray(design.insertedElements)?design.insertedElements:[]).forEach(insertElement);(Array.isArray(design.elementEdits)?design.elementEdits:[]).forEach(applyEdit);});observer.observe(document.body,{childList:true,subtree:true});}
  initStudioBridge();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
