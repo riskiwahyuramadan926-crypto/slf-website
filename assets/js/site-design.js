@@ -10,7 +10,7 @@ const fontMap={
  sans:'Arial,Helvetica,sans-serif',
  rounded:'"Trebuchet MS",Arial,sans-serif',
  mono:'ui-monospace,SFMono-Regular,Consolas,monospace',
- fantasy:'Georgia,"Palatino Linotype",serif,
+ fantasy:'Georgia,"Palatino Linotype",serif',
  display:'Impact,Haettenschweiler,"Arial Narrow Bold",sans-serif',
  book:'Palatino,"Palatino Linotype","Book Antiqua",serif'
 };
