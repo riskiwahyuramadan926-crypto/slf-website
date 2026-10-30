@@ -88,7 +88,7 @@ function bindFields(){
 }
 function saveCreated(data){
  if(!design.insertedElements.some(x=>x.id===data.id)){
-  snapshot();design.insertedElements.push({id:data.id,page:data.page||currentPage(),containerSelector:data.containerSelector,type:data.kind==='image'?'image':'text',text:data.kind==='image'?'': 'Teks baru',src:data.src||'',alt:'Elemen tambahan SLF',styles:{},effects:[]});setDirty();
+  snapshot();design.insertedElements.push({id:data.id,page:data.page||currentPage(),containerSelector:data.containerSelector,type:['image','button','divider','card'].includes(data.kind)?data.kind:'text',text:data.text||'Teks baru',src:data.src||'',href:data.href||'',alt:'Elemen tambahan SLF',styles:{},effects:[]});setDirty();
  }
 }
 
