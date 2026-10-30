@@ -15,6 +15,8 @@ function normalizeStyles(input){
  if(color(x.color))out.color=color(x.color);
  if(color(x.backgroundColor))out.backgroundColor=color(x.backgroundColor);
  if(fonts.has(x.fontFamily))out.fontFamily=x.fontFamily;
+ if(['normal','italic'].includes(x.fontStyle))out.fontStyle=x.fontStyle;
+ if(['none','underline','line-through'].includes(x.textDecoration))out.textDecoration=x.textDecoration;
  for(const [key,min,max,fallback] of [['fontSize',8,120,16],['fontWeight',300,900,700],['lineHeight',.8,3,1.5],['letterSpacing',-2,20,0],['borderRadius',0,80,0],['padding',0,80,0],['marginBottom',0,120,0],['opacity',0,1,1],['maxWidth',80,1200,800]])if(x[key]!==undefined)out[key]=num(x[key],min,max,fallback);
  if(['left','center','right','justify'].includes(x.textAlign))out.textAlign=x.textAlign;
  if(['none','uppercase','lowercase','capitalize'].includes(x.textTransform))out.textTransform=x.textTransform;

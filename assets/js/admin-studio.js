@@ -16,7 +16,7 @@ function insertedFor(id){return design.insertedElements.find(x=>x.id===id);}
 function getActiveEdit(){if(!selected)return null;if(selected.created)return insertedFor(selected.id);return entryFor(selected.selector);}
 function selectPreview(path){currentPath=path;$('studio-preview-frame-wrap').classList.add('is-loading');frameReady=false;$('studio-preview-frame').src=path+(path.includes('?')?'&':'?')+'slf_studio=1&v='+Date.now();$('studio-preview-page').value=path;selected=null;renderSelection();}
 function styleFields(){
- return {color:'studio-style-color',backgroundColor:'studio-style-bg',fontFamily:'studio-style-font',fontSize:'studio-style-size',fontWeight:'studio-style-weight',letterSpacing:'studio-style-spacing',lineHeight:'studio-style-line',textAlign:'studio-style-align',textTransform:'studio-style-transform',borderRadius:'studio-style-radius',padding:'studio-style-padding',marginBottom:'studio-style-margin',maxWidth:'studio-style-max',opacity:'studio-style-opacity',boxShadow:'studio-style-shadow',filter:'studio-style-filter',objectFit:'studio-style-fit'};
+ return {color:'studio-style-color',backgroundColor:'studio-style-bg',fontFamily:'studio-style-font',fontStyle:'studio-style-font-style',textDecoration:'studio-style-decoration',fontSize:'studio-style-size',fontWeight:'studio-style-weight',letterSpacing:'studio-style-spacing',lineHeight:'studio-style-line',textAlign:'studio-style-align',textTransform:'studio-style-transform',borderRadius:'studio-style-radius',padding:'studio-style-padding',marginBottom:'studio-style-margin',maxWidth:'studio-style-max',opacity:'studio-style-opacity',boxShadow:'studio-style-shadow',filter:'studio-style-filter',objectFit:'studio-style-fit'};
 }
 function styleState(edit){return edit&&edit.styles||{};}
 function renderSelection(){
@@ -24,12 +24,12 @@ function renderSelection(){
  $('studio-selected-path').textContent=selected?selected.selector:'Pilih elemen di preview website.';
  $('studio-selected-note').textContent=selected?(selected.tag.toUpperCase()+' · '+(selected.textEditable?'Teks dapat diedit':'Konten teks bukan elemen tunggal; ubah tampilannya dari properti.')+(selected.created?' · Elemen baru':'')):'Perubahan diterapkan langsung pada preview.';
  const active=getActiveEdit(),styles=styleState(active);
- const styleDefaults={color:'#ffffff',backgroundColor:'#100c18',fontFamily:'system',fontSize:16,fontWeight:700,letterSpacing:0,lineHeight:1.5,textAlign:'left',textTransform:'none',borderRadius:0,padding:0,marginBottom:0,maxWidth:800,opacity:100,boxShadow:'none',filter:'none',objectFit:'cover'};
+ const styleDefaults={color:selected?.computed?.color||'#ffffff',backgroundColor:selected?.computed?.backgroundColor||'#100c18',fontFamily:selected?.computed?.fontFamily||'system',fontStyle:'normal',textDecoration:'none',fontSize:16,fontWeight:700,letterSpacing:0,lineHeight:1.5,textAlign:'left',textTransform:'none',borderRadius:0,padding:0,marginBottom:0,maxWidth:800,opacity:Math.round((selected?.computed?.opacity??1)*100),boxShadow:'none',filter:'none',objectFit:'cover'};
  $('studio-element-text').disabled=!selected||!selected.textEditable;
  $('studio-element-text').value=selected&&selected.textEditable?(active&&active.text!==undefined?active.text:selected.text):'';
  $('studio-element-src').disabled=!selected||selected.tag!=='img';
  $('studio-element-src').value=selected?(active&&active.src!==undefined?active.src:selected.src):'';
- for(const [key,id] of Object.entries(styleFields())){const el=$(id);if(!el)continue;const value=styles[key];el.value=value!==undefined?(key==='opacity'?Math.round(Number(value)*100):value):styleDefaults[key];}
+ for(const [key,id] of Object.entries(styleFields())){const el=$(id);if(!el)continue;const value=styles[key];el.value=value!==undefined?(key==='opacity'?Math.round(Number(value)*100):value):(selected?.computed?.[key]!==undefined?selected.computed[key]:styleDefaults[key]);}
  const effects=active&&active.effects||[];
  document.querySelectorAll('[data-effect]').forEach(el=>el.checked=effects.includes(el.dataset.effect));
  $('studio-remove-created').disabled=!(selected&&selected.created);
@@ -85,7 +85,7 @@ function bind(){
   if(m.type==='slf-studio-ready'){$('studio-live-status').textContent='Halaman '+m.page+' siap diedit';}
   if(m.type==='slf-studio-selected'){selected=m;renderSelection();}
   if(m.type==='slf-studio-created'){saveCreated(m);}
-  if(m.type==='slf-studio-removed'){design.insertedElements=design.insertedElements.filter(x=>x.id!==m.id);setDirty();}
+  if(m.type==='slf-studio-removed'){design.insertedElements=design.insertedElements.filter(x=>x.id!==m.id);selected=null;renderSelection();setDirty();}
  });
  $('studio-preview-page').addEventListener('change',e=>{if(dirty&&!confirm('Ada perubahan belum diterbitkan. Buang perubahan lokal sebelum pindah halaman?')){e.target.value=currentPath;return;}if(dirty)loadDesign(false);selectPreview(e.target.value);});
  $('studio-select-mode').addEventListener('click',()=>{mode=!mode;$('studio-select-mode').textContent='Pilih elemen: '+(mode?'ON':'OFF');msg({type:'slf-studio-mode',enabled:mode});});
