@@ -144,6 +144,7 @@ function bind(){
  $('studio-add-text').addEventListener('click',()=>{if(!selected){alert('Pilih bagian/area di preview terlebih dahulu.');return;}msg({type:'slf-studio-add',kind:'text'});});
  $('studio-add-image').addEventListener('click',()=>{if(!selected){alert('Pilih bagian/area di preview terlebih dahulu.');return;}const src=prompt('Masukkan URL HTTPS atau path gambar, misalnya /assets/images/uploads/gambar.webp');if(src)msg({type:'slf-studio-add',kind:'image',src:src.trim()});});
  $('studio-remove-created').addEventListener('click',()=>{if(!selected||!selected.created)return;msg({type:'slf-studio-remove'});});
+ $('studio-global-accent').addEventListener('focus',snapshot);$('studio-global-accent2').addEventListener('focus',snapshot);$('studio-global-overlay').addEventListener('focus',snapshot);$('studio-global-overlay-opacity').addEventListener('focus',snapshot);
  $('studio-global-accent').addEventListener('input',e=>{design.accent=e.target.value;setDirty();msg({type:'slf-studio-theme',accent:design.accent});});
  $('studio-global-accent2').addEventListener('input',e=>{design.accent2=e.target.value;setDirty();msg({type:'slf-studio-theme',accent2:design.accent2});});
  $('studio-global-overlay').addEventListener('input',e=>{design.overlayColor=e.target.value;setDirty();msg({type:'slf-studio-theme',overlayColor:design.overlayColor});});
