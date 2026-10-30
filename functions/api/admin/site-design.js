@@ -14,10 +14,13 @@ function normalizeStyles(input){
  const x=input&&typeof input==='object'?input:{},out={};
  if(color(x.color))out.color=color(x.color);
  if(color(x.backgroundColor))out.backgroundColor=color(x.backgroundColor);
+ if(color(x.borderColor))out.borderColor=color(x.borderColor);
+ if(['solid','dashed','dotted','none'].includes(x.borderStyle))out.borderStyle=x.borderStyle;
+ if(['none','soft','glow','gold'].includes(x.textShadow))out.textShadow=x.textShadow;
  if(fonts.has(x.fontFamily))out.fontFamily=x.fontFamily;
  if(['normal','italic'].includes(x.fontStyle))out.fontStyle=x.fontStyle;
  if(['none','underline','line-through'].includes(x.textDecoration))out.textDecoration=x.textDecoration;
- for(const [key,min,max,fallback] of [['fontSize',8,120,16],['fontWeight',300,900,700],['lineHeight',.8,3,1.5],['letterSpacing',-2,20,0],['borderRadius',0,80,0],['padding',0,80,0],['marginBottom',0,120,0],['opacity',0,1,1],['maxWidth',80,1200,800]])if(x[key]!==undefined)out[key]=num(x[key],min,max,fallback);
+ for(const [key,min,max,fallback] of [['fontSize',8,120,16],['fontWeight',300,900,700],['lineHeight',.8,3,1.5],['letterSpacing',-2,20,0],['borderRadius',0,80,0],['padding',0,80,0],['marginBottom',0,120,0],['opacity',0,1,1],['maxWidth',80,1200,800],['widthPct',0,100,100],['minHeight',0,900,0],['borderWidth',0,12,0]])if(x[key]!==undefined)out[key]=num(x[key],min,max,fallback);
  if(['left','center','right','justify'].includes(x.textAlign))out.textAlign=x.textAlign;
  if(['none','uppercase','lowercase','capitalize'].includes(x.textTransform))out.textTransform=x.textTransform;
  if(shadows.has(x.boxShadow))out.boxShadow=x.boxShadow;

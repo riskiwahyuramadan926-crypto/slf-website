@@ -13,6 +13,7 @@ const fontMap={
  fantasy:'Georgia,"Palatino Linotype",serif'
 };
 const shadows={none:'none',soft:'0 8px 24px rgba(0,0,0,.18)',deep:'0 18px 42px rgba(0,0,0,.32)',glow:'0 0 24px rgba(126,230,246,.35)',gold:'0 0 24px rgba(243,203,130,.28)'};
+const textShadows={none:'none',soft:'0 2px 10px rgba(0,0,0,.55)',glow:'0 0 16px rgba(126,230,246,.7)',gold:'0 0 16px rgba(243,203,130,.65)'};
 const filters={none:'none',softBlur:'blur(1px)',gray:'grayscale(1)',warm:'sepia(.28) saturate(1.15)',vivid:'saturate(1.35) contrast(1.04)'};
 let design=null,studioSelect=false,selected=null,originState=new WeakMap(),insertedNodes=new Map();
 const parentOrigin=location.origin;
@@ -56,12 +57,15 @@ function remember(el){
 }
 function applyStyle(el,styles){
  if(!styles||typeof styles!=='object')return;
- const allowed=['color','backgroundColor','fontFamily','fontStyle','textDecoration','fontSize','fontWeight','lineHeight','letterSpacing','textAlign','textTransform','borderRadius','padding','marginBottom','opacity','boxShadow','filter','maxWidth','objectFit'];
+ const allowed=['color','backgroundColor','fontFamily','fontStyle','textDecoration','fontSize','fontWeight','lineHeight','letterSpacing','textAlign','textTransform','borderRadius','padding','marginBottom','opacity','boxShadow','filter','maxWidth','widthPct','minHeight','borderWidth','borderColor','borderStyle','textShadow','objectFit'];
  for(const key of allowed){if(styles[key]===undefined)continue;let value=styles[key];
   if(key==='fontFamily')value=fontMap[value]||fontMap.system;
   if(key==='fontStyle'&&!['normal','italic'].includes(value))continue;
   if(key==='textDecoration'&&!['none','underline','line-through'].includes(value))continue;
   if(key==='boxShadow')value=shadows[value]||'none';
+  if(key==='textShadow')value=textShadows[value]||'none';
+  if(key==='borderColor'&&!isColor(value))continue;
+  if(key==='borderStyle'&&!['solid','dashed','dotted','none'].includes(value))continue;
   if(key==='filter')value=filters[value]||'none';
   if(key==='color'||key==='backgroundColor'){if(value!=='transparent'&&!isColor(value))continue;}
   if(key==='fontWeight')value=String(clamp(value,300,900,700));
@@ -73,6 +77,9 @@ function applyStyle(el,styles){
   if(key==='marginBottom')value=clamp(value,0,120,0)+'px';
   if(key==='opacity')value=clamp(value,0,1,1);
   if(key==='maxWidth')value=clamp(value,80,1200,800)+'px';
+  if(key==='widthPct')value=clamp(value,0,100,100)+'%';
+  if(key==='minHeight')value=clamp(value,0,900,0)+'px';
+  if(key==='borderWidth')value=clamp(value,0,12,0)+'px';
   if(key==='textAlign'&&!['left','center','right','justify'].includes(value))continue;
   if(key==='textTransform'&&!['none','uppercase','lowercase','capitalize'].includes(value))continue;
   if(key==='objectFit'&&!['cover','contain','fill'].includes(value))continue;
@@ -122,6 +129,7 @@ function applyDesign(d){
  if(hero){
   const overlay='rgba('+parseInt(overlayColor.slice(1,3),16)+','+parseInt(overlayColor.slice(3,5),16)+','+parseInt(overlayColor.slice(5,7),16)+','+(clamp(d.overlayOpacity,0,100,65)/100)+')';
   if(wall){const src=String(wall.src).replace(/["\\]/g,'');hero.style.setProperty('background-image','linear-gradient('+overlay+','+overlay+'),url("'+src+'")','important');hero.style.setProperty('background-size','cover','important');hero.style.setProperty('background-position',clamp(wall.x,0,100,50)+'% '+clamp(wall.y,0,100,50)+'%','important');hero.style.setProperty('background-repeat','no-repeat','important');}
+  else if(clamp(d.overlayOpacity,0,100,0)>0){const base=getComputedStyle(hero).backgroundImage;hero.style.setProperty('background-image','linear-gradient('+overlay+','+overlay+'), '+(base&&base!=='none'?base:'linear-gradient(#101a31,#080d19)'),'important');}
   if(isColor(d.background))hero.style.setProperty('background-color',d.background,'important');
   const texts=layers.filter(x=>x.type==='text'&&x.visible!==false&&String(x.text||'').trim());
   const images=layers.filter(x=>x.type==='image'&&x.id!=='wallpaper'&&x.visible!==false&&x.src);
@@ -189,7 +197,7 @@ async function init(){
   const response=await fetch('/api/site-design',{cache:'no-store'});
   if(response.ok){const data=await response.json();if(data.design)applyDesign(data.design);}
  }catch(_){}
- if(document.body){const observer=new MutationObserver(()=>{if(!design)return;(Array.isArray(design.insertedElements)?design.insertedElements:[]).forEach(insertElement);(Array.isArray(design.elementEdits)?design.elementEdits:[]).forEach(applyEdit);});observer.observe(document.body,{childList:true,subtree:true});}
+ if(document.body){let scheduled=false;const observer=new MutationObserver(()=>{if(scheduled||!design)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;(Array.isArray(design.insertedElements)?design.insertedElements:[]).forEach(insertElement);(Array.isArray(design.elementEdits)?design.elementEdits:[]).forEach(applyEdit);});});observer.observe(document.body,{childList:true,subtree:true});}
  initStudioBridge();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
