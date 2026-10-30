@@ -147,8 +147,8 @@ function bind(){
  $('studio-global-accent').addEventListener('focus',snapshot);$('studio-global-accent2').addEventListener('focus',snapshot);$('studio-global-overlay').addEventListener('focus',snapshot);$('studio-global-overlay-opacity').addEventListener('focus',snapshot);
  $('studio-global-accent').addEventListener('input',e=>{design.accent=e.target.value;setDirty();msg({type:'slf-studio-theme',accent:design.accent});});
  $('studio-global-accent2').addEventListener('input',e=>{design.accent2=e.target.value;setDirty();msg({type:'slf-studio-theme',accent2:design.accent2});});
- $('studio-global-overlay').addEventListener('input',e=>{design.overlayColor=e.target.value;setDirty();msg({type:'slf-studio-theme',overlayColor:design.overlayColor});});
- $('studio-global-overlay-opacity').addEventListener('input',e=>{design.overlayOpacity=Number(e.target.value);setDirty();msg({type:'slf-studio-theme',overlayOpacity:design.overlayOpacity});});
+ $('studio-global-overlay').addEventListener('input',e=>{design.overlayColor=e.target.value;setDirty();msg({type:'slf-studio-theme',overlayColor:design.overlayColor,overlayOpacity:design.overlayOpacity});});
+ $('studio-global-overlay-opacity').addEventListener('input',e=>{design.overlayOpacity=Number(e.target.value);setDirty();msg({type:'slf-studio-theme',overlayColor:design.overlayColor,overlayOpacity:design.overlayOpacity});});
  $('studio-reset-selected').addEventListener('click',()=>{if(!selected)return;if(!confirm('Reset perubahan pada elemen terpilih?'))return;snapshot();if(selected.created){design.insertedElements=design.insertedElements.filter(x=>x.id!==selected.id);msg({type:'slf-studio-remove'});}else design.elementEdits=design.elementEdits.filter(x=>x.selector!==selected.selector||x.page!==currentPage());setDirty();selectPreview(currentPath);});
  $('studio-discard').addEventListener('click',()=>{if(!confirm('Buang semua perubahan preview yang belum diterbitkan?'))return;loadDesign(false);selectPreview(currentPath);});
  $('studio-publish').addEventListener('click',async()=>{
