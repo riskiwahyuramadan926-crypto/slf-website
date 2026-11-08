@@ -8,7 +8,9 @@ export async function onRequest(context) {
   // The health handler performs its own connection + schema checks and returns the actual failure stage.
   // Keep health and credential verification reachable during D1/schema incidents.
   // Store data endpoints remain protected by the normal database/schema gate.
-  if (pathname === '/api/support/chat' || pathname === '/api/health' || pathname === '/api/admin/me' || pathname.startsWith('/api/media/')) return context.next();
+  // These endpoints bootstrap their own small tables so a Wiki migration can never block Store or announcements.
+  const isolatedDataRoutes = new Set(['/api/wiki','/api/admin/wiki','/api/announcements','/api/admin/announcements']);
+  if (isolatedDataRoutes.has(pathname) || pathname === '/api/support/chat' || pathname === '/api/health' || pathname === '/api/admin/me' || pathname.startsWith('/api/media/')) return context.next();
   if (!env.DB) {
     return new Response(JSON.stringify({
       error: 'Database Store belum terikat. Binding Cloudflare D1 harus bernama DB.'
