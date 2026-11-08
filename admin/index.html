@@ -34,7 +34,8 @@
 .owner-admin-menu{border-color:rgba(243,203,130,.32);background:rgba(243,203,130,.035)}
 .owner-admin-menu .admin-tab-group-label{color:var(--gold2)}
 .admin-tab-group[hidden]{display:none!important}
- .wiki-admin-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:16px;align-items:start}.wiki-admin-grid>.admin-form{min-width:0}#wiki-article-content{min-height:340px;font-family:ui-monospace,monospace;font-size:.82rem;line-height:1.55}#wiki-admin-error.show{display:block}@media(max-width:900px){.wiki-admin-grid{grid-template-columns:1fr}}\n</style></head>
+
+.wiki-admin-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:16px;align-items:start}.wiki-admin-grid>.admin-form{min-width:0}#wiki-article-content{min-height:340px;font-family:ui-monospace,monospace;font-size:.82rem;line-height:1.55}#wiki-admin-error.show{display:block}@media(max-width:900px){.wiki-admin-grid{grid-template-columns:1fr}}\n</style></head>
 <body><div class="topline"><b>SLF ADMIN</b> · PUSAT OPERASIONAL STORE</div>
 <header><div class="wrap nav"><a class="brand" href="/"><span class="mark">✦</span><span><strong>SURVIVAL LEGACY FRONTIER</strong><small>PUSAT OPERASIONAL ADMIN</small></span></a><div><a class="btn" href="/store/">Store</a> <span id="role-pill" class="admin-badge">Belum masuk</span> <button class="btn btn-quiet" id="logout" type="button">Keluar</button></div></div></header>
 <main class="wrap"><section class="hero"><div class="section-head"><div class="eyebrow">Panel staf privat</div><h1>Pusat<span>Operasional.</span></h1><p>Panel dibagi dua: Admin mengelola operasional; Owner mendapat semua menu, termasuk keuangan, produk, konfigurasi, dan akses staf. Pembayaran Store tetap dicocokkan dengan transaksi masuk di DANA.</p></div></section>
@@ -124,8 +125,8 @@
   <div id="support-error" class="form-error"></div><div id="support-list" class="admin-list"><div class="empty">Memuat tiket…</div></div>
 </section>
 <section id="announcements-tab" hidden>
-  <div class="section-head"><h2>Pengumuman Store</h2><p>Pengumuman aktif tampil otomatis di halaman Store sesuai jadwal yang diatur.</p></div>
-  <form id="announcement-form" class="admin-form"><h3 id="announcement-form-title">Buat pengumuman</h3><input id="announcement-id" type="hidden">
+  <div class="section-head"><h2>Pengumuman SLF</h2><p>Pengumuman aktif tampil otomatis di Beranda dan halaman Store sesuai jadwal yang diatur.</p></div>
+  <form id="announcement-form" class="admin-form"><h3 id="announcement-form-title">Buat pengumuman SLF</h3><input id="announcement-id" type="hidden">
     <div class="admin-form-grid">
       <div class="full"><label for="announcement-title">Judul</label><input id="announcement-title" required maxlength="100"></div>
       <div class="full"><label for="announcement-body">Isi</label><textarea id="announcement-body" required maxlength="1500"></textarea></div>
