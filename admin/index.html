@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#100c18"><title>Pusat Operasional Admin | SLF</title><link rel="stylesheet" href="/assets/css/store.css"><link rel="stylesheet" href="/assets/css/frontier-theme.css"><link rel="stylesheet" href="/assets/css/admin-studio.css?v=20261030-livebuilder6"><script src="/assets/js/admin.js?v=20261030-studio1" defer></script><script src="/assets/js/admin-studio.js?v=20261030-livebuilder66" defer></script>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#100c18"><title>Pusat Operasional Admin | SLF</title><link rel="stylesheet" href="/assets/css/store.css"><link rel="stylesheet" href="/assets/css/frontier-theme.css"><link rel="stylesheet" href="/assets/css/admin-studio.css?v=20261030-livebuilder6"><script src="/assets/js/admin.js?v=20261030-studio1" defer></script><script src="/assets/js/admin-studio.js?v=20261030-livebuilder66" defer></script><script src="/assets/js/wiki-admin.js?v=20261108-wikieditor1" defer></script>
 <style>
 .admin-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}.admin-stat{padding:16px;border:1px solid var(--line);background:#191322;border-radius:14px}.admin-stat small{display:block;color:var(--muted)}.admin-stat strong{display:block;font-size:1.45rem;color:var(--gold);overflow-wrap:anywhere}.admin-tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:18px 0}.admin-tools input,.admin-tools select,.admin-reply textarea{background:#171020;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:11px;min-width:0}.admin-tools input{flex:1;min-width:180px}.admin-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.admin-tabs button.active{background:var(--purple);color:#1b1028;border-color:var(--purple)}.admin-order{scroll-margin-top:95px}.admin-order dl{display:grid;grid-template-columns:minmax(100px,.4fr) 1fr;gap:5px 12px}.admin-order dt{color:var(--muted)}.admin-order dd{margin:0;overflow-wrap:anywhere}.admin-badge{display:inline-flex;border:1px solid var(--line);padding:3px 8px;border-radius:99px;color:var(--muted);font-size:.78rem}.review-card{border:1px solid var(--line);background:#191322;border-radius:14px;padding:18px;margin:12px 0}.review-card p{overflow-wrap:anywhere}.admin-reply{display:grid;gap:9px;margin-top:12px}.admin-reply textarea{width:100%;min-height:90px}.admin-muted{color:var(--muted);font-size:.84rem}.admin-section-title{margin:26px 0 8px}.admin-inline-actions{display:flex;gap:8px;flex-wrap:wrap}.admin-note{color:var(--muted);font-size:.82rem;margin:12px 0}.admin-table-wrap{overflow:auto}.admin-login{max-width:520px}@media(max-width:720px){.admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-order dl{grid-template-columns:1fr;gap:1px}.admin-order dd{margin-bottom:8px}.admin-tools>*{width:100%}}
 .admin-form{margin:14px 0;padding:18px;border:1px solid var(--line);background:#191322;border-radius:14px}
@@ -34,7 +34,7 @@
 .owner-admin-menu{border-color:rgba(243,203,130,.32);background:rgba(243,203,130,.035)}
 .owner-admin-menu .admin-tab-group-label{color:var(--gold2)}
 .admin-tab-group[hidden]{display:none!important}
-</style></head>
+ .wiki-admin-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:16px;align-items:start}.wiki-admin-grid>.admin-form{min-width:0}#wiki-article-content{min-height:340px;font-family:ui-monospace,monospace;font-size:.82rem;line-height:1.55}#wiki-admin-error.show{display:block}@media(max-width:900px){.wiki-admin-grid{grid-template-columns:1fr}}\n</style></head>
 <body><div class="topline"><b>SLF ADMIN</b> · PUSAT OPERASIONAL STORE</div>
 <header><div class="wrap nav"><a class="brand" href="/"><span class="mark">✦</span><span><strong>SURVIVAL LEGACY FRONTIER</strong><small>PUSAT OPERASIONAL ADMIN</small></span></a><div><a class="btn" href="/store/">Store</a> <span id="role-pill" class="admin-badge">Belum masuk</span> <button class="btn btn-quiet" id="logout" type="button">Keluar</button></div></div></header>
 <main class="wrap"><section class="hero"><div class="section-head"><div class="eyebrow">Panel staf privat</div><h1>Pusat<span>Operasional.</span></h1><p>Panel dibagi dua: Admin mengelola operasional; Owner mendapat semua menu, termasuk keuangan, produk, konfigurasi, dan akses staf. Pembayaran Store tetap dicocokkan dengan transaksi masuk di DANA.</p></div></section>
@@ -61,7 +61,7 @@
   <button class="btn" data-tab="promos" data-owner-only="true" type="button">Promo</button>
   <button class="btn" data-tab="reports" data-owner-only="true" type="button">Statistik & Laporan</button>
   <button class="btn" data-tab="finance" data-owner-only="true" type="button">Kas & Keuangan</button>
-  <button class="btn" data-tab="site-content" data-owner-only="true" type="button">Editor Website</button><button class="btn" data-tab="studio" data-owner-only="true" type="button">✦ SLF Studio</button>
+  <button class="btn" data-tab="site-content" data-owner-only="true" type="button">Editor Website</button><button class="btn" data-tab="wiki-manager" data-owner-only="true" type="button">Perpustakaan Wiki</button><button class="btn" data-tab="studio" data-owner-only="true" type="button">✦ SLF Studio</button>
   <button class="btn" data-tab="access" data-owner-only="true" type="button">Akses & Role</button>
 </div>
 </div>
@@ -178,6 +178,46 @@
   </form><div id="cms-list" class="admin-list"><div class="empty">Memuat konten…</div></div>
 </section>
 
+<section id="wiki-manager-tab" hidden>
+ <div class="section-head"><h2>Perpustakaan Wiki · Pengelola Buku</h2><p>Susun Wiki seperti perpustakaan: buat kategori sebagai buku, lalu masukkan artikel ke dalam buku. Semua perubahan tersimpan di database; tidak perlu mengubah HTML atau menghubungi developer.</p></div>
+ <div class="admin-note">Format isi artikel memakai Markdown sederhana: <code># Judul bagian</code>, <code>## Subbagian</code>, <code>**tebal**</code>, <code>*miring*</code>, daftar dengan <code>- item</code>, dan kutipan dengan <code>&gt; catatan</code>. HTML mentah tidak dijalankan.</div>
+ <div id="wiki-admin-error" class="form-error" role="alert"></div>
+ <div class="wiki-admin-grid">
+  <div>
+   <form id="wiki-category-form" class="admin-form">
+    <h3 id="wiki-category-form-title">Tambah buku / kategori</h3><input id="wiki-category-id" type="hidden">
+    <div class="admin-form-grid">
+     <div><label for="wiki-category-name">Nama buku</label><input id="wiki-category-name" required maxlength="80" placeholder="Contoh: Server & Aturan"></div>
+     <div><label for="wiki-category-slug">Slug buku</label><input id="wiki-category-slug" maxlength="70" placeholder="server-aturan"></div>
+     <div><label for="wiki-category-icon">Ikon</label><input id="wiki-category-icon" maxlength="12" value="📚" placeholder="📚"></div>
+     <div><label for="wiki-category-order">Urutan buku</label><input id="wiki-category-order" type="number" min="-1000" max="1000" value="10"></div>
+     <div class="full"><label for="wiki-category-description">Deskripsi buku</label><textarea id="wiki-category-description" maxlength="300" placeholder="Jelaskan isi kategori ini secara singkat."></textarea></div>
+     <div><label for="wiki-category-active">Status buku</label><select id="wiki-category-active"><option value="1">Tampilkan ke pemain</option><option value="0">Sembunyikan sementara</option></select></div>
+    </div>
+    <div class="admin-inline-actions"><button class="btn btn-gold" type="submit">Simpan buku</button><button class="btn btn-quiet" id="wiki-category-reset" type="button">Buku baru</button></div>
+   </form>
+   <h3 class="admin-section-title">Rak buku saat ini</h3><div id="wiki-categories-list" class="admin-list"><div class="empty">Memuat kategori…</div></div>
+  </div>
+  <div>
+   <form id="wiki-article-form" class="admin-form">
+    <h3 id="wiki-article-form-title">Tambah artikel</h3><input id="wiki-article-id" type="hidden">
+    <div class="admin-form-grid">
+     <div class="full"><label for="wiki-article-category">Masukkan ke buku</label><select id="wiki-article-category" required></select></div>
+     <div class="full"><label for="wiki-article-title">Judul artikel</label><input id="wiki-article-title" required maxlength="140" placeholder="Contoh: Cara membuat claim"></div>
+     <div><label for="wiki-article-slug">Slug artikel</label><input id="wiki-article-slug" maxlength="70" placeholder="cara-membuat-claim"></div>
+     <div><label for="wiki-article-icon">Ikon artikel</label><input id="wiki-article-icon" maxlength="12" value="📖"></div>
+     <div><label for="wiki-article-order">Urutan dalam buku</label><input id="wiki-article-order" type="number" min="-1000" max="1000" value="10"></div>
+     <div><label for="wiki-article-status">Status artikel</label><select id="wiki-article-status"><option value="published">Terbitkan</option><option value="draft">Simpan sebagai draft</option></select></div>
+     <div class="full"><label for="wiki-article-summary">Ringkasan</label><textarea id="wiki-article-summary" maxlength="320" placeholder="Penjelasan singkat yang terlihat di daftar isi buku."></textarea></div>
+     <div class="full"><label for="wiki-article-content">Isi artikel</label><textarea id="wiki-article-content" rows="16" maxlength="20000" placeholder="# Judul bagian&#10;Tulis penjelasan di sini. Pisahkan paragraf dengan satu baris kosong.&#10;&#10;## Subbagian&#10;- Poin pertama&#10;- Poin kedua"></textarea></div>
+    </div>
+    <div id="wiki-legacy-note" class="admin-note" hidden>Ini adalah artikel lama yang masih memakai halaman HTML tersendiri. Saat kamu mengisi isi artikel di atas lalu menyimpan, versi baru dari database akan dipakai menggantikan tautan lama.</div>
+    <div class="admin-inline-actions"><button class="btn btn-gold" type="submit">Simpan artikel</button><button class="btn btn-quiet" id="wiki-article-reset" type="button">Artikel baru</button></div>
+   </form>
+   <h3 class="admin-section-title">Daftar isi semua buku</h3><div id="wiki-articles-list" class="admin-list"><div class="empty">Memuat artikel…</div></div>
+  </div>
+ </div>
+</section>
 <section id="studio-tab" hidden>
  <div class="section-head"><div class="eyebrow">Live Visual Builder · Owner</div><h2>SLF Studio</h2><p>Edit tampilan dari halaman website yang sebenarnya. Ketuk elemen pada preview untuk memilih bagian yang mau diubah; hasil perubahan langsung terlihat sebelum diterbitkan.</p></div>
  <div class="studio-toolbar"><label for="studio-preview-page">Halaman</label><select id="studio-preview-page"><option value="/">Beranda</option><option value="/store/">Store</option><option value="/wiki/">Wiki utama</option><optgroup label="Artikel Wiki"><option value="/wiki/artikel/aturan-komunitas.html">Wiki · Aturan Komunitas</option><option value="/wiki/artikel/aturan-server.html">Wiki · Aturan Server</option><option value="/wiki/artikel/bantuan-laporan.html">Wiki · Bantuan & Laporan</option><option value="/wiki/artikel/benefit-vip.html">Wiki · Benefit VIP+</option><option value="/wiki/artikel/claim-tanah.html">Wiki · Claim Tanah</option><option value="/wiki/artikel/dunia-slf.html">Wiki · Dunia SLF</option><option value="/wiki/artikel/ekonomi-pasar.html">Wiki · Ekonomi & Pasar</option><option value="/wiki/artikel/faq-teknis.html">Wiki · FAQ Teknis</option><option value="/wiki/artikel/lapar-haus.html">Wiki · Lapar & Haus</option><option value="/wiki/artikel/mulai-bermain.html">Wiki · Mulai Bermain</option><option value="/wiki/artikel/nyawa-reentry.html">Wiki · Nyawa & Re-entry</option><option value="/wiki/artikel/perjalanan-waystone.html">Wiki · Perjalanan Waystone</option><option value="/wiki/artikel/pvp-coliseum.html">Wiki · PvP & Coliseum</option><option value="/wiki/artikel/ras-kemampuan.html">Wiki · Ras & Kemampuan</option><option value="/wiki/artikel/season-reset.html">Wiki · Season & Reset</option><option value="/wiki/artikel/store-donasi.html">Wiki · Store & Donasi</option><option value="/wiki/artikel/zona-drakmor.html">Wiki · Zona Drakmor</option><option value="/wiki/artikel/zona-elarion.html">Wiki · Zona Elarion</option><option value="/wiki/artikel/zona-noxveil.html">Wiki · Zona Noxveil</option><option value="/wiki/artikel/zona-veyrwood.html">Wiki · Zona Veyrwood</option></optgroup><option value="/bantuan/">Pusat Bantuan</option><option value="/store/order.html">Status pesanan</option><option value="/store/review.html">Ulasan</option><option value="/store/ticket.html">Tiket re-entry</option></select><span id="studio-live-status" class="studio-preview-status">Memuat editor…</span><span id="studio-dirty" class="studio-unsaved"></span></div>
