@@ -51,10 +51,10 @@ function resetArticle(){ $('wiki-article-form').reset();$('wiki-article-id').val
 function editCategory(id){const c=categories.find(x=>x.id===id);if(!c)return;$('wiki-category-id').value=c.id;$('wiki-category-name').value=c.name;$('wiki-category-slug').value=c.slug;$('wiki-category-icon').value=c.icon||'📚';$('wiki-category-description').value=c.description||'';$('wiki-category-order').value=c.sort_order||0;$('wiki-category-active').value=c.active?'1':'0';$('wiki-category-form-title').textContent='Edit buku: '+c.name;$('wiki-category-form').scrollIntoView({behavior:'smooth',block:'start'});}
 
 function legacyInline(node,base){
- if(node.nodeType===3)return node.nodeValue.replace(/\\s+/g,' ');
+ if(node.nodeType===3)return node.nodeValue.replace(/\s+/g,' ');
  if(node.nodeType!==1)return '';
  const tag=node.tagName.toLowerCase();
- if(tag==='br')return '\\n';
+ if(tag==='br')return '\n';
  if(tag==='img'){const alt=node.getAttribute('alt')||'gambar';const src=node.getAttribute('src');return src?'['+alt+']('+new URL(src,base).href+')':'['+alt+']';}
  const inner=Array.from(node.childNodes).map(n=>legacyInline(n,base)).join('');
  if(tag==='strong'||tag==='b')return '**'+inner.trim()+'**';
@@ -68,9 +68,9 @@ function legacyList(node,base,depth=0){
  return Array.from(node.children).filter(x=>x.tagName.toLowerCase()==='li').map((li,index)=>{
   const nested=Array.from(li.children).filter(x=>['ul','ol'].includes(x.tagName.toLowerCase()));
   const text=Array.from(li.childNodes).filter(x=>!(x.nodeType===1&&['ul','ol'].includes(x.tagName.toLowerCase()))).map(x=>legacyInline(x,base)).join('').trim();
-  const childLists=nested.map(x=>legacyList(x,base,depth+1)).join('\\n');
-  return '  '.repeat(depth)+(ordered?(index+1)+'. ':'- ')+text+(childLists?'\\n'+childLists:'');
- }).join('\\n');
+  const childLists=nested.map(x=>legacyList(x,base,depth+1)).join('\n');
+  return '  '.repeat(depth)+(ordered?(index+1)+'. ':'- ')+text+(childLists?'\n'+childLists:'');
+ }).join('\n');
 }
 function legacyBlocks(root,base){
  const parts=[];
@@ -81,12 +81,12 @@ function legacyBlocks(root,base){
   if(tag==='ul'||tag==='ol'){parts.push(legacyList(node,base));return;}
   if(/^h[1-6]$/.test(tag)){const level=Math.min(3,Math.max(1,Number(tag.slice(1))));parts.push('#'.repeat(level)+' '+legacyInline(node,base).trim());return;}
   if(tag==='p'){const t=legacyInline(node,base).trim();if(t)parts.push(t);return;}
-  if(tag==='blockquote'){const t=legacyBlocks(node,base).replace(/\\n/g,'\\n> ');if(t)parts.push('> '+t);return;}
+  if(tag==='blockquote'){const t=legacyBlocks(node,base).replace(/\n/g,'\n> ');if(t)parts.push('> '+t);return;}
   if(tag==='hr'){parts.push('---');return;}
   if(['div','section','article'].includes(tag)){const t=legacyBlocks(node,base);if(t)parts.push(t);return;}
   const t=legacyInline(node,base).trim();if(t)parts.push(t);
  });
- return parts.join('\\n\\n').replace(/\\n{3,}/g,'\\n\\n').trim();
+ return parts.join('\n\n').replace(/\n{3,}/g,'\n\n').trim();
 }
 
 async function editArticle(id){
