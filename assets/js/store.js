@@ -171,25 +171,5 @@
     } catch (_) { /* Ulasan boleh tidak tampil bila API belum dipasang. */ }
   }
   loadReviews();
-  loadAnnouncements();
 
-  async function loadAnnouncements(){
-    try{
-      const response=await fetch('/api/announcements',{cache:'no-store'});
-      if(!response.ok)return;
-      const data=await response.json(),items=data.announcements||[];
-      if(!items.length)return;
-      const section=$('store-announcements'),root=$('announcement-list');
-      root.replaceChildren();
-      items.forEach(item=>{
-        const card=document.createElement('article');card.className='product';
-        const label=document.createElement('span');label.className='pill';label.textContent='Pengumuman SLF';
-        const title=document.createElement('h3');title.textContent=item.title;
-        const body=document.createElement('p');body.textContent=item.body;
-        const date=document.createElement('div');date.className='subtle';date.textContent=new Date(item.created_at).toLocaleDateString('id-ID');
-        card.append(label,title,body,date);root.append(card);
-      });
-      section.hidden=false;
-    }catch(_){/* Pengumuman tidak mengganggu checkout bila API belum aktif. */}
-  }
 })();
