@@ -43,6 +43,7 @@
         </div>
     </section>
     <div class="quickbar"><div class="wrap quick-grid"><a class="quick" href="#wiki"><span class="ico">⌘</span><span><b>Ensiklopedia Wiki</b><small>Aturan dan sistem dunia</small></span></a><a class="quick" href="#store"><span class="ico">♜</span><span><b>Store &amp; Dukungan</b><small>Paket resmi dan donasi</small></span></a><a class="quick" href="#bantuan"><span class="ico">◈</span><span><b>Pusat Bantuan</b><small>Solusi masalah pemain</small></span></a><a class="quick" href="#komunitas"><span class="ico">✧</span><span><b>Komunitas</b><small>Terhubung dengan SLF</small></span></a></div></div>
+    <section class="section" id="home-announcements" hidden><div class="wrap"><div class="section-head"><div class="eyebrow">Kabar resmi SLF</div><h2>Pengumuman terbaru.</h2><p>Informasi aktif dari pengelola akan muncul di sini.</p></div><div class="shop-grid" id="home-announcement-list"></div></div></section>
     <section class="inspiration-section" aria-labelledby="inspiration-title">
       <div class="wrap">
         <div class="inspiration-heading">
@@ -134,7 +135,7 @@
     document.querySelectorAll('[data-placeholder]').forEach(link=>link.addEventListener('click',event=>{event.preventDefault();showToast(link.dataset.placeholder);}));
     document.querySelectorAll('[data-copy-text]').forEach(button=>button.addEventListener('click',async()=>{const value=button.dataset.copyText;try{await navigator.clipboard.writeText(value);showToast('Berhasil disalin: '+value);}catch(error){showToast('Salin manual: '+value);}}));
   </script>
-  <script src="/assets/js/site-design.js?v=20261030-livebuilder8" defer></script><script src="/assets/js/site-content.js" defer></script>
+  <script src="/assets/js/announcements.js?v=20261108-announcements1" defer></script><script src="/assets/js/site-design.js?v=20261030-livebuilder8" defer></script><script src="/assets/js/site-content.js" defer></script>
   <script src="/assets/js/support-widget.js" defer></script>
 </body>
 </html>
