@@ -109,3 +109,23 @@ CREATE TABLE IF NOT EXISTS site_design (
   id TEXT PRIMARY KEY CHECK(id='default'), config_json TEXT NOT NULL DEFAULT '{}',
   updated_by TEXT NOT NULL DEFAULT 'owner', updated_at TEXT NOT NULL
 );
+
+-- Categorized Wiki library. Runtime schema seeds the starter books and legacy article links.
+CREATE TABLE IF NOT EXISTS wiki_categories (
+  id TEXT PRIMARY KEY, name TEXT NOT NULL, slug TEXT NOT NULL UNIQUE,
+  description TEXT NOT NULL DEFAULT '', icon TEXT NOT NULL DEFAULT '📚',
+  sort_order INTEGER NOT NULL DEFAULT 0, active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_wiki_categories_order ON wiki_categories(active,sort_order,name);
+
+CREATE TABLE IF NOT EXISTS wiki_articles (
+  id TEXT PRIMARY KEY, category_id TEXT NOT NULL, title TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE, summary TEXT NOT NULL DEFAULT '',
+  content TEXT NOT NULL DEFAULT '', legacy_url TEXT,
+  icon TEXT NOT NULL DEFAULT '📖', sort_order INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'published' CHECK(status IN ('draft','published')),
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+  FOREIGN KEY(category_id) REFERENCES wiki_categories(id) ON DELETE RESTRICT
+);
+CREATE INDEX IF NOT EXISTS idx_wiki_articles_category ON wiki_articles(category_id,status,sort_order,title);
