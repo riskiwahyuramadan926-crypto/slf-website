@@ -1,8 +1,10 @@
 import { json, fail, readJson, requireAdmin, safeText, randomHex, logAdminActivity } from '../../_lib/common.js';
+import { ensureAnnouncementsSchema } from '../../_lib/announcement-schema.js';
 
 export async function onRequestGet({ request, env }) {
   if (!(await requireAdmin(request, env))) return fail('Akses admin ditolak.',401);
   if (!env.DB) return fail('Database belum tersambung.',503);
+  try { await ensureAnnouncementsSchema(env.DB); } catch(error) { console.error('[SLF_ANNOUNCEMENTS_ADMIN] schema failed:',error?.message||error); return json({error:'Database pengumuman gagal disiapkan.'},503); }
   const {results=[]}=await env.DB.prepare('SELECT id,title,body,active,starts_at,ends_at,created_at,updated_at FROM announcements ORDER BY created_at DESC LIMIT 200').all();
   return json({announcements:results.map(a=>({...a,active:Boolean(a.active)}))});
 }
