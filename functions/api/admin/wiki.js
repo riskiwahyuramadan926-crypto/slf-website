@@ -1,4 +1,5 @@
 import { json, fail, readJson, requireOwner, safeText, randomHex, logAdminActivity } from '../../_lib/common.js';
+import { ensureWikiSchema } from '../../_lib/wiki-schema.js';
 
 const slugify = value => String(value||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,70);
 const slugValid = value => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value);
@@ -7,6 +8,7 @@ const boolValue = value => !(value===false || value===0 || value==='0');
 
 export async function onRequestGet({ request, env }) {
   if (!(await requireOwner(request,env))) return fail('Pengelolaan Wiki hanya dapat diakses Owner.',403);
+  try { await ensureWikiSchema(env.DB); } catch (error) { console.error('[SLF_WIKI_ADMIN] schema initialization failed:',error?.message||error); return json({error:'Database Wiki gagal disiapkan.',diagnostic:String(error?.message||error).slice(0,220)},503); }
   const {results:categories=[]}=await env.DB.prepare('SELECT id,name,slug,description,icon,sort_order,active,created_at,updated_at FROM wiki_categories ORDER BY sort_order,name').all();
   const {results:articles=[]}=await env.DB.prepare('SELECT a.*,c.name AS category_name FROM wiki_articles a LEFT JOIN wiki_categories c ON c.id=a.category_id ORDER BY c.sort_order,a.sort_order,a.title LIMIT 1000').all();
   return json({categories:categories.map(x=>({...x,active:Boolean(x.active)})),articles});
@@ -14,6 +16,7 @@ export async function onRequestGet({ request, env }) {
 
 export async function onRequestPost({ request, env }) {
   if (!(await requireOwner(request,env))) return fail('Pengelolaan Wiki hanya dapat diakses Owner.',403);
+  try { await ensureWikiSchema(env.DB); } catch (error) { console.error('[SLF_WIKI_ADMIN] schema initialization failed:',error?.message||error); return json({error:'Database Wiki gagal disiapkan.',diagnostic:String(error?.message||error).slice(0,220)},503); }
   const d=await readJson(request);
   const now=new Date().toISOString();
 
@@ -69,6 +72,7 @@ export async function onRequestPost({ request, env }) {
 
 export async function onRequestDelete({ request, env }) {
   if (!(await requireOwner(request,env))) return fail('Pengelolaan Wiki hanya dapat diakses Owner.',403);
+  try { await ensureWikiSchema(env.DB); } catch (error) { console.error('[SLF_WIKI_ADMIN] schema initialization failed:',error?.message||error); return json({error:'Database Wiki gagal disiapkan.',diagnostic:String(error?.message||error).slice(0,220)},503); }
   const url=new URL(request.url);
   const type=safeText(url.searchParams.get('type'),20);
   const id=safeText(url.searchParams.get('id'),80);
