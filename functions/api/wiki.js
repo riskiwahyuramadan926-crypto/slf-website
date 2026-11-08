@@ -1,7 +1,12 @@
 import { json, fail } from '../_lib/common.js';
+import { ensureWikiSchema } from '../_lib/wiki-schema.js';
 
 export async function onRequestGet({ env }) {
-  if (!env.DB) return fail('Perpustakaan Wiki belum tersedia.',503);
+  if (!env.DB) return fail('Perpustakaan Wiki belum tersedia: binding D1 DB tidak ditemukan.',503);
+  try { await ensureWikiSchema(env.DB); } catch (error) {
+    console.error('[SLF_WIKI] schema initialization failed:', error?.message || error);
+    return json({error:'Database Wiki gagal disiapkan.',diagnostic:String(error?.message||error).slice(0,220)},503);
+  }
   const { results: categories = [] } = await env.DB.prepare(
     `SELECT c.id,c.name,c.slug,c.description,c.icon,c.sort_order,
       COUNT(a.id) AS article_count
