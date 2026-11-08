@@ -3,8 +3,8 @@
   const $ = id => document.getElementById(id);
   const secretKey = 'slf_admin_secret_session';
   let allOrders = [], allReviews = [], allProducts = [], allPromos = [], allCustomers = [], allTickets = [], allAnnouncements = [], allNotes = [], allCmsItems = [], allFinanceEntries = [], currentFinance = {}, currentRole = '', ownerSecretConfigured = false, lastCmsKind = 'slot', knownOrderIds = new Set(), knownTicketIds = new Set(), firstLoad = true, firstTicketLoad = true, activeTab = 'orders';
-  const ownerOnlyTabs = new Set(['products','promos','reports','finance','site-content','studio','access']);
-  const allTabNames = ['orders','tickets','reviews','products','promos','customers','reports','activity','support','announcements','notes','finance','site-content','studio','access'];
+  const ownerOnlyTabs = new Set(['products','promos','reports','finance','site-content','studio','access','wiki-manager']);
+  const allTabNames = ['orders','tickets','reviews','products','promos','customers','reports','activity','support','announcements','notes','finance','site-content','studio','access','wiki-manager'];
   const statusLabels = {PENDING_PAYMENT:'Menunggu pembayaran',PAID:'Pembayaran berhasil',PROCESSING:'Sedang diproses',COMPLETED:'Selesai',EXPIRED:'Kedaluwarsa',CANCELLED:'Dibatalkan'};
   const idr = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -119,6 +119,7 @@
     if(!res.ok){if(res.status===401){sessionStorage.removeItem(secretKey);currentRole='';$('login-panel').hidden=false;$('dashboard').hidden=true;$('role-pill').textContent='Belum masuk';}const error=new Error(data.error||'Permintaan gagal ('+res.status+').');error.status=res.status;error.payload=data;throw error;}
     return data;
   }
+  window.SLFAdminApi = api;
   async function loadOrders(manual=false){
     $('login-error').classList.remove('show');$('admin-error').classList.remove('show');
     const secret=sessionStorage.getItem(secretKey)||'';
@@ -279,7 +280,7 @@
       showToast('Akses ditolak: fitur ini hanya tersedia untuk Owner.');
       return;
     }
-    const jobs={tickets:loadTickets,products:loadProducts,promos:loadPromos,customers:loadCustomers,reports:loadReports,activity:loadActivity,support:loadSupport,announcements:loadAnnouncements,notes:loadNotes,finance:loadFinance,'site-content':loadSiteContent,studio:()=>window.SLFStudioLoad&&window.SLFStudioLoad(),access:loadAccess};
+    const jobs={tickets:loadTickets,products:loadProducts,promos:loadPromos,customers:loadCustomers,reports:loadReports,activity:loadActivity,support:loadSupport,announcements:loadAnnouncements,notes:loadNotes,finance:loadFinance,'site-content':loadSiteContent,'wiki-manager':()=>window.SLFWikiAdminLoad&&window.SLFWikiAdminLoad(),studio:()=>window.SLFStudioLoad&&window.SLFStudioLoad(),access:loadAccess};
     if(name==='reviews'){loadReviews();return;}
     if(jobs[name])jobs[name]();
   }
