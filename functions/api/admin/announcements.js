@@ -12,6 +12,7 @@ export async function onRequestGet({ request, env }) {
 export async function onRequestPost({ request, env }) {
   if (!(await requireAdmin(request, env))) return fail('Akses admin ditolak.',401);
   if (!env.DB) return fail('Database belum tersambung.',503);
+  try { await ensureAnnouncementsSchema(env.DB); } catch(error) { console.error('[SLF_ANNOUNCEMENTS_ADMIN] schema failed:',error?.message||error); return json({error:'Database pengumuman gagal disiapkan.'},503); }
   const d=await readJson(request);
   const title=safeText(d.title,100), body=safeText(d.body,1500);
   const id=safeText(d.id,60) || 'ANN-'+randomHex(8).toUpperCase();
