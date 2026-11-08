@@ -1,5 +1,7 @@
 import { json, resolveAdminSecrets, resolveTicketLinkSecret } from '../_lib/common.js';
 import { ensureStoreSchema } from '../_lib/store-schema.js';
+import { ensureWikiSchema } from '../_lib/wiki-schema.js';
+import { ensureAnnouncementsSchema } from '../_lib/announcement-schema.js';
 
 const requiredTables = [
   'orders', 'reviews', 'review_replies', 'store_products', 'promo_codes',
@@ -57,6 +59,8 @@ export async function onRequestGet({ env }) {
     // Health is intentionally independent of the global API middleware so schema
     // initialization failures can be reported here instead of hidden by its generic 503.
     await ensureStoreSchema(env.DB);
+    await ensureWikiSchema(env.DB);
+    await ensureAnnouncementsSchema(env.DB);
     const { results = [] } = await env.DB.prepare(
       "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('orders','reviews','review_replies','store_products','promo_codes','admin_activity','support_tickets','announcements','reentry_tickets','finance_entries','admin_notes','site_content','site_design','admin_auth_attempts','wiki_categories','wiki_articles') ORDER BY name"
     ).all();
