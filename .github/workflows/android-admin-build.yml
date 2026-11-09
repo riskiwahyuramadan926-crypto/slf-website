@@ -7,7 +7,6 @@ on:
       - "android-admin/**"
       - ".github/workflows/android-admin-build.yml"
   workflow_dispatch:
-    branches: [android-admin-build]
 
 permissions:
   contents: read
@@ -34,27 +33,8 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
 
-      - name: Install current Android CLI
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl -fsSL https://dl.google.com/android/cli/latest/linux_x86_64/install.sh | bash
-          export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
-          if ! command -v android >/dev/null 2>&1; then
-            CLI_BIN="$(find "$HOME" -maxdepth 6 -type f -name android -perm /111 -printf '%h\n' | head -n 1)"
-            test -n "$CLI_BIN"
-            export PATH="$CLI_BIN:$PATH"
-          fi
-          echo "Android CLI: $(command -v android)"
-          android --version
-          android sdk list --all | tee "$RUNNER_TEMP/android-sdk-packages.txt"
-          grep -E 'platforms/android-37(@|[[:space:]]|$)' "$RUNNER_TEMP/android-sdk-packages.txt"
-          android sdk install platforms/android-37 build-tools/36.0.0
-
-      - name: Set up Gradle 9.3.1
-        uses: gradle/actions/setup-gradle@v6
-        with:
-          gradle-version: "9.3.1"
+      - name: Install Android API 36
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
       - name: Extract native Android project
         run: |
@@ -65,8 +45,22 @@ jobs:
         working-directory: android-admin/slf-admin-android
         run: python3 tests/check_project.py
 
+      - name: Apply CI SDK platform compatibility
+        working-directory: android-admin/slf-admin-android
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("app/build.gradle.kts")
+          s = p.read_text()
+          if "compileSdk = 37" not in s:
+              raise SystemExit("Expected compileSdk 37 not found; refusing unexpected edit")
+          p.write_text(s.replace("compileSdk = 37", "compileSdk = 36", 1))
+          assert "compileSdk = 36" in p.read_text()
+          PY
+
       - name: Build APK
-        run: gradle --no-daemon --stacktrace -p android-admin/slf-admin-android assembleDebug
+        working-directory: android-admin/slf-admin-android
+        run: ./gradlew --no-daemon --stacktrace assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
