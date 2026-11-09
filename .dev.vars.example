@@ -1,0 +1,19 @@
+# Copy to .dev.vars for local Cloudflare Pages development.
+# Keep every value empty here. Never commit the filled .dev.vars file.
+
+OWNER_SECRET=
+ADMIN_SECRET=
+TICKET_LINK_SECRET=
+
+# Optional Owner media upload integration
+GITHUB_MEDIA_TOKEN=
+
+# Optional WhatsApp Business Cloud API notifications
+WA_ACCESS_TOKEN=
+WA_PHONE_NUMBER_ID=
+WA_ADMIN_TO=
+WA_TEMPLATE_NAME=
+WA_SUPPORT_TEMPLATE_NAME=
+WA_SUPPORT_TEMPLATE_LANGUAGE=
+WA_TEMPLATE_LANGUAGE=
+WHATSAPP_API_VERSION=
