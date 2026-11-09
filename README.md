@@ -64,3 +64,28 @@ Proyek ini memakai HTML/CSS/JavaScript langsung, jadi tidak ada proses bundling/
 5. Setelah commit ter-deploy, jalankan workflow `SLF production monitor` sekali secara manual dan pastikan lulus. Buka juga `/api/health`; status sehat harus `ok: true`, `database: connected`, `schema: ready`, dan `missing: []`.
 
 Jangan centang status Production/Monitoring sebagai selesai sebelum pemeriksaan langsung berhasil. `npm test` adalah pemeriksaan lokal/CI, bukan bukti bahwa Cloudflare sudah menerbitkan deployment.
+
+## UI/UX Pro Max — design system website SLF
+
+UI SLF memakai pedoman UI/UX Pro Max yang disesuaikan dengan identitas dan arsitektur website ini. Aturan desain disimpan di repository supaya perubahan tampilan lintas sesi tetap konsisten.
+
+- Master: `design-system/survival-legacy-frontier/MASTER.md`
+- Page override: `design-system/survival-legacy-frontier/pages/home.md`, `store.md`, `wiki.md`, dan `admin.md`
+- Aturan wajib AI/kontributor: `AGENTS.md`
+
+Arah desain: Dark Mode + Accessible UI dengan nuansa retro-futuristik secukupnya. Pertahankan navy gelap, cyan, lavender, tata letak responsif, dan pola komponen SLF yang sudah ada. Jangan mengubahnya menjadi template gaming generik, menambahkan 3D/animasi berat, atau mengganti konten dan fungsi hanya demi tampilan.
+
+### Pasang skill resmi untuk Codex (lokal)
+
+Repository skill resmi: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+
+Jalankan dari folder hasil clone repository SLF pada komputer yang memakai Codex:
+
+```bash
+npm install -g ui-ux-pro-max-cli@latest
+uipro init --ai codex
+```
+
+CLI resmi membuat skill project-local pada `.agents/skills/ui-ux-pro-max/` beserta data dan script pencarian. Skill tersebut membantu AI melakukan pencarian rekomendasi UI/UX; file Master dan page override di atas tetap menjadi aturan khusus SLF. Instalasi CLI ini hanya untuk lingkungan pengembangan, bukan dependency website atau Cloudflare Pages runtime.
+
+Perintah di atas belum dijalankan pada perangkat lokal Owner dari sesi ini. Panduan desain SLF di repository sudah tersedia dan tetap dapat dipakai tanpa memasang CLI global.
