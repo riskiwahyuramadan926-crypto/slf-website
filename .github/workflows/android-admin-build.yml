@@ -7,6 +7,7 @@ on:
       - "android-admin/**"
       - ".github/workflows/android-admin-build.yml"
   workflow_dispatch:
+    branches: [android-admin-build]
 
 permissions:
   contents: read
@@ -36,6 +37,11 @@ jobs:
       - name: Install Android API 36
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
+      - name: Set up Gradle 9.3.1
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: "9.3.1"
+
       - name: Extract native Android project
         run: |
           mkdir -p android-admin
@@ -59,8 +65,7 @@ jobs:
           PY
 
       - name: Build APK
-        working-directory: android-admin/slf-admin-android
-        run: ./gradlew --no-daemon --stacktrace assembleDebug
+        run: gradle --no-daemon --stacktrace -p android-admin/slf-admin-android assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
