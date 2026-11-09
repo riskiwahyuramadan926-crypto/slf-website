@@ -1,0 +1,20 @@
+# Dependencies and local tooling
+node_modules/
+.wrangler/
+.cache/
+coverage/
+
+# Cloudflare local bindings and secrets
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
+# Generic local secrets
+.env
+.env.*
+!.env.example
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db
