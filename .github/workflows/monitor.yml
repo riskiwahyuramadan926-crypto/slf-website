@@ -1,0 +1,63 @@
+name: SLF production monitor
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: slf-production-monitor
+  cancel-in-progress: true
+
+jobs:
+  uptime:
+    name: production-health
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check homepage and Cloudflare health API
+        env:
+          SITE_URL: ${{ vars.SLF_SITE_URL || 'https://legacy-frontier.web.id' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="${SITE_URL%/}"
+          echo "Checking SLF production endpoint: $base"
+
+          curl --fail --silent --show-error --location \
+            --retry 2 --retry-all-errors --retry-delay 5 --max-time 25 \
+            "$base/" -o /tmp/slf-home.html
+
+          grep -qi "SURVIVAL LEGACY FRONTIER" /tmp/slf-home.html || {
+            echo "::error::Homepage responded but the SLF page marker was not found."
+            exit 1
+          }
+
+          curl --fail --silent --show-error --location \
+            --retry 2 --retry-all-errors --retry-delay 5 --max-time 25 \
+            "$base/api/health" -o /tmp/slf-health.json
+
+          node --input-type=commonjs <<'NODE'
+          const fs = require('node:fs');
+          const health = JSON.parse(fs.readFileSync('/tmp/slf-health.json', 'utf8'));
+          const checks = {
+            ok: health.ok === true,
+            database: health.database === 'connected',
+            schema: health.schema === 'ready',
+            noMissingTables: Array.isArray(health.missing) && health.missing.length === 0,
+            adminSecrets: health.adminReady === true,
+            ticketSecret: health.reentryReady === true
+          };
+          for (const [name, passed] of Object.entries(checks)) {
+            console.log((passed ? 'PASS ' : 'FAIL ') + name);
+          }
+          if (Object.values(checks).some(passed => !passed)) {
+            // Print status flags only; never print secret values or environment contents.
+            console.error('SLF health check failed. Inspect Cloudflare Pages variables, D1 binding, and runtime logs.');
+            process.exit(1);
+          }
+          console.log('SLF production health is ready.');
+          NODE
