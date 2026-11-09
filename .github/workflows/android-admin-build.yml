@@ -34,8 +34,22 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
 
-      - name: Install Android API 37
-        run: sdkmanager "platforms;android-37" "build-tools;36.0.0"
+      - name: Install current Android CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://dl.google.com/android/cli/latest/linux_x86_64/install.sh | bash
+          export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
+          if ! command -v android >/dev/null 2>&1; then
+            CLI_BIN="$(find "$HOME" -maxdepth 6 -type f -name android -perm /111 -printf '%h\n' | head -n 1)"
+            test -n "$CLI_BIN"
+            export PATH="$CLI_BIN:$PATH"
+          fi
+          echo "Android CLI: $(command -v android)"
+          android --version
+          android sdk list --all | tee "$RUNNER_TEMP/android-sdk-packages.txt"
+          grep -E 'platforms/android-37(@|[[:space:]]|$)' "$RUNNER_TEMP/android-sdk-packages.txt"
+          android sdk install platforms/android-37 build-tools/36.0.0
 
       - name: Set up Gradle 9.3.1
         uses: gradle/actions/setup-gradle@v6
