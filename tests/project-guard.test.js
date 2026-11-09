@@ -81,3 +81,19 @@ test('all application JavaScript files pass Node syntax checking', async () => {
     assert.equal(result.status, 0, path.relative(root, file) + '\n' + (result.stderr || result.stdout));
   }
 });
+
+test('UI UX Pro Max guidance is persisted and required for SLF pages', async () => {
+  const master = await read('design-system/survival-legacy-frontier/MASTER.md');
+  const agents = await read('AGENTS.md');
+  const readme = await read('README.md');
+  assert.match(master, /Dark Mode \(OLED\)/);
+  assert.match(master, /Accessibility requirements/);
+  assert.match(master, /Performance and implementation/);
+  assert.match(agents, /design-system\/survival-legacy-frontier\/MASTER\.md/);
+  assert.match(agents, /ui-ux-pro-max\/SKILL\.md/);
+  for (const page of ['home','store','wiki','admin']) {
+    const override = await read(`design-system/survival-legacy-frontier/pages/${page}.md`);
+    assert.match(override, /MASTER\.md/);
+  }
+  assert.match(readme, /uipro init --ai codex/);
+});
