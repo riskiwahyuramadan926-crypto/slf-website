@@ -3,11 +3,7 @@ name: SLF Admin Android APK
 on:
   push:
     branches: [android-admin-build]
-    paths:
-      - "android-admin/**"
-      - ".github/workflows/android-admin-build.yml"
   workflow_dispatch:
-    branches: [android-admin-build]
 
 permissions:
   contents: read

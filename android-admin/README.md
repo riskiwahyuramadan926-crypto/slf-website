@@ -1,21 +1,11 @@
 # SLF Admin Android
 
-Proyek Android native SLF Admin. Website production tidak diubah. Source package ditempatkan di `android-admin/SLF_Admin_Android_Project.tar.gz` dan diekstrak oleh workflow build ke `android-admin/slf-admin-android/`.
+Project Android native untuk ruang operasional Survival Legacy Frontier. Website production tidak diubah. Source project tersimpan dalam arsip `SLF_Admin_Android_Project.tar.gz`.
 
-## Build APK
+Build otomatis tersedia di branch `android-admin-build` melalui GitHub Actions. Job menggunakan JDK 17, Android SDK Platform 36, Build Tools 36.0.0, dan Gradle 9.3.1. Karena source project disetel ke compileSdk 37, workflow menurunkan compileSdk menjadi 36 hanya pada salinan kerja CI. Target SDK tetap 36; perubahan ini hanya untuk kompilasi dan tidak mengubah fungsi atau aturan server.
 
-Workflow **SLF Admin Android APK** berjalan otomatis saat ada perubahan pada folder `android-admin/` di branch `android-admin-build`, atau dapat dijalankan manual melalui GitHub Actions.
+Setelah job berhasil, buka tab Actions, pilih workflow **SLF Admin Android APK**, kemudian unduh artifact **SLF-Admin-debug-APK**. Ekstrak ZIP artifact untuk mendapatkan `app-debug.apk`.
 
-Setelah job berhasil:
-1. Buka tab **Actions** pada repository.
-2. Pilih workflow **SLF Admin Android APK** dan run terbaru yang berstatus sukses.
-3. Unduh artifact **SLF-Admin-debug-APK**.
-4. Ekstrak ZIP artifact untuk mendapatkan `app-debug.apk`.
+APK yang dihasilkan adalah debug build untuk pengujian, bukan release Play Store. Uji login, akses role Owner/Admin, semua operasi, dan notifikasi dengan akun uji sebelum dipakai operasional. Verifikasi pembayaran tetap harus dicocokkan dengan transaksi DANA Bisnis yang benar-benar masuk.
 
-Build menggunakan JDK 17, Android SDK Platform 36, Build Tools 36.0.0, dan Gradle Wrapper 9.3.1. Source project lokal tetap memakai compileSdk 37; workflow CI menyesuaikan nilai compileSdk menjadi 36 sementara di workspace runner karena SDK stable platform 37 belum tersedia di SDK Manager yang digunakan runner. Target SDK aplikasi tetap 36. Penyesuaian ini hanya compile-time dan tidak mengubah aturan server/API SLF.
-
-APK yang dihasilkan adalah debug build untuk pengujian perangkat, bukan release build Play Store. Jangan gunakan APK ini untuk transaksi nyata sebelum login Owner/Admin, akses server, dan seluruh alur operasional diuji dengan akun uji.
-
-## Isolasi dari website
-
-Semua source dan build Android berada di folder `android-admin/` pada branch `android-admin-build`. Branch `main`, halaman website, Cloudflare Pages Functions, D1, serta workflow website yang sudah ada tidak diubah oleh pekerjaan ini.
+Seluruh pekerjaan ini berada pada branch `android-admin-build` dan folder `android-admin/`. Branch `main`, halaman website, Cloudflare Pages Functions, D1, dan harga/aturan server tidak diedit.
