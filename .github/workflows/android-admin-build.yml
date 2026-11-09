@@ -1,0 +1,57 @@
+name: Build SLF Admin Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "android-admin/**"
+      - ".github/workflows/android-admin-build.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: slf-admin-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Compile native Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle 9.3.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.3.1"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK platform
+        run: sdkmanager "platforms;android-37"
+
+      - name: Validate project structure
+        working-directory: android-admin
+        run: python3 tests/check_project.py
+
+      - name: Build debug APK
+        working-directory: android-admin
+        run: gradle --no-daemon --stacktrace clean assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SLF-Admin-Android-debug
+          path: android-admin/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
