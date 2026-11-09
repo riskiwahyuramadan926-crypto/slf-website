@@ -1,0 +1,20 @@
+name: SLF Android Runner Diagnostic
+
+on:
+  push:
+    branches: [android-admin-build]
+    paths:
+      - ".github/workflows/android-admin-runner-diagnostic.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  runner-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm GitHub-hosted runner
+        run: |
+          echo "GitHub-hosted runner started."
+          uname -a
+          java -version
