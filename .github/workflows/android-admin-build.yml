@@ -5,7 +5,6 @@ on:
   push:
     paths:
       - "android-admin/**"
-      - ".github/workflows/android-admin-build.yml"
 
 permissions:
   contents: read
