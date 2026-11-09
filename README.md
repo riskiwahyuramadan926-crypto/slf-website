@@ -32,3 +32,35 @@ Store menggunakan Cloudflare Pages Functions dan D1. Pembayaran DANA Bisnis dila
 - Harga ada di assets/js/store-config.js dan functions/_lib/catalog.js.
 
 Tes `/api/health` untuk diagnosa database dan secret tanpa menampilkan nilainya. Hasil sehat harus menunjukkan `database: connected`, `schema: ready`, `ok: true`, dan `missing: []`. Jika login admin gagal, buka panel `/admin/` lalu tekan **Cek koneksi database**. Jika binding tidak tersedia, periksa Settings → Bindings pada Cloudflare Pages dan redeploy; jika inisialisasi skema gagal, periksa Logs deployment. Jangan simpan secret di file publik/GitHub.
+
+## Standar proyek: checklist 6 lapis
+
+Website SLF mengikuti checklist 6 lapis agar perubahan aman dan tidak merusak fitur lama. Aturan rinci yang harus dibaca AI/kontributor ada di `AGENTS.md`.
+
+| Lapis | Penerapan di SLF | Status |
+|---|---|---|
+| 1. Rules file | `AGENTS.md` berisi struktur, perintah, gaya perubahan, larangan, aturan database, dan keamanan. | Dipasang |
+| 2. Test | `npm test` menjalankan pemeriksaan konfigurasi Pages/D1, migrasi non-destruktif, keamanan health check, otorisasi API admin, file secret lokal, dan sintaks semua JavaScript. GitHub Actions menjalankannya saat push dan pull request. | Dipasang; hasil CI harus hijau |
+| 3. Database | Cloudflare D1 dengan binding `DB`; migrasi runtime dibuat idempoten dan mempertahankan tabel/data lama. | Sudah ada |
+| 4. Environment variable | Secret produksi disimpan di Cloudflare Pages Variables and Secrets. Untuk lokal, salin `.dev.vars.example` menjadi `.dev.vars`; file lokal diabaikan oleh Git. | Aturan repo dipasang; nilai Cloudflare harus dicek di dashboard |
+| 5. Deploy | Cloudflare Pages memakai `wrangler.toml` dan output root proyek. Setelah deploy, uji website dan API dari URL produksi. | Konfigurasi repo ada; deploy live perlu diverifikasi |
+| 6. Monitoring | GitHub Actions memeriksa halaman utama dan `/api/health` setiap 15 menit. Kegagalan terlihat pada tab Actions. | Workflow dipasang; perlu satu eksekusi sukses dan notifikasi GitHub diaktifkan |
+
+### Perintah lokal
+
+```bash
+npm test
+npm run pages:dev
+```
+
+Proyek ini memakai HTML/CSS/JavaScript langsung, jadi tidak ada proses bundling/build terpisah saat ini. Tes dijalankan dengan Node.js bawaan tanpa dependency tambahan.
+
+### Langkah Owner yang masih perlu dilakukan
+
+1. Di Cloudflare Pages → Settings → Variables and Secrets, pastikan `OWNER_SECRET`, `ADMIN_SECRET`, dan `TICKET_LINK_SECRET` tersedia untuk Production dan Preview yang digunakan. Masing-masing harus sesuai aturan di atas; jangan masukkan nilainya ke GitHub.
+2. Di GitHub → Settings → Secrets and variables → Actions → Variables, tambahkan `SLF_SITE_URL` bila domain produksi berbeda dari alamat default monitor.
+3. Di GitHub → Settings → Branches, lindungi `main` dan wajibkan status check `quality`; saat audit terakhir branch `main` belum dilindungi, sehingga CI belum memblokir push langsung.
+4. Aktifkan notifikasi GitHub Actions di akun/perangkat agar kegagalan workflow monitoring diketahui. Workflow tidak mengirim token atau nilai rahasia dalam log.
+5. Setelah commit ter-deploy, jalankan workflow `SLF production monitor` sekali secara manual dan pastikan lulus. Buka juga `/api/health`; status sehat harus `ok: true`, `database: connected`, `schema: ready`, dan `missing: []`.
+
+Jangan centang status Production/Monitoring sebagai selesai sebelum pemeriksaan langsung berhasil. `npm test` adalah pemeriksaan lokal/CI, bukan bukti bahwa Cloudflare sudah menerbitkan deployment.
