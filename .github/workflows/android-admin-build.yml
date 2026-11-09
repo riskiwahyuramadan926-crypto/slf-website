@@ -3,7 +3,11 @@ name: SLF Admin Android APK
 on:
   push:
     branches: [android-admin-build]
+    paths:
+      - "android-admin/**"
+      - ".github/workflows/android-admin-build.yml"
   workflow_dispatch:
+    branches: [android-admin-build]
 
 permissions:
   contents: read
@@ -38,10 +42,18 @@ jobs:
         with:
           gradle-version: "9.3.1"
 
+      - name: Verify source archive
+        run: |
+          set -euo pipefail
+          xz -t android-admin/SLF_Admin_Android_Project.tar.xz
+          tar -tJf android-admin/SLF_Admin_Android_Project.tar.xz > /tmp/slf-android-files.txt
+          test "$(wc -l < /tmp/slf-android-files.txt)" -ge 25
+          echo "Source archive valid: $(wc -l < /tmp/slf-android-files.txt) entries"
+
       - name: Extract native Android project
         run: |
           mkdir -p android-admin
-          tar -xzf android-admin/SLF_Admin_Android_Project.tar.gz -C android-admin
+          tar -xJf android-admin/SLF_Admin_Android_Project.tar.xz -C android-admin
 
       - name: Run project checks
         working-directory: android-admin/slf-admin-android
