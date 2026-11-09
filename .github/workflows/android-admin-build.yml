@@ -59,18 +59,11 @@ jobs:
         working-directory: android-admin/slf-admin-android
         run: python3 tests/check_project.py
 
-      - name: Apply CI SDK platform compatibility
+      - name: Confirm Android SDK configuration
         working-directory: android-admin/slf-admin-android
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path("app/build.gradle.kts")
-          s = p.read_text()
-          if "compileSdk = 37" not in s:
-              raise SystemExit("Expected compileSdk 37 not found; refusing unexpected edit")
-          p.write_text(s.replace("compileSdk = 37", "compileSdk = 36", 1))
-          assert "compileSdk = 36" in p.read_text()
-          PY
+          grep -q 'compileSdk = 36' app/build.gradle.kts
+          grep -q 'targetSdk = 36' app/build.gradle.kts
 
       - name: Build APK
         run: gradle --no-daemon --stacktrace -p android-admin/slf-admin-android assembleDebug
