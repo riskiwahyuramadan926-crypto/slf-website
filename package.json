@@ -3,6 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "pages:dev": "wrangler pages dev ."
+    "pages:dev": "wrangler pages dev .",
+    "test": "node --test tests/*.test.js",
+    "check": "npm test"
   }
 }
