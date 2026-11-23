@@ -71,7 +71,8 @@ export async function ensureWikiSchema(db) {
           FOREIGN KEY(book_id) REFERENCES wiki_books(id) ON DELETE RESTRICT
         )`],
         ['index-books','CREATE INDEX IF NOT EXISTS idx_wiki_books_order ON wiki_books(active,sort_order,name)'],
-        ['index-chapters','CREATE INDEX IF NOT EXISTS idx_wiki_chapters_book ON wiki_chapters(book_id,status,sort_order,title)']
+        ['index-chapters','CREATE INDEX IF NOT EXISTS idx_wiki_chapters_book ON wiki_chapters(book_id,status,sort_order,title)'],
+        ['create-migrations',`CREATE TABLE IF NOT EXISTS wiki_migrations (id TEXT PRIMARY KEY, applied_at TEXT NOT NULL)`]
       ];
       for(const [name,sql] of steps){
         try{await db.prepare(sql).run();}
@@ -90,19 +91,25 @@ export async function ensureWikiSchema(db) {
             .bind(...a,now,now).run();
         }catch(error){throw new Error('SLF_WIKI_STEP:seed-article:'+String(error?.message||error).slice(0,180));}
       }
-      // Copy the legacy category/article rows into the explicit Book/Chapter model.
-      // INSERT OR IGNORE preserves existing edits and makes this migration repeatable.
-      try {
-        await db.prepare(`INSERT OR IGNORE INTO wiki_books
-          (id,name,slug,description,icon,sort_order,active,created_at,updated_at)
-          SELECT id,name,slug,description,icon,sort_order,active,created_at,updated_at FROM wiki_categories`).run();
-      } catch(error) { throw new Error('SLF_WIKI_STEP:migrate-books:'+String(error?.message||error).slice(0,180)); }
-      try {
-        await db.prepare(`INSERT OR IGNORE INTO wiki_chapters
-          (id,book_id,title,slug,summary,content,legacy_url,icon,sort_order,status,created_at,updated_at)
-          SELECT a.id,a.category_id,a.title,a.slug,a.summary,a.content,a.legacy_url,a.icon,a.sort_order,a.status,a.created_at,a.updated_at
-          FROM wiki_articles a INNER JOIN wiki_books b ON b.id=a.category_id`).run();
-      } catch(error) { throw new Error('SLF_WIKI_STEP:migrate-chapters:'+String(error?.message||error).slice(0,180)); }
+      // Copy legacy rows once. A migration marker prevents deleted books/chapters
+      // from being recreated from the compatibility tables on later requests.
+      const migrated=await db.prepare("SELECT id FROM wiki_migrations WHERE id='books-chapters-v1'").first();
+      if(!migrated){
+        try {
+          await db.batch([
+            db.prepare(`INSERT OR IGNORE INTO wiki_books
+              (id,name,slug,description,icon,sort_order,active,created_at,updated_at)
+              SELECT id,name,slug,description,icon,sort_order,active,created_at,updated_at FROM wiki_categories`),
+            db.prepare(`INSERT OR IGNORE INTO wiki_chapters
+              (id,book_id,title,slug,summary,content,legacy_url,icon,sort_order,status,created_at,updated_at)
+              SELECT a.id,a.category_id,a.title,a.slug,a.summary,a.content,a.legacy_url,a.icon,a.sort_order,a.status,a.created_at,a.updated_at
+              FROM wiki_articles a INNER JOIN wiki_books b ON b.id=a.category_id`),
+            db.prepare("INSERT OR IGNORE INTO wiki_migrations (id,applied_at) VALUES ('books-chapters-v1',?)").bind(now)
+          ]);
+        } catch(error) {
+          throw new Error('SLF_WIKI_STEP:migrate-books-chapters:'+String(error?.message||error).slice(0,180));
+        }
+      }
     })();
     initialized.set(db,task);
   }
