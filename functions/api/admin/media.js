@@ -18,7 +18,20 @@ async function github(env,path,options={}){
     'content-type':'application/json'
   };
   const response=await fetch(apiUrl(path),{...options,headers:{...headers,...(options.headers||{})}});
-  const data=await response.json().catch(()=>({}));
+  const raw=await response.text().catch(()=>'');
+  let data={};
+  if(raw){
+    try{data=JSON.parse(raw);}catch(_){data={message:raw.slice(0,180)};}
+  }
+  if(!data.message&&!response.ok){
+    const requestId=response.headers.get('x-github-request-id');
+    const contentType=response.headers.get('content-type');
+    data.message=[
+      contentType?'content-type='+contentType:'',
+      requestId?'request-id='+requestId:'',
+      response.headers.get('x-ratelimit-remaining')==='0'?'GitHub API rate limit habis':''
+    ].filter(Boolean).join('; ')||'GitHub tidak mengirim detail respons.';
+  }
   return {response,data};
 }
 function githubFailure(status,data){
