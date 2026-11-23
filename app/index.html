@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0912">
+  <meta name="description" content="Aplikasi operasional Survival Legacy Frontier.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>SLF Mobile</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./app.css?v=1">
+  <script src="./app.js?v=1" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#home" aria-label="SLF Mobile Beranda"><span class="brand-mark">✦</span><span><b>SLF MOBILE</b><small>SURVIVAL LEGACY FRONTIER</small></span></a>
+      <div class="top-actions"><span class="connection" id="connectionState"><i></i> Memeriksa</span><button class="icon-button" id="installButton" type="button" hidden aria-label="Install aplikasi">↓</button><button class="avatar" id="profileButton" type="button" aria-label="Profil">SLF</button></div>
+    </header>
+
+    <main id="homeView" class="view active">
+      <section class="welcome">
+        <div class="eyebrow">PUSAT KENDALI SERVER</div>
+        <h1>Semua alat SLF.<br><span>Dalam satu tempat.</span></h1>
+        <p>Kelola konten, proyek, tiket, dan operasional server melalui satu aplikasi mobile.</p>
+        <div class="welcome-meta"><span class="status-dot"></span><span id="syncLabel">Draft tersimpan di perangkat</span></div>
+      </section>
+      <section class="section-block">
+        <div class="section-heading"><div><span class="eyebrow">WORKSPACE</span><h2>Menu utama</h2></div><span class="muted" id="moduleCount">5 modul</span></div>
+        <div class="module-grid">
+          <button class="module-card featured" data-open="studio" type="button"><span class="module-icon">✧</span><span class="module-copy"><b>SLF Studio</b><small>Editor visual & project</small></span><span class="arrow">↗</span></button>
+          <button class="module-card" data-open="wiki" type="button"><span class="module-icon">▤</span><span class="module-copy"><b>Wiki</b><small>Buku dan bab</small></span><span class="arrow">↗</span></button>
+          <button class="module-card" data-open="tickets" type="button"><span class="module-icon">▧</span><span class="module-copy"><b>Tiket</b><small>Re-entry & bantuan</small></span><span class="arrow">↗</span></button>
+          <button class="module-card" data-open="transactions" type="button"><span class="module-icon">◈</span><span class="module-copy"><b>Transaksi</b><small>Pesanan & laporan</small></span><span class="arrow">↗</span></button>
+          <button class="module-card owner-card" data-open="owner" type="button"><span class="module-icon">♛</span><span class="module-copy"><b>Pengaturan Owner</b><small>Akses khusus pemilik</small></span><span class="arrow">↗</span></button>
+        </div>
+      </section>
+      <section class="section-block recent-block"><div class="section-heading"><div><span class="eyebrow">LANJUTKAN</span><h2>Project lokal</h2></div><button class="text-button" data-open="studio" type="button">Buka Studio →</button></div><div id="recentProjects" class="recent-list"><div class="empty-card">Belum ada draft. Buat project pertama di SLF Studio.</div></div></section>
+      <footer class="app-footer">SLF Mobile <span>•</span> Aplikasi operasional internal</footer>
+    </main>
+
+    <main id="studioView" class="view studio-view">
+      <div class="studio-topline"><button class="back-button" data-open="home" type="button">←</button><div class="studio-heading"><b>SLF Studio</b><small id="projectStatus">Project baru · Draft lokal</small></div><button class="save-button" id="saveProject" type="button">Simpan</button></div>
+      <section class="preview-region" aria-label="Live preview">
+        <div class="preview-head"><span><i class="live-dot"></i> LIVE PREVIEW</span><span id="previewSize">Mobile · 390 px</span><button id="refreshPreview" type="button" aria-label="Refresh preview">↻</button></div>
+        <div class="preview-stage" id="previewStage">
+          <div class="preview-page" id="previewPage">
+            <div class="preview-hero"><span class="preview-kicker">SURVIVAL LEGACY FRONTIER</span><h2>Build your<br><em>frontier.</em></h2><p>Preview project akan tampil di sini.</p><span class="preview-cta">Mulai menjelajah ↗</span></div>
+            <div class="preview-placeholder"><span>✦</span><b>Canvas SLF Studio</b><small>Tambahkan layer melalui tombol +</small></div>
+          </div>
+        </div>
+      </section>
+      <section class="editor-region">
+        <div class="editor-tabs" role="tablist" aria-label="Panel editor"><button class="editor-tab active" data-panel="layers" type="button">Layer</button><button class="editor-tab" data-panel="properties" type="button">Properti</button><button class="editor-tab" data-panel="animation" type="button">Animasi</button><button class="editor-tab" data-panel="actions" type="button">Action</button></div>
+        <div class="editor-content" id="editorContent">
+          <section class="editor-panel active" id="panel-layers"><div class="panel-heading"><div><b>Susunan layer</b><small id="layerCount">0 layer</small></div><button class="mini-button" id="addLayerInline" type="button">＋ Tambah</button></div><div id="layerList" class="layer-list"><div class="empty-card compact">Belum ada layer. Tekan tombol + untuk menambahkan elemen.</div></div></section>
+          <section class="editor-panel" id="panel-properties"><div class="panel-heading"><div><b>Properti layer</b><small id="selectedLayerName">Pilih layer untuk mengedit</small></div></div><div id="propertyFields" class="property-fields"><p class="muted">Pilih salah satu layer terlebih dahulu.</p></div></section>
+          <section class="editor-panel" id="panel-animation"><div class="panel-heading"><div><b>Animasi</b><small>Pengaturan dasar project</small></div></div><div class="property-fields"><label class="field-label">Preset animasi<select id="animationPreset"><option value="none">Tanpa animasi</option><option value="fade">Fade in</option><option value="float">Float / melayang</option><option value="pulse">Pulse</option></select></label><label class="switch-row"><span><b>Infinite loop</b><small>Ulangi selama halaman terbuka</small></span><input id="animationLoop" type="checkbox"></label><p class="hint">Engine animasi lanjutan dan trigger interaksi akan diaktifkan pada tahap Studio berikutnya.</p></div></section>
+          <section class="editor-panel" id="panel-actions"><div class="panel-heading"><div><b>Action / Command</b><small>Aksi layer terpilih</small></div></div><div class="empty-card compact">Command halaman, popup, form, dan webhook akan dihubungkan pada tahap Builder & Backend.</div></section>
+        </div>
+      </section>
+      <button class="floating-add" id="floatingAdd" type="button" aria-label="Tambah elemen">＋</button>
+      <nav class="bottom-nav"><button data-open="home" type="button"><span>⌂</span>Beranda</button><button class="selected" data-open="studio" type="button"><span>✧</span>Studio</button><button data-open="wiki" type="button"><span>▤</span>Wiki</button><button data-open="transactions" type="button"><span>◈</span>Transaksi</button></nav>
+    </main>
+
+    <main id="moduleView" class="view module-view">
+      <div class="module-topline"><button class="back-button" data-open="home" type="button">←</button><div><b id="moduleTitle">Modul</b><small id="moduleSubtitle">SLF Mobile</small></div></div>
+      <section class="module-body" id="moduleBody"></section>
+      <nav class="bottom-nav"><button data-open="home" type="button"><span>⌂</span>Beranda</button><button data-open="studio" type="button"><span>✧</span>Studio</button><button data-open="wiki" type="button"><span>▤</span>Wiki</button><button data-open="transactions" type="button"><span>◈</span>Transaksi</button></nav>
+    </main>
+  </div>
+
+  <div class="sheet-backdrop" id="addSheet" hidden>
+    <section class="add-sheet" role="dialog" aria-modal="true" aria-labelledby="addSheetTitle">
+      <div class="sheet-handle"></div><div class="sheet-title"><div><span class="eyebrow">SLF BUILDER</span><h2 id="addSheetTitle">Apa yang ingin dibuat?</h2></div><button id="closeSheet" class="icon-button" type="button" aria-label="Tutup">×</button></div>
+      <div class="add-options">
+        <button data-create="text" type="button"><span>Ｔ</span><b>Teks</b><small>Judul atau paragraf</small></button>
+        <button data-create="image" type="button"><span>▧</span><b>Gambar</b><small>Media visual</small></button>
+        <button data-create="video" type="button"><span>▷</span><b>Video</b><small>Video embed</small></button>
+        <button data-create="button" type="button"><span>▱</span><b>Tombol</b><small>Elemen interaktif</small></button>
+        <button data-create="table" type="button"><span>▦</span><b>Tabel</b><small>Data terstruktur</small></button>
+        <button data-create="card" type="button"><span>▣</span><b>Kartu info</b><small>Panel informasi</small></button>
+      </div>
+      <div class="sheet-divider"></div>
+      <div class="builder-options"><button data-create="page" type="button"><span>＋</span><b>Buat halaman / route</b><small>Page Builder · Tahap 3</small><i>→</i></button><button data-create="backend" type="button"><span>⌘</span><b>Buat backend / tabel D1</b><small>Backend Builder · Tahap 3</small><i>→</i></button></div>
+      <p class="sheet-note">Project baru tersimpan lokal sampai berhasil disinkronkan ke server.</p>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
