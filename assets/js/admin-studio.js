@@ -171,7 +171,7 @@ function bind(){
  window.addEventListener('message',event=>{
   if(event.origin!==location.origin||event.source!==frame.contentWindow||!event.data)return;
   const m=event.data;
-  if(m.type==='slf-studio-ready'){$('studio-live-status').textContent='Halaman '+m.page+' siap diedit';}
+  if(m.type==='slf-studio-ready'){$('studio-live-status').textContent='Halaman '+m.page+' siap diedit';msg({type:'slf-studio-mode',enabled:mode});msg({type:'slf-studio-free-layers',layers:design.freeLayers||[]});}
   if(m.type==='slf-studio-outline'){outlineItems=Array.isArray(m.items)?m.items:[];renderNavigator();}
   if(m.type==='slf-studio-selected'){selected=m;renderSelection();}
   if(m.type==='slf-studio-layer-selected'){snapshot();selectedLayerId=m.id;renderFreeLayerControls();}
