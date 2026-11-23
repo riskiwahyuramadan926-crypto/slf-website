@@ -145,7 +145,7 @@ function applyFreeLayers(d){
  });
 }
 function dragFreeLayer(event){
- if(!studioMode)return;
+ if(!studioMode||!studioSelect)return;
  const wrapper=event.target.closest('.studio-free-layer');if(!wrapper)return;
  event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
  const id=wrapper.dataset.slfLayerId,stage=wrapper.parentElement,rect=stage.getBoundingClientRect();
@@ -233,7 +233,7 @@ function initStudioBridge(){
   if(event.origin!==parentOrigin||event.source!==window.parent||!event.data)return;
   const m=event.data;
   if(m.type==='slf-studio-free-layers'){design.freeLayers=Array.isArray(m.layers)?m.layers:[];applyFreeLayers(design);}
-  if(m.type==='slf-studio-mode'){studioSelect=Boolean(m.enabled);}
+  if(m.type==='slf-studio-mode'){studioSelect=Boolean(m.enabled);applyFreeLayers(design);}
   if(m.type==='slf-studio-inline-mode'){inlineMode=Boolean(m.enabled);studioSelect=false;}
   if(m.type==='slf-studio-select-target'&&typeof m.selector==='string'){try{const target=document.querySelector(m.selector);if(target)selectElement(target);}catch(_){}}
   if(m.type==='slf-studio-theme'){const root=document.documentElement;const t=m;if(t.globalFont&&fontMap[t.globalFont])document.body.style.fontFamily=fontMap[t.globalFont];if(isColor(t.background))document.body.style.backgroundColor=t.background;if(isColor(t.accent)){root.style.setProperty('--purple',t.accent);root.style.setProperty('--purple2',t.accent);root.style.setProperty('--accent',t.accent);}if(isColor(t.accent2)){root.style.setProperty('--gold',t.accent2);root.style.setProperty('--gold2',t.accent2);}const hero=document.querySelector('.hero');if(hero&&(t.overlayColor||t.overlayOpacity!==undefined)){let shade=hero.querySelector(':scope > .slf-preview-overlay');if(!shade){shade=document.createElement('div');shade.className='slf-preview-overlay';shade.style.cssText='position:absolute;inset:0;z-index:0;pointer-events:none';hero.prepend(shade);hero.style.position='relative';}shade.style.backgroundColor=isColor(t.overlayColor)?t.overlayColor:'#100c18';shade.style.opacity=String(clamp(t.overlayOpacity,0,100,0)/100);}}
