@@ -110,13 +110,25 @@ function freeLayerContainer(){
 function sendFreeLayers(){msg({type:'slf-studio-free-layers',layers:Array.isArray(design.freeLayers)?design.freeLayers:[]});}
 function addFreeLayer(src){
  const layer={id:'free-'+Math.random().toString(36).slice(2,11),page:currentPage(),containerSelector:freeLayerContainer(),src:String(src||''),x:35,y:24,width:30,height:32,fit:'contain',opacity:100,z:4,background:false,visible:true};
- snapshot();design.freeLayers=Array.isArray(design.freeLayers)?design.freeLayers:[];design.freeLayers.push(layer);selectedLayerId=layer.id;setDirty();sendFreeLayers();renderFreeLayerControls();
+ snapshot();design.freeLayers=Array.isArray(design.freeLayers)?design.freeLayers:[];design.freeLayers.push(layer);selectedLayerId=layer.id;setDirty();sendFreeLayers();msg({type:'slf-studio-layer-focus',id:layer.id});renderFreeLayerControls();
+}
+function selectFreeLayer(id){
+ const layer=(design.freeLayers||[]).find(item=>item.id===id);if(!layer)return;
+ selectedLayerId=id;msg({type:'slf-studio-layer-focus',id});renderFreeLayerControls();
 }
 function renderFreeLayerControls(){
- const layer=(design.freeLayers||[]).find(item=>item.id===selectedLayerId);
+ const layers=Array.isArray(design.freeLayers)?design.freeLayers:[];
+ const list=$('studio-layer-list');if(list){
+  list.replaceChildren();
+  if(!layers.length){const empty=document.createElement('p');empty.className='admin-muted';empty.textContent='Belum ada gambar. Upload gambar untuk membuat layer pertama.';list.append(empty);}
+  layers.forEach((item,index)=>{
+   const button=document.createElement('button');button.type='button';button.className='studio-layer-item'+(item.id===selectedLayerId?' is-active':'');button.textContent=(item.background?'Latar · ':'Layer '+(index+1)+' · ')+String(item.src||'').split('/').pop().slice(0,28);button.addEventListener('click',()=>selectFreeLayer(item.id));list.append(button);
+  });
+ }
+ const layer=layers.find(item=>item.id===selectedLayerId);
  const ids=['studio-layer-position-x','studio-layer-position-y','studio-layer-width','studio-layer-height','studio-layer-opacity','studio-layer-fit','studio-layer-background','studio-layer-delete'];
  ids.forEach(id=>{const el=$(id);if(el)el.disabled=!layer;});
- $('studio-layer-label').textContent=layer?'Layer gambar terpilih':'Belum ada layer gambar dipilih';
+ $('studio-layer-label').textContent=layer?'Mengedit: '+String(layer.src||'').split('/').pop():'Pilih layer dari daftar atau langsung ketuk gambarnya di preview';
  if(!layer)return;
  $('studio-layer-position-x').value=layer.x??35;$('studio-layer-position-y').value=layer.y??24;
  $('studio-layer-width').value=layer.width??30;$('studio-layer-height').value=layer.height??32;
@@ -159,8 +171,7 @@ async function uploadStudioMedia(){
   const result=await api('/api/admin/media',{method:'POST',body:form});
   $('studio-media-file').value='';await loadStudioMedia();
   $('studio-media-note').textContent='Gambar diunggah. Deployment Pages dipicu oleh commit GitHub.';
-  if(selected&&selected.tag==='img')change(x=>x.src=result.asset.url);
-  else addFreeLayer(result.asset.url);
+  addFreeLayer(result.asset.url);
  }catch(error){$('studio-media-note').textContent=error.message||'Upload gagal.';}
  finally{button.disabled=false;}
 }
