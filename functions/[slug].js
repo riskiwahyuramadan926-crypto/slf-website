@@ -51,7 +51,7 @@ document.querySelectorAll('.slf-action').forEach(button=>button.addEventListener
   if(type==='external'){if(/^https:\\/\\//i.test(target))window.open(target,'_blank','noopener,noreferrer');return;}
   if(type==='scroll'){const el=document.querySelector(target.startsWith('#')?target:'#'+CSS.escape(target));el?.scrollIntoView({behavior:'smooth'});return;}
   if(type==='backend-submit'||type==='backend-read'){
-   const values={};document.querySelectorAll('input[name]').forEach(input=>{if(input.name)values[input.name]=input.value;});
+   let values={};\n   if(type==='backend-submit'){\n    const schemaResponse=await fetch('/api/studio/data',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'schema',table:target})});\n    const schema=await schemaResponse.json().catch(()=>({}));if(!schemaResponse.ok)throw new Error(schema.error||'Skema formulir tidak dapat dimuat.');\n    const allowed=new Set(schema.columns||[]);document.querySelectorAll('input[name]').forEach(input=>{if(allowed.has(input.name))values[input.name]=input.value;});\n   }
    const response=await fetch('/api/studio/data',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:type==='backend-submit'?'submit':'read',table:target,values})});
    const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Backend request gagal.');
    if(type==='backend-submit'){status.textContent=data.message||'Data tersimpan.';document.querySelectorAll('input[name]').forEach(input=>input.value='');}
