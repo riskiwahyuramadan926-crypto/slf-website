@@ -1,294 +1,87 @@
 (() => {
-  'use strict';
-
-  const $ = (id) => document.getElementById(id);
-  const DB_NAME = 'slf-mobile-local';
-  const DB_VERSION = 1;
-  const STORE = 'records';
-  const PROJECT_KEY = 'studio-current-project';
-  const PROJECTS_KEY = 'studio-project-list';
-  const MODULES = {
-    wiki: { title: 'Wiki', subtitle: 'Perpustakaan Buku & Bab', href: '/wiki/', note: 'Buku dan bab Wiki tetap menggunakan sistem publik yang sudah berjalan. Integrasi editor dan cache data privat akan masuk pada tahap integrasi.' },
-    tickets: { title: 'Tiket', subtitle: 'Re-entry & bantuan pemain', href: '/store/ticket.html', note: 'Halaman tiket lama tetap tersedia. Data tiket dan tindakan Admin akan dihubungkan melalui API yang sudah ada pada tahap integrasi.' },
-    transactions: { title: 'Transaksi', subtitle: 'Pesanan & laporan pendapatan', href: '/admin/', note: 'Transaksi tetap dikelola oleh backend D1 yang sekarang. Aksi Owner dan penghitungan laporan akan diintegrasikan setelah audit endpoint dan role.' },
-    owner: { title: 'Pengaturan Owner', subtitle: 'Akses khusus pemilik', href: '/admin/', note: 'Pengaturan Owner akan memakai autentikasi server yang sudah ada. Tidak ada hak Owner yang diberikan hanya berdasarkan tampilan aplikasi.' }
-  };
-  const TYPE_META = {
-    text: { label: 'Teks', icon: 'T' }, image: { label: 'Gambar', icon: '▧' },
-    video: { label: 'Video', icon: '▷' }, button: { label: 'Tombol', icon: '▱' },
-    table: { label: 'Tabel', icon: '▦' }, card: { label: 'Kartu info', icon: '▣' }
-  };
-
-  let dbPromise;
-  let project = createProject();
-  let selectedLayerId = null;
-  let deferredInstallPrompt = null;
-  let toastTimer;
-
-  function createId() {
-    return globalThis.crypto?.randomUUID?.() || 'slf-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  }
-  function createProject() {
-    return { id: createId(), name: 'Project SLF Baru', updatedAt: new Date().toISOString(), version: 1, layers: [] };
-  }
-  function openDb() {
-    if (!('indexedDB' in window)) return Promise.reject(new Error('IndexedDB tidak tersedia di browser ini.'));
-    if (!dbPromise) dbPromise = new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, DB_VERSION);
-      request.onupgradeneeded = () => {
-        const db = request.result;
-        if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'key' });
-      };
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error || new Error('Gagal membuka penyimpanan lokal.'));
-    });
-    return dbPromise;
-  }
-  async function localGet(key) {
-    const db = await openDb();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readonly');
-      const req = tx.objectStore(STORE).get(key);
-      req.onsuccess = () => resolve(req.result?.value ?? null);
-      req.onerror = () => reject(req.error);
-    });
-  }
-  async function localPut(key, value) {
-    const db = await openDb();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readwrite');
-      tx.objectStore(STORE).put({ key, value, updatedAt: new Date().toISOString() });
-      tx.oncomplete = () => resolve(true);
-      tx.onerror = () => reject(tx.error || new Error('Gagal menyimpan draft.'));
-      tx.onabort = () => reject(tx.error || new Error('Penyimpanan draft dibatalkan.'));
-    });
-  }
-  function safeText(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
-  function notify(message) {
-    const node = $('toast');
-    node.textContent = message;
-    node.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => node.classList.remove('show'), 2300);
-  }
-  function setConnection() {
-    const online = navigator.onLine;
-    const node = $('connectionState');
-    node.classList.toggle('offline', !online);
-    node.innerHTML = '<i></i>' + (online ? ' Online' : ' Offline');
-  }
-  function setView(name) {
-    document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
-    const target = name === 'home' ? $('homeView') : name === 'studio' ? $('studioView') : $('moduleView');
-    target.classList.add('active');
-    if (name === 'studio') {
-      renderLayers();
-      renderPreview();
-      document.querySelector('.bottom-nav [data-open="studio"]')?.classList.add('selected');
-    } else if (name !== 'home') renderModule(name);
-    if (name === 'home') renderRecentProjects();
-    history.replaceState({ view: name }, '', name === 'home' ? './' : './#' + name);
-  }
-  function renderModule(name) {
-    const module = MODULES[name];
-    if (!module) return;
-    $('moduleTitle').textContent = module.title;
-    $('moduleSubtitle').textContent = module.subtitle;
-    $('moduleBody').replaceChildren();
-    const eyebrow = document.createElement('div');
-    eyebrow.className = 'eyebrow';
-    eyebrow.textContent = 'MODUL SLF';
-    const title = document.createElement('h1');
-    title.textContent = module.title;
-    const description = document.createElement('p');
-    description.textContent = module.note;
-    const status = document.createElement('div');
-    status.className = 'module-status';
-    status.textContent = 'Integrasi native aplikasi: Tahap 2. Sistem lama tetap dapat digunakan melalui halaman yang tersedia.';
-    const link = document.createElement('a');
-    link.className = 'save-button';
-    link.href = module.href;
-    link.textContent = 'Buka panel SLF saat ini ↗';
-    link.style.display = 'inline-flex';
-    link.style.textDecoration = 'none';
-    link.style.marginTop = '15px';
-    link.target = '_self';
-    $('moduleBody').append(eyebrow, title, description, status, link);
-  }
-  function selectPanel(panel) {
-    document.querySelectorAll('.editor-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.panel === panel));
-    document.querySelectorAll('.editor-panel').forEach(node => node.classList.toggle('active', node.id === 'panel-' + panel));
-  }
-  function renderLayers() {
-    const root = $('layerList');
-    root.replaceChildren();
-    $('layerCount').textContent = project.layers.length + (project.layers.length === 1 ? ' layer' : ' layer');
-    if (!project.layers.length) {
-      const empty = document.createElement('div');
-      empty.className = 'empty-card compact';
-      empty.textContent = 'Belum ada layer. Tekan tombol + untuk menambahkan elemen.';
-      root.append(empty);
-      renderProperties();
-      return;
-    }
-    project.layers.slice().reverse().forEach(layer => {
-      const row = document.createElement('div');
-      row.className = 'layer-row' + (layer.id === selectedLayerId ? ' active' : '');
-      const type = document.createElement('span'); type.className = 'layer-type'; type.textContent = TYPE_META[layer.type]?.icon || '◇';
-      const label = document.createElement('span'); label.className = 'layer-label';
-      const name = document.createElement('b'); name.textContent = layer.name;
-      const meta = document.createElement('small'); meta.textContent = TYPE_META[layer.type]?.label || layer.type;
-      label.append(name, meta);
-      const edit = document.createElement('button'); edit.type = 'button'; edit.textContent = '•••'; edit.setAttribute('aria-label', 'Pilih ' + layer.name);
-      edit.addEventListener('click', () => { selectedLayerId = layer.id; renderLayers(); selectPanel('properties'); });
-      row.addEventListener('click', () => { selectedLayerId = layer.id; renderLayers(); selectPanel('properties'); });
-      row.append(type, label, edit);
-      root.append(row);
-    });
-    renderProperties();
-  }
-  function selectedLayer() { return project.layers.find(layer => layer.id === selectedLayerId) || null; }
-  function renderProperties() {
-    const root = $('propertyFields');
-    root.replaceChildren();
-    const layer = selectedLayer();
-    $('selectedLayerName').textContent = layer ? layer.name : 'Pilih layer untuk mengedit';
-    $('animationPreset').value = layer?.animation || 'none';
-    $('animationLoop').checked = Boolean(layer?.loop);
-    if (!layer) {
-      const note = document.createElement('p'); note.className = 'muted'; note.textContent = 'Pilih salah satu layer terlebih dahulu.'; root.append(note); return;
-    }
-    const name = document.createElement('label'); name.className = 'field-label'; name.textContent = 'Nama layer';
-    const nameInput = document.createElement('input'); nameInput.value = layer.name; nameInput.maxLength = 80;
-    nameInput.addEventListener('input', () => { layer.name = nameInput.value; const activeName = document.querySelector('.layer-row.active .layer-label b'); if (activeName) activeName.textContent = layer.name; });
-    name.append(nameInput); root.append(name);
-    if (['text','button','card'].includes(layer.type)) {
-      const content = document.createElement('label'); content.className = 'field-label'; content.textContent = layer.type === 'text' ? 'Isi teks' : 'Label / konten';
-      const input = document.createElement('textarea'); input.value = layer.content || ''; input.maxLength = 2000;
-      input.addEventListener('input', () => { layer.content = input.value; renderPreview(); });
-      content.append(input); root.append(content);
-    }
-    if (['image','video'].includes(layer.type)) {
-      const source = document.createElement('label'); source.className = 'field-label'; source.textContent = layer.type === 'image' ? 'URL gambar' : 'URL video embed';
-      const input = document.createElement('input'); input.type = 'url'; input.placeholder = 'https://…'; input.value = layer.src || '';
-      input.addEventListener('change', () => { layer.src = input.value.trim(); renderPreview(); });
-      source.append(input); root.append(source);
-    }
-    const remove = document.createElement('button'); remove.className = 'mini-button'; remove.type = 'button'; remove.textContent = 'Hapus layer';
-    remove.addEventListener('click', () => { project.layers = project.layers.filter(item => item.id !== layer.id); selectedLayerId = null; renderLayers(); renderPreview(); });
-    root.append(remove);
-  }
-  function renderPreview() {
-    const root = $('previewPage');
-    root.querySelectorAll('.preview-layer').forEach(node => node.remove());
-    project.layers.forEach(layer => {
-      const node = document.createElement('div');
-      node.className = 'preview-layer' + (layer.id === selectedLayerId ? ' selected' : '');
-      node.dataset.layerId = layer.id;
-      if (layer.type === 'image' && layer.src) {
-        const img = document.createElement('img'); img.src = layer.src; img.alt = layer.name; img.loading = 'lazy'; img.style.maxWidth = '100%'; img.style.maxHeight = '90px'; node.append(img);
-      } else if (layer.type === 'video' && layer.src) {
-        const text = document.createElement('span'); text.textContent = 'Video embed: ' + layer.src; node.append(text);
-      } else node.textContent = layer.content || layer.name;
-      node.addEventListener('click', () => { selectedLayerId = layer.id; renderLayers(); renderPreview(); selectPanel('properties'); });
-      root.append(node);
-      const animation = layer.animation || 'none';
-      if (layer.loop && animation !== 'none') node.classList.add('anim-' + animation);
-    });
-  }
-  function addLayer(type) {
-    if (!TYPE_META[type]) return;
-    const layer = { id: createId(), type, name: TYPE_META[type].label + ' ' + (project.layers.length + 1), content: type === 'text' ? 'Teks baru' : type === 'button' ? 'Klik di sini' : type === 'card' ? 'Informasi baru' : '', src: '', animation: 'none', loop: false };
-    project.layers.push(layer);
-    selectedLayerId = layer.id;
-    renderLayers();
-    renderPreview();
-    selectPanel('properties');
-    closeSheet();
-    notify('Layer ditambahkan ke draft lokal.');
-  }
-  async function saveProject() {
-    project.updatedAt = new Date().toISOString();
-    try {
-      await localPut(PROJECT_KEY, project);
-      let list = await localGet(PROJECTS_KEY);
-      if (!Array.isArray(list)) list = [];
-      list = [project, ...list.filter(item => item.id !== project.id)].slice(0, 30);
-      await localPut(PROJECTS_KEY, list);
-      $('projectStatus').textContent = 'Tersimpan lokal · ' + new Date(project.updatedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-      $('syncLabel').textContent = 'Draft tersimpan di perangkat';
-      renderRecentProjects();
-      notify('Draft berhasil disimpan di perangkat ini.');
-    } catch (error) {
-      notify(error.message || 'Gagal menyimpan draft.');
-    }
-  }
-  async function loadProject() {
-    try {
-      const saved = await localGet(PROJECT_KEY);
-      if (saved && saved.id && Array.isArray(saved.layers)) project = saved;
-    } catch (error) {
-      notify('Penyimpanan lokal belum tersedia: ' + error.message);
-    }
-    renderLayers();
-    renderPreview();
-    renderRecentProjects();
-  }
-  async function renderRecentProjects() {
-    const root = $('recentProjects');
-    if (!root) return;
-    root.replaceChildren();
-    try {
-      const list = await localGet(PROJECTS_KEY);
-      if (!Array.isArray(list) || !list.length) {
-        const empty = document.createElement('div'); empty.className = 'empty-card'; empty.textContent = 'Belum ada draft. Buat project pertama di SLF Studio.'; root.append(empty); return;
-      }
-      list.slice(0, 4).forEach(item => {
-        const card = document.createElement('button'); card.type = 'button'; card.className = 'project-card'; card.style.textAlign = 'left'; card.style.color = 'inherit';
-        const copy = document.createElement('span'); const title = document.createElement('b'); title.textContent = item.name || 'Project tanpa nama'; const meta = document.createElement('small'); meta.textContent = (item.layers?.length || 0) + ' layer · Draft lokal'; copy.append(title, meta);
-        const arrow = document.createElement('span'); arrow.textContent = '↗'; arrow.style.color = 'var(--purple)';
-        card.append(copy, arrow);
-        card.addEventListener('click', async () => { project = item; await localPut(PROJECT_KEY, project); selectedLayerId = null; setView('studio'); });
-        root.append(card);
-      });
-    } catch { /* Keep the home screen usable when local storage is unavailable. */ }
-  }
-  function openSheet() { $('addSheet').hidden = false; }
-  function closeSheet() { $('addSheet').hidden = true; }
-  async function start() {
-    setConnection();
-    window.addEventListener('online', setConnection);
-    window.addEventListener('offline', setConnection);
-    document.querySelectorAll('[data-open]').forEach(button => button.addEventListener('click', () => setView(button.dataset.open)));
-    document.querySelectorAll('.editor-tab').forEach(button => button.addEventListener('click', () => selectPanel(button.dataset.panel)));
-    $('floatingAdd').addEventListener('click', openSheet);
-    $('addLayerInline').addEventListener('click', openSheet);
-    $('closeSheet').addEventListener('click', closeSheet);
-    $('addSheet').addEventListener('click', event => { if (event.target === $('addSheet')) closeSheet(); });
-    document.querySelectorAll('[data-create]').forEach(button => button.addEventListener('click', () => {
-      const type = button.dataset.create;
-      if (TYPE_META[type]) addLayer(type);
-      else { closeSheet(); notify(type === 'page' ? 'Page Builder tersedia pada tahap 3.' : 'Backend & D1 Builder tersedia pada tahap 3.'); }
-    }));
-    $('saveProject').addEventListener('click', saveProject);
-    $('refreshPreview').addEventListener('click', renderPreview);
-    $('profileButton').addEventListener('click', () => notify('Login dan role akan terhubung dengan autentikasi Admin SLF pada tahap integrasi.'));
-    $('animationPreset').addEventListener('change', event => { const layer = selectedLayer(); if (layer) { layer.animation = event.target.value; renderPreview(); } });
-    $('animationLoop').addEventListener('change', event => { const layer = selectedLayer(); if (layer) { layer.loop = event.target.checked; renderPreview(); } });
-    window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); deferredInstallPrompt = event; $('installButton').hidden = false; });
-    $('installButton').addEventListener('click', async () => {
-      if (!deferredInstallPrompt) return;
-      deferredInstallPrompt.prompt();
-      await deferredInstallPrompt.userChoice;
-      deferredInstallPrompt = null;
-      $('installButton').hidden = true;
-    });
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(error => console.warn('SLF PWA service worker:', error));
-    }
-    await loadProject();
-    if (location.hash && MODULES[location.hash.slice(1)]) setView(location.hash.slice(1));
-    else if (location.hash === '#studio') setView('studio');
-  }
-  document.addEventListener('DOMContentLoaded', start);
+'use strict';
+const $ = id => document.getElementById(id);
+const DB_NAME='slf-mobile-local', DB_VERSION=1, STORE='records';
+const PROJECTS_KEY='studio-project-list', SECRET_KEY='slf_admin_secret_session';
+const TYPE_META={text:{label:'Teks',icon:'T'},image:{label:'Gambar',icon:'▧'},video:{label:'Video',icon:'▷'},button:{label:'Tombol',icon:'▱'},table:{label:'Tabel',icon:'▦'},card:{label:'Kartu info',icon:'▣'}};
+const PAGE_SEEDS=[
+ {name:'Beranda',path:'/',group:'Halaman utama'},
+ {name:'Store',path:'/store/',group:'Halaman utama'},
+ {name:'Wiki',path:'/wiki/',group:'Halaman utama'},
+ {name:'Pusat Bantuan',path:'/bantuan/',group:'Halaman utama'},
+ {name:'Status pesanan',path:'/store/order.html',group:'Store'},
+ {name:'Ulasan',path:'/store/review.html',group:'Store'},
+ {name:'Tiket re-entry',path:'/store/ticket.html',group:'Store'},
+ ...[
+ ['Aturan Komunitas','aturan-komunitas'],['Aturan Server','aturan-server'],['Bantuan & Laporan','bantuan-laporan'],['Benefit VIP+','benefit-vip'],['Claim Tanah','claim-tanah'],['Dunia SLF','dunia-slf'],['Ekonomi & Pasar','ekonomi-pasar'],['FAQ Teknis','faq-teknis'],['Lapar & Haus','lapar-haus'],['Mulai Bermain','mulai-bermain'],['Nyawa & Re-entry','nyawa-reentry'],['Perjalanan Waystone','perjalanan-waystone'],['PvP & Coliseum','pvp-coliseum'],['Ras & Kemampuan','ras-kemampuan'],['Season & Reset','season-reset'],['Store & Donasi','store-donasi'],['Zona Drakmor','zona-drakmor'],['Zona Elarion','zona-elarion'],['Zona Noxveil','zona-noxveil'],['Zona Veyrwood','zona-veyrwood']
+ ].map(([name,slug])=>({name:'Wiki · '+name,path:'/wiki/artikel/'+slug+'.html',group:'Artikel Wiki'}))
+];
+const ADMIN_GROUPS=[
+ {label:'Operasional · Admin dan Owner',items:[
+  ['Pesanan & Transaksi','orders','◈'],['Tiket Re-entry','tickets','▣'],['Ulasan','reviews','☆'],['Pelanggan','customers','♙'],['Aktivitas','activity','◷'],['Pusat Bantuan','support','?'],['Pengumuman','announcements','▤'],['Catatan Tim','notes','✎']
+ ]},
+ {label:'Khusus Owner · Tidak tersedia untuk Admin',owner:true,items:[
+  ['Produk','products','◇'],['Promo','promos','％'],['Statistik & Laporan','reports','▥'],['Kas & Keuangan','finance','Rp'],['Editor Website','site-content','✧'],['Perpustakaan Wiki','wiki-manager','▤'],['✦ SLF Studio','studio','✦'],['Akses & Role','access','♛']
+ ]}
+];
+let dbPromise, projects=[], project=null, selectedLayerId=null, activeMode='mobile', savedFingerprint='', dirty=false, role='', toastTimer;
+const uid=()=>globalThis.crypto?.randomUUID?.()||('slf-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8));
+function createProject(page,name){return {id:uid(),name:name||page.name,pagePath:page.path||'/',pageGroup:page.group||'Project baru',isDefault:Boolean(page.path),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),layers:[],device:{mobile:{},desktop:{}}};}
+function openDb(){if(!('indexedDB'in window))return Promise.reject(new Error('IndexedDB tidak tersedia.'));if(!dbPromise)dbPromise=new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,DB_VERSION);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(STORE))req.result.createObjectStore(STORE,{keyPath:'key'});};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});return dbPromise;}
+async function get(key){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readonly'),r=tx.objectStore(STORE).get(key);r.onsuccess=()=>resolve(r.result?.value??null);r.onerror=()=>reject(r.error);});}
+async function put(key,value){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put({key,value,updatedAt:new Date().toISOString()});tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});}
+function fingerprint(value){return JSON.stringify(value);}
+function notify(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2600);}
+function setDirty(){dirty=fingerprint(project)!==savedFingerprint;$('projectStatus').textContent=dirty?'Ada perubahan belum disimpan':'Draft tersimpan';$('saveProject').classList.toggle('needs-save',dirty);}
+function setView(view){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));const target=view==='home'?'homeView':view==='lobby'?'studioLobby':view==='editor'?'studioView':'moduleView';$(target).classList.add('active');if(view==='home')renderHome();if(view==='lobby')renderLobby();if(view==='editor'){renderLayers();renderPreview();updateModeUi();}history.replaceState({view},'',view==='home'?'./':view==='lobby'?'./#studio':'./#'+view);}
+function pageLabel(path){return PAGE_SEEDS.find(p=>p.path===path)?.name||path;}
+function renderHome(){
+ const root=$('menuGroups');root.replaceChildren();
+ ADMIN_GROUPS.forEach(group=>{const section=document.createElement('section');section.className='menu-group'+(group.owner?' owner-menu':'');const title=document.createElement('div');title.className='menu-group-title';title.textContent=group.label;section.append(title);const grid=document.createElement('div');grid.className='module-grid';group.items.forEach(([label,key,icon])=>{const b=document.createElement('button');b.type='button';b.className='module-card'+(group.owner?' owner-card':'');b.innerHTML='<span class="module-icon">'+icon+'</span><span class="module-copy"><b></b><small></small></span><span class="arrow">↗</span>';b.querySelector('b').textContent=label;b.querySelector('small').textContent=group.owner?'Khusus Owner':'Menu Admin Tools';if(group.owner&&role!=='owner')b.classList.add('locked');b.addEventListener('click',()=>openAdminMenu(key,label,group.owner));grid.append(b);});section.append(grid);root.append(section);});
+ $('roleLabel').textContent=role?('Akses: '+(role==='owner'?'Owner':'Admin')):'Belum terhubung · masuk Admin';
+ $('roleAction').textContent=role?'Keluar':'Masuk Admin';
+ $('roleAction').onclick=()=>role?logout():openLogin();
+}
+function openAdminMenu(key,label,ownerOnly){if(!role){openLogin('Masuk Admin untuk membuka '+label+'.');return;}if(ownerOnly&&role!=='owner'){notify('Menu ini khusus Owner.');return;}if(key==='studio'){setView('lobby');return;}const urls={'orders':'/admin/','tickets':'/admin/','reviews':'/admin/','customers':'/admin/','activity':'/admin/','support':'/admin/','announcements':'/admin/','notes':'/admin/','products':'/admin/','promos':'/admin/','reports':'/admin/','finance':'/admin/','site-content':'/admin/','wiki-manager':'/admin/','access':'/admin/'};sessionStorage.setItem('slf_admin_requested_tab',key);location.href=urls[key]||'/admin/';}
+function openLogin(message){$('loginModal').hidden=false;$('loginMessage').textContent=message||'Gunakan rahasia akses yang sama dengan Admin Tools SLF.';$('adminSecret').focus();}
+function closeLogin(){$('loginModal').hidden=true;}
+async function auth(secret){const response=await fetch('/api/admin/me',{headers:{authorization:'Bearer '+secret},cache:'no-store'});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Akses ditolak.');return data;}
+async function login(){const secret=$('adminSecret').value.trim();if(secret.length<32){$('loginMessage').textContent='Rahasia akses minimal 32 karakter.';return;}const btn=$('loginSubmit');btn.disabled=true;btn.textContent='Memeriksa…';try{const data=await auth(secret);sessionStorage.setItem(SECRET_KEY,secret);role=data.role==='owner'?'owner':'admin';closeLogin();renderHome();notify('Login '+(role==='owner'?'Owner':'Admin')+' berhasil.');}catch(e){$('loginMessage').textContent=e.message;}finally{btn.disabled=false;btn.textContent='Masuk';}}
+function logout(){sessionStorage.removeItem(SECRET_KEY);role='';renderHome();notify('Sesi aplikasi berakhir.');}
+async function loadProjects(){projects=await get(PROJECTS_KEY)||[];if(!Array.isArray(projects))projects=[];const byPath=new Map(projects.filter(p=>p.isDefault).map(p=>[p.pagePath,p]));PAGE_SEEDS.forEach(page=>{if(!byPath.has(page.path))projects.push(createProject(page));});await put(PROJECTS_KEY,projects);renderLobby();}
+function renderLobby(){
+ const root=$('projectGrid');root.replaceChildren();
+ const groups=[...new Set(projects.map(p=>p.pageGroup||'Project baru'))];
+ groups.forEach(group=>{const heading=document.createElement('h3');heading.className='project-group-heading';heading.textContent=group;root.append(heading);const grid=document.createElement('div');grid.className='project-grid';projects.filter(p=>(p.pageGroup||'Project baru')===group).forEach(p=>{const card=document.createElement('button');card.type='button';card.className='project-tile';const thumb=document.createElement('div');thumb.className='project-thumb';thumb.innerHTML='<span>✦</span><small></small>';thumb.querySelector('small').textContent=p.pagePath;const info=document.createElement('div');info.className='project-info';const title=document.createElement('b');title.textContent=p.name;const meta=document.createElement('small');meta.textContent=(p.layers?.length||0)+' layer · '+(p.updatedAt?new Date(p.updatedAt).toLocaleDateString('id-ID'):'Halaman bawaan');info.append(title,meta);card.append(thumb,info);card.addEventListener('click',()=>openProject(p.id));grid.append(card);});root.append(grid);});
+ $('projectCount').textContent=projects.length+' project';
+}
+async function openProject(id){project=projects.find(p=>p.id===id);if(!project)return;selectedLayerId=null;activeMode='mobile';savedFingerprint=fingerprint(project);dirty=false;$('editorPageName').textContent=project.name;$('projectStatus').textContent='Draft tersimpan';setView('editor');}
+async function addProject(){const name=prompt('Nama halaman / project baru:','Halaman Baru');if(name===null)return;const clean=name.trim();if(!clean){notify('Nama project wajib diisi.');return;}const slug=clean.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||uid();const p=createProject({name:clean,path:'/draft-pages/'+slug+'.html',group:'Project baru'});p.isDefault=false;projects.unshift(p);await put(PROJECTS_KEY,projects);await openProject(p.id);notify('Project baru dibuat. Route publik baru akan dibuat saat Page Builder/backend disiapkan.');}
+function selectPanel(name){document.querySelectorAll('.editor-tab').forEach(b=>b.classList.toggle('active',b.dataset.panel===name));document.querySelectorAll('.editor-panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+name));}
+function selectedLayer(){return project?.layers.find(x=>x.id===selectedLayerId)||null;}
+function renderLayers(){const root=$('layerList');root.replaceChildren();$('layerCount').textContent=(project.layers.length)+' layer';if(!project.layers.length){const empty=document.createElement('div');empty.className='empty-card';empty.textContent='Belum ada layer. Tekan + untuk menambahkan elemen.';root.append(empty);}project.layers.slice().reverse().forEach(layer=>{const row=document.createElement('button');row.type='button';row.className='layer-row'+(layer.id===selectedLayerId?' active':'');const icon=document.createElement('span');icon.className='layer-type';icon.textContent=TYPE_META[layer.type]?.icon||'◇';const copy=document.createElement('span');copy.className='layer-label';const name=document.createElement('b');name.textContent=layer.name;const meta=document.createElement('small');meta.textContent=TYPE_META[layer.type]?.label||layer.type;copy.append(name,meta);row.append(icon,copy);row.addEventListener('click',()=>{selectedLayerId=layer.id;renderLayers();renderProperties();renderPreview();selectPanel('properties');});root.append(row);});renderProperties();}
+function renderProperties(){const root=$('propertyFields');root.replaceChildren();const layer=selectedLayer();$('selectedLayerName').textContent=layer?.name||'Pilih layer untuk mengedit';$('animationPreset').value=layer?.animation||'none';$('animationLoop').checked=Boolean(layer?.loop);if(!layer){const p=document.createElement('p');p.className='muted';p.textContent='Pilih layer terlebih dahulu.';root.append(p);return;}const addField=(label,kind,value,handler)=>{const wrap=document.createElement('label');wrap.className='field-label';wrap.textContent=label;const input=document.createElement(kind==='textarea'?'textarea':'input');if(kind!=='textarea')input.type=kind;input.value=value||'';input.addEventListener('input',()=>{handler(input.value);setDirty();renderPreview();});wrap.append(input);root.append(wrap);};addField('Nama layer','text',layer.name,v=>layer.name=v);if(['text','button','card','table'].includes(layer.type))addField('Isi / konten','textarea',layer.content,v=>layer.content=v);if(['image','video'].includes(layer.type))addField('URL media','url',layer.src,v=>layer.src=v);const del=document.createElement('button');del.className='mini-button';del.textContent='Hapus layer';del.onclick=()=>{project.layers=project.layers.filter(x=>x.id!==layer.id);selectedLayerId=null;setDirty();renderLayers();renderPreview();};root.append(del);}
+function renderPreview(){const root=$('previewPage');root.replaceChildren();const header=document.createElement('div');header.className='preview-site-header';header.textContent='SURVIVAL LEGACY FRONTIER · '+project.name;root.append(header);if(!project.layers.length){const intro=document.createElement('div');intro.className='preview-placeholder';intro.innerHTML='<span>✦</span><b></b><small>Tambahkan layer untuk menyusun halaman ini.</small>';intro.querySelector('b').textContent=project.name;root.append(intro);}project.layers.forEach(layer=>{const node=document.createElement('div');node.className='preview-layer'+(layer.id===selectedLayerId?' selected':'');node.dataset.layerId=layer.id;if(layer.type==='image'&&layer.src){const img=document.createElement('img');img.src=layer.src;img.alt=layer.name;node.append(img);}else if(layer.type==='video'){node.textContent='Video: '+(layer.src||layer.name);}else node.textContent=layer.content||layer.name;if(layer.loop&&layer.animation!=='none')node.classList.add('anim-'+layer.animation);node.onclick=()=>{selectedLayerId=layer.id;renderLayers();renderPreview();selectPanel('properties');};root.append(node);});}
+function addLayer(type){if(!TYPE_META[type])return;const layer={id:uid(),type,name:TYPE_META[type].label+' '+(project.layers.length+1),content:type==='text'?'Teks baru':type==='button'?'Klik di sini':type==='card'?'Informasi baru':'',src:'',animation:'none',loop:false};project.layers.push(layer);selectedLayerId=layer.id;setDirty();renderLayers();renderPreview();selectPanel('properties');closeSheet();notify('Layer ditambahkan. Simpan project setelah selesai.');}
+async function saveProject(){if(!project)return;project.updatedAt=new Date().toISOString();const index=projects.findIndex(p=>p.id===project.id);if(index>=0)projects[index]=project;else projects.unshift(project);await put(PROJECTS_KEY,projects);savedFingerprint=fingerprint(project);dirty=false;$('projectStatus').textContent='Tersimpan di perangkat';$('saveProject').classList.remove('needs-save');renderLobby();notify('Project berhasil disimpan di perangkat ini.');}
+function updateModeUi(){$('previewSize').textContent=activeMode==='mobile'?'Mobile · 390 px':'Desktop · 1280 px';$('previewPage').classList.toggle('desktop-preview',activeMode==='desktop');$('modeMobile').classList.toggle('active',activeMode==='mobile');$('modeDesktop').classList.toggle('active',activeMode==='desktop');}
+function switchMode(next){if(next===activeMode)return;if(dirty||fingerprint(project)!==savedFingerprint){notify('Simpan Project terlebih dahulu sebelum mengganti mode.');return;}activeMode=next;updateModeUi();}
+async function exportProject(){if(!project)return;if(dirty||fingerprint(project)!==savedFingerprint){notify('Simpan Project terlebih dahulu sebelum Export.');return;}if(!role){openLogin('Login Owner diperlukan untuk Export ke website.');return;}if(role!=='owner'){notify('Export website hanya dapat dilakukan Owner.');return;}const unsupported=project.layers.filter(l=>l.type!=='image');if(unsupported.length){notify('Export saat ini hanya mendukung layer Gambar. Layer teks, tombol, tabel, video, dan kartu belum punya pemetaan ke desain website asli.');return;}const images=project.layers.filter(l=>l.type==='image'&&l.src);if(!images.length){notify('Tambahkan layer Gambar sebelum Export.');return;}const button=$('exportProject');button.disabled=true;button.textContent='Menerbitkan…';try{const secret=sessionStorage.getItem(SECRET_KEY)||'';const read=await fetch('/api/admin/site-design',{headers:{authorization:'Bearer '+secret},cache:'no-store'});const data=await read.json().catch(()=>({}));if(!read.ok)throw new Error(data.error||'Gagal membaca desain website.');const design=data.design||{version:2,page:'all',accent:'#9b6cff',accent2:'#f3cb82',background:'#100c18',globalFont:'system',overlayColor:'#100c18',overlayOpacity:0,layers:[],freeLayers:[],elementEdits:[],insertedElements:[]};design.freeLayers=Array.isArray(design.freeLayers)?design.freeLayers:[];const pageKey=project.pagePath==='/'?'home':project.pagePath==='/store/'?'store':project.pagePath==='/wiki/'?'wiki':project.pagePath==='/bantuan/'?'help':project.pagePath==='/store/order.html'?'order':project.pagePath==='/store/review.html'?'review':project.pagePath==='/store/ticket.html'?'ticket':project.pagePath.startsWith('/wiki/artikel/')?'wiki-'+project.pagePath.split('/').pop().replace('.html',''):'home';design.freeLayers=design.freeLayers.filter(l=>!(l.appProjectId===project.id));images.forEach((layer,i)=>design.freeLayers.push({id:'app-'+project.id+'-'+layer.id,page:pageKey,containerSelector:'main',src:layer.src,x:8,y:12+i*8,width:84,height:28,fit:'contain',opacity:100,z:4+i,background:false,visible:true,appProjectId:project.id}));const write=await fetch('/api/admin/site-design',{method:'POST',headers:{authorization:'Bearer '+secret,'content-type':'application/json'},body:JSON.stringify({design})});const result=await write.json().catch(()=>({}));if(!write.ok)throw new Error(result.error||'Penerbitan gagal.');notify('Layer gambar berhasil diterbitkan ke desain website.');}catch(e){notify('Export gagal: '+e.message);}finally{button.disabled=false;button.textContent='Export';}}
+function openSheet(){$('addSheet').hidden=false;}function closeSheet(){$('addSheet').hidden=true;}
+async function start(){
+ const secret=sessionStorage.getItem(SECRET_KEY);if(secret){try{const data=await auth(secret);role=data.role==='owner'?'owner':'admin';}catch{sessionStorage.removeItem(SECRET_KEY);}}
+ $('loginButton').onclick=()=>openLogin();$('loginClose').onclick=closeLogin;$('loginSubmit').onclick=login;$('adminSecret').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
+ $('openStudio').onclick=()=>setView('lobby');$('lobbyBack').onclick=()=>setView('home');$('newProject').onclick=addProject;$('editorBack').onclick=()=>{if(dirty&&!confirm('Perubahan belum disimpan. Keluar dan buang perubahan terakhir?'))return;setView('lobby');};$('saveProject').onclick=saveProject;$('exportProject').onclick=exportProject;
+ $('modeMobile').onclick=()=>switchMode('mobile');$('modeDesktop').onclick=()=>switchMode('desktop');
+ document.querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>{const name=b.dataset.open;if(name==='studio')setView('lobby');else if(name==='home')setView('home');else openAdminMenu(name,name,false);}));
+ document.querySelectorAll('.editor-tab').forEach(b=>b.addEventListener('click',()=>selectPanel(b.dataset.panel)));
+ $('floatingAdd').onclick=openSheet;$('addLayerInline').onclick=openSheet;$('closeSheet').onclick=closeSheet;$('addSheet').onclick=e=>{if(e.target===$('addSheet'))closeSheet();};
+ document.querySelectorAll('[data-create]').forEach(b=>b.addEventListener('click',()=>addLayer(b.dataset.create)));
+ $('animationPreset').onchange=e=>{const l=selectedLayer();if(l){l.animation=e.target.value;setDirty();renderPreview();}};$('animationLoop').onchange=e=>{const l=selectedLayer();if(l){l.loop=e.target.checked;setDirty();renderPreview();}};
+ document.querySelectorAll('input,textarea,select').forEach(el=>{if(!['adminSecret'].includes(el.id)&&el.closest('#propertyFields'))return;});
+ window.addEventListener('online',()=>{$('connectionState').textContent='Online';});window.addEventListener('offline',()=>{$('connectionState').textContent='Offline';});
+ if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{});
+ await loadProjects();renderHome();if(location.hash==='#studio')setView('lobby');
+}
+document.addEventListener('DOMContentLoaded',start);
 })();
