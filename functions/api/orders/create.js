@@ -1,9 +1,14 @@
 import { json, fail, readJson, sha256Hex, hmacSha256Hex, randomHex, safeText, notifyAdmin, resolveTicketLinkSecret } from '../../_lib/common.js';
 import { calculatePrice, RANK_COLORS, RANK_STYLES } from '../../_lib/catalog.js';
+import { ensureStoreSchema } from '../../_lib/store-schema.js';
 
 export async function onRequestPost({ request, env }) {
+  let stage = 'database-binding';
   try {
     if (!env.DB) return fail('Database Store belum tersambung. Binding harus bernama DB.', 503);
+    stage = 'store-schema';
+    await ensureStoreSchema(env.DB);
+    stage = 'request-validation';
     const data = await readJson(request);
     if (!data.agree) return fail('Centang persetujuan sebelum membuat pesanan.');
     const isReentryProduct = ['REENTRY_1','REENTRY_2','REENTRY_3'].includes(data.productId);
@@ -54,16 +59,26 @@ export async function onRequestPost({ request, env }) {
       ? {rankName:safeText(data.details?.rankName,16),rankColor:String(data.details?.rankColor||'').toUpperCase(),rankStyle:safeText(data.details?.rankStyle,20),buyerNote:data.productId==='VIP_PLUS'?safeText(data.details?.buyerNote,400):''}
       : {buyerNote:safeText(data.details?.buyerNote,400)};
     const sql = "INSERT INTO orders (id,access_key_hash,minecraft_name,platform,whatsapp,email,product_id,product_name,details_json,promo_code,subtotal,discount,total,status,partner_reference_no,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'PENDING_PAYMENT',?,?,?)";
-    await env.DB.prepare(sql).bind(id,hash,minecraftName,platform,whatsapp,email||null,data.productId,price.product.name,JSON.stringify(details),promoCode||null,price.subtotal,price.discount,price.total,ref,now,now).run();
-    for (let index = 0; index < ticketCount; index += 1) {
-      const ticketId = 'TKT-' + date + '-' + randomHex(8).toUpperCase();
-      // A ticket gets its own HMAC key; sharing it does not reveal the order's access key.
-      const ticketToken = await hmacSha256Hex(resolveTicketLinkSecret(env).secret, id + ':' + ticketId + ':' + token);
-      const ticketHash = await sha256Hex(ticketToken);
-      await env.DB.prepare(
-        "INSERT INTO reentry_tickets (id, order_id, access_key_hash, minecraft_name, product_name, season_id, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'WAITING_PAYMENT', ?, ?)"
-      ).bind(ticketId, id, ticketHash, minecraftName, price.product.name, seasonId, now, now).run();
+    const statements = [
+      env.DB.prepare(sql).bind(id,hash,minecraftName,platform,whatsapp,email||null,data.productId,price.product.name,JSON.stringify(details),promoCode||null,price.subtotal,price.discount,price.total,ref,now,now)
+    ];
+
+    // Prepare every re-entry row before writing. D1 batch makes the order and all
+    // related tickets one transaction: any failed insert rolls the entire set back.
+    if (ticketCount > 0) {
+      const ticketSecret = resolveTicketLinkSecret(env).secret;
+      for (let index = 0; index < ticketCount; index += 1) {
+        const ticketId = 'TKT-' + date + '-' + randomHex(8).toUpperCase();
+        const ticketToken = await hmacSha256Hex(ticketSecret, id + ':' + ticketId + ':' + token);
+        const ticketHash = await sha256Hex(ticketToken);
+        statements.push(env.DB.prepare(
+          "INSERT INTO reentry_tickets (id, order_id, access_key_hash, minecraft_name, product_name, season_id, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'WAITING_PAYMENT', ?, ?)"
+        ).bind(ticketId, id, ticketHash, minecraftName, price.product.name, seasonId, now, now));
+      }
     }
+
+    stage = 'store-order-and-tickets';
+    await env.DB.batch(statements);
     const orderUrl = new URL('/store/order.html', request.url);
     orderUrl.searchParams.set('id', id); orderUrl.searchParams.set('key', token);
     // Best-effort WhatsApp Cloud API alert; never block checkout if notification is not configured.
@@ -72,7 +87,7 @@ export async function onRequestPost({ request, env }) {
     } catch (notificationError) { console.error('Admin WhatsApp notification failed:', notificationError?.message || notificationError); }
     return json({orderId:id,orderUrl:orderUrl.toString(),total:price.total,subtotal:price.subtotal,discount:price.discount,status:'PENDING_PAYMENT'});
   } catch (e) {
-    console.error('Order creation failed', e?.message || e);
-    return fail('Pesanan gagal dibuat. Periksa koneksi database D1 dan tabel Store.', 503);
+    console.error('Order creation failed at ' + stage + ':', e?.message || e);
+    return fail('Pesanan belum berhasil disimpan. Tidak ada pembayaran yang perlu dilakukan. Periksa kembali data lalu coba sekali lagi. Jika masalah berulang, hubungi CS SLF.', 503);
   }
 }

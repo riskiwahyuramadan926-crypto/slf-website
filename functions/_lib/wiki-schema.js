@@ -54,7 +54,25 @@ export async function ensureWikiSchema(db) {
           created_at TEXT NOT NULL, updated_at TEXT NOT NULL
         )`],
         ['index-categories','CREATE INDEX IF NOT EXISTS idx_wiki_categories_order ON wiki_categories(active,sort_order,name)'],
-        ['index-articles','CREATE INDEX IF NOT EXISTS idx_wiki_articles_category ON wiki_articles(category_id,status,sort_order,title)']
+        ['index-articles','CREATE INDEX IF NOT EXISTS idx_wiki_articles_category ON wiki_articles(category_id,status,sort_order,title)'],
+        ['create-books',`CREATE TABLE IF NOT EXISTS wiki_books (
+          id TEXT PRIMARY KEY, name TEXT NOT NULL, slug TEXT NOT NULL UNIQUE,
+          description TEXT NOT NULL DEFAULT '', icon TEXT NOT NULL DEFAULT '📚',
+          sort_order INTEGER NOT NULL DEFAULT 0, active INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+        )`],
+        ['create-chapters',`CREATE TABLE IF NOT EXISTS wiki_chapters (
+          id TEXT PRIMARY KEY, book_id TEXT NOT NULL, title TEXT NOT NULL,
+          slug TEXT NOT NULL UNIQUE, summary TEXT NOT NULL DEFAULT '',
+          content TEXT NOT NULL DEFAULT '', legacy_url TEXT,
+          icon TEXT NOT NULL DEFAULT '📖', sort_order INTEGER NOT NULL DEFAULT 0,
+          status TEXT NOT NULL DEFAULT 'published' CHECK(status IN ('draft','published')),
+          created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+          FOREIGN KEY(book_id) REFERENCES wiki_books(id) ON DELETE RESTRICT
+        )`],
+        ['index-books','CREATE INDEX IF NOT EXISTS idx_wiki_books_order ON wiki_books(active,sort_order,name)'],
+        ['index-chapters','CREATE INDEX IF NOT EXISTS idx_wiki_chapters_book ON wiki_chapters(book_id,status,sort_order,title)'],
+        ['create-migrations',`CREATE TABLE IF NOT EXISTS wiki_migrations (id TEXT PRIMARY KEY, applied_at TEXT NOT NULL)`]
       ];
       for(const [name,sql] of steps){
         try{await db.prepare(sql).run();}
@@ -72,6 +90,25 @@ export async function ensureWikiSchema(db) {
           await db.prepare("INSERT OR IGNORE INTO wiki_articles (id,category_id,title,slug,summary,content,legacy_url,icon,sort_order,status,created_at,updated_at) VALUES (?,?,?,?,?,'',?,?,?,'published',?,?)")
             .bind(...a,now,now).run();
         }catch(error){throw new Error('SLF_WIKI_STEP:seed-article:'+String(error?.message||error).slice(0,180));}
+      }
+      // Copy legacy rows once. A migration marker prevents deleted books/chapters
+      // from being recreated from the compatibility tables on later requests.
+      const migrated=await db.prepare("SELECT id FROM wiki_migrations WHERE id='books-chapters-v1'").first();
+      if(!migrated){
+        try {
+          await db.batch([
+            db.prepare(`INSERT OR IGNORE INTO wiki_books
+              (id,name,slug,description,icon,sort_order,active,created_at,updated_at)
+              SELECT id,name,slug,description,icon,sort_order,active,created_at,updated_at FROM wiki_categories`),
+            db.prepare(`INSERT OR IGNORE INTO wiki_chapters
+              (id,book_id,title,slug,summary,content,legacy_url,icon,sort_order,status,created_at,updated_at)
+              SELECT a.id,a.category_id,a.title,a.slug,a.summary,a.content,a.legacy_url,a.icon,a.sort_order,a.status,a.created_at,a.updated_at
+              FROM wiki_articles a INNER JOIN wiki_books b ON b.id=a.category_id`),
+            db.prepare("INSERT OR IGNORE INTO wiki_migrations (id,applied_at) VALUES ('books-chapters-v1',?)").bind(now)
+          ]);
+        } catch(error) {
+          throw new Error('SLF_WIKI_STEP:migrate-books-chapters:'+String(error?.message||error).slice(0,180));
+        }
       }
     })();
     initialized.set(db,task);

@@ -11,6 +11,7 @@ Make operational tasks predictable, auditable, and safe. Clarity and data integr
 - Search and filters near the list they control.
 - Tables/cards that show status, date, player/order identity, and next valid action.
 - Forms grouped by purpose with inline validation and save feedback.
+- The Wiki manager must edit Books and their Chapters, including ordering, draft/publication state, Markdown preview, tables, callouts, and media insertion.
 - Destructive actions separated from normal save/update actions.
 
 ## Visual rules

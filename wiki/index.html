@@ -23,7 +23,7 @@
  <div class="wrap wiki-library-hero-inner">
   <div class="eyebrow">PERPUSTAKAAN FRONTIER · EDISI LENGKAP</div>
   <h1>Semua pengetahuan.<br><span>Tersusun dalam satu rak.</span></h1>
-  <p>Pilih buku berdasarkan topik, lalu buka artikel yang ingin kamu baca. Gunakan pencarian untuk menemukan panduan tanpa harus membuka setiap kategori.</p>
+  <p>Setiap buku memuat satu materi utama dengan bab-bab yang tersusun rapi. Pilih buku, buka daftar isinya, lalu lanjutkan membaca dari bab ke bab.</p>
   <div class="wiki-library-meta"><span>✦ Server & aturan</span><span>☷ Komunitas</span><span>⌕ Bantuan & FAQ</span></div>
  </div>
 </section>
@@ -41,13 +41,13 @@
    <div class="wiki-view-heading"><button class="wiki-back-button" id="wiki-search-clear" type="button">← Kembali ke semua buku</button><div><div class="eyebrow">HASIL PENCARIAN</div><h2 id="wiki-search-title">Artikel ditemukan</h2></div></div>
    <div id="wiki-search-results" class="wiki-article-list"></div>
   </section>
-  <section id="wiki-category-view" hidden aria-label="Isi kategori buku">
+  <section id="wiki-category-view" hidden aria-label="Daftar bab dalam buku">
    <div class="wiki-view-heading"><button class="wiki-back-button" id="wiki-back-shelf" type="button">← Kembali ke rak buku</button><div id="wiki-category-heading"></div></div>
    <div id="wiki-article-list" class="wiki-article-list"></div>
   </section>
-  <section id="wiki-reader" hidden aria-label="Isi artikel Wiki">
-   <div class="wiki-reader-top"><button class="wiki-back-button" id="wiki-reader-back" type="button">← Kembali ke kategori</button><span id="wiki-reader-breadcrumb" class="muted"></span></div>
-   <article class="wiki-reader-paper">
+  <section id="wiki-reader" hidden aria-label="Pembaca bab Wiki">
+   <div class="wiki-reader-top"><button class="wiki-back-button" id="wiki-reader-back" type="button">← Kembali ke daftar bab</button><span id="wiki-reader-breadcrumb" class="muted"></span></div>
+   <div class="wiki-reader-layout"><aside class="wiki-chapter-sidebar"><div class="wiki-toc-heading"><span class="eyebrow">DAFTAR ISI</span><strong>Bab dalam buku</strong></div><nav id="wiki-chapter-toc" class="wiki-chapter-toc" aria-label="Navigasi bab"></nav></aside><article class="wiki-reader-paper">
     <div class="wiki-reader-kicker">WIKI · SURVIVAL LEGACY FRONTIER</div>
     <div id="wiki-reader-category" class="wiki-reader-category"></div>
     <h1 id="wiki-reader-title"></h1>
@@ -55,8 +55,8 @@
     <div class="wiki-reader-rule"></div>
     <div id="wiki-reader-body" class="wiki-reader-body"></div>
     <div class="wiki-reader-footer"><span>Periksa pengumuman terbaru jika aturan berubah mengikuti season.</span><a href="/#komunitas">Kanal resmi SLF ↗</a></div>
-   </article>
-   <div class="wiki-reader-navigation"><button class="wiki-back-button" id="wiki-reader-prev" type="button" disabled>← Artikel sebelumnya</button><button class="wiki-back-button" id="wiki-reader-next" type="button" disabled>Artikel berikutnya →</button></div>
+   </article></div>
+   <div class="wiki-reader-navigation"><button class="wiki-back-button" id="wiki-reader-prev" type="button" disabled>← Bab sebelumnya</button><button class="wiki-back-button" id="wiki-reader-next" type="button" disabled>Bab berikutnya →</button></div>
   </section>
   <div class="wiki-library-note"><strong>ⓘ Catatan akurasi</strong><p>Informasi berlabel rencana atau perlu verifikasi belum tentu aktif di season berjalan. Pengumuman resmi terbaru dan konfigurasi server yang sedang aktif tetap menjadi acuan.</p></div>
  </div>
@@ -64,7 +64,8 @@
 <section class="section cms-section" data-cms-wrap="wiki" hidden><div class="wrap"><div class="section-head"><div class="eyebrow">Informasi pengelola</div><h2>Catatan terbaru.</h2></div><div class="cms-card-grid" data-cms-list="wiki"></div></div></section>
 </main>
 <footer><div class="wrap footer-inner"><div><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">✦</span><span class="brand-name">SURVIVAL LEGACY FRONTIER<small>SEBUAH DUNIA, BANYAK KISAH</small></span></a><div class="footer-copy" style="margin-top:12px">© <span id="wikiYear"></span> Survival Legacy Frontier. Komunitas independen.</div><div class="footer-copy">Minecraft adalah merek dagang Mojang/Microsoft. SLF bukan produk resmi atau afiliasinya.</div></div><nav class="footer-links" aria-label="Tautan footer"><a href="/">Beranda</a><a href="/store/">Store</a><a href="/bantuan/">Bantuan</a><a href="https://saweria.co/LegacyFrontier" target="_blank" rel="noopener noreferrer">Dukung SLF ↗</a></nav></div></footer>
-<script src="/assets/js/wiki-library.js?v=20261108-library3" defer></script>
+<script src="/assets/js/wiki-markdown.js?v=20261123-books1" defer></script>
+<script src="/assets/js/wiki-library.js?v=20261123-books1" defer></script>
 <script src="/assets/js/site-design.js?v=20261108-library2" defer></script>
 <script src="/assets/js/site-content.js" defer></script>
 <script src="/assets/js/support-widget.js" defer></script>

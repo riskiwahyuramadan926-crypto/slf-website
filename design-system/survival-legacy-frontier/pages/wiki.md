@@ -7,16 +7,16 @@ Make rules and gameplay information easy to find, understand, and revisit, espec
 
 ## Structure
 1. Search visible near the top of the library.
-2. Books/categories with meaningful names and article counts.
-3. Article list with title and useful summary.
-4. Reader view with breadcrumb, clear title, summary, structured headings, lists, callouts, related reading, and back navigation.
+2. Books, each representing one main topic, with chapter counts.
+3. Chapter list with ordered chapter numbers, titles, and useful summaries.
+4. Reader view with a persistent in-book chapter navigation, breadcrumb, clear title, summary, structured headings, lists, callouts, tables, images, previous/next navigation, and a clear return path.
 
 ## Visual rules
 - Maintain the SLF library theme. The cream/paper reader surface is an intentional editorial exception, not a global theme.
 - Body copy should be comfortable for long reading, with a restrained line length and generous line-height.
 - Keep article metadata secondary to the article title.
 - Don't let icon decoration compete with titles.
-- Preserve the same nav and back behavior across library, search, category, and reader states.
+- Preserve the same nav and back behavior across library, search, book, and reader states.
 
 ## Content and interaction
 - Search title, summary, and content; clearly show no-results and API-error states.

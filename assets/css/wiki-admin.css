@@ -1,0 +1,19 @@
+.wiki-admin-grid{align-items:start}
+.wiki-editor-field{min-width:0}
+.wiki-editor-toolbar{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;padding:9px;border:1px solid var(--line);border-radius:10px;background:#111a2b}
+.wiki-editor-toolbar button{min-height:38px;padding:7px 10px;border:1px solid rgba(155,187,230,.2);border-radius:8px;background:#17253c;color:var(--text);font:700 .78rem system-ui,sans-serif;cursor:pointer}
+.wiki-editor-toolbar button:hover,.wiki-editor-toolbar button:focus-visible{border-color:#86e7ef;outline:none}
+.wiki-editor-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:stretch}
+.wiki-editor-grid textarea{width:100%;min-width:0;min-height:390px;resize:vertical;font: .88rem/1.65 ui-monospace,SFMono-Regular,Consolas,monospace}
+.wiki-editor-preview{min-width:0;max-height:580px;overflow:auto;padding:15px;border:1px solid var(--line);border-radius:10px;background:#f5eedf;color:#33283b}
+.wiki-editor-preview-title{margin-bottom:12px;color:#71573c;font-size:.75rem;font-weight:850;text-transform:uppercase;letter-spacing:.08em}
+.wiki-editor-preview .wiki-reader-body{font:400 .92rem/1.75 Georgia,serif;color:#33283b}
+.wiki-editor-preview .wiki-reader-body h2,.wiki-editor-preview .wiki-reader-body h3{color:#241a30}
+.wiki-editor-preview .wiki-reader-body table{width:100%;border-collapse:collapse;min-width:300px;font: .78rem/1.5 system-ui,sans-serif}
+.wiki-editor-preview .wiki-reader-body th,.wiki-editor-preview .wiki-reader-body td{padding:7px;border:1px solid rgba(71,50,67,.18);text-align:left}
+.wiki-editor-preview .wiki-reader-body th{background:rgba(177,140,84,.14)}
+.wiki-editor-preview .wiki-reader-body img{max-width:100%;height:auto;border-radius:8px}
+.wiki-editor-preview .wiki-reader-body .wiki-callout{padding:10px 12px;border-left:3px solid #b18c54;background:rgba(177,140,84,.12)}
+.wiki-upload-status{min-height:20px;margin:7px 0 0;color:var(--muted);font-size:.78rem}
+@media(max-width:1000px){.wiki-editor-grid{grid-template-columns:1fr}.wiki-editor-grid textarea{min-height:260px}.wiki-editor-preview{max-height:none;min-height:200px}}
+@media(max-width:620px){.wiki-editor-toolbar button{flex:1 1 auto}.wiki-editor-preview{padding:12px}}

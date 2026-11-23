@@ -113,7 +113,7 @@
   async function api(path,init={}) {
     const secret=sessionStorage.getItem(secretKey)||'';
     const headers={...(init.headers||{}),authorization:'Bearer '+secret};
-    if(init.body)headers['content-type']='application/json';
+    if(init.body && !(init.body instanceof FormData))headers['content-type']='application/json';
     const res=await fetch(path,{...init,headers,cache:'no-store'});
     const data=await res.json().catch(()=>({}));
     if(!res.ok){if(res.status===401){sessionStorage.removeItem(secretKey);currentRole='';$('login-panel').hidden=false;$('dashboard').hidden=true;$('role-pill').textContent='Belum masuk';}const error=new Error(data.error||'Permintaan gagal ('+res.status+').');error.status=res.status;error.payload=data;throw error;}

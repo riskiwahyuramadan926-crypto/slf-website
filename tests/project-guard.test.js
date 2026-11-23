@@ -97,3 +97,57 @@ test('UI UX Pro Max guidance is persisted and required for SLF pages', async () 
   }
   assert.match(readme, /uipro init --ai codex/);
 });
+
+test('Wiki uses explicit Books and Chapters with a one-time non-destructive legacy migration', async () => {
+  const schema = await read('functions/_lib/wiki-schema.js');
+  const publicApi = await read('functions/api/wiki.js');
+  const adminApi = await read('functions/api/admin/wiki.js');
+  assert.match(schema, /CREATE TABLE IF NOT EXISTS wiki_books/i);
+  assert.match(schema, /CREATE TABLE IF NOT EXISTS wiki_chapters/i);
+  assert.match(schema, /wiki_migrations/);
+  assert.match(schema, /INSERT OR IGNORE INTO wiki_chapters/i);
+  assert.doesNotMatch(schema, /DROP\s+TABLE/i);
+  assert.match(publicApi, /wiki_books/);
+  assert.match(publicApi, /wiki_chapters/);
+  assert.match(adminApi, /requireOwner\(request,\s*env\)/);
+  assert.match(adminApi, /wiki_books/);
+  assert.match(adminApi, /wiki_chapters/);
+});
+
+test('Wiki editor supports safe Markdown preview, tables, image URLs, and protected uploads', async () => {
+  const renderer = await read('assets/js/wiki-markdown.js');
+  const reader = await read('assets/js/wiki-library.js');
+  const editor = await read('assets/js/wiki-admin.js');
+  const adminPage = await read('admin/index.html');
+  const adminApi = await read('functions/api/admin/media.js');
+  assert.match(renderer, /function safeUrl/);
+  assert.match(renderer, /wiki-table-wrap/);
+  assert.match(renderer, /loading="lazy"/);
+  assert.match(renderer, /escapeHtml/);
+  assert.match(reader, /wiki-chapter-toc/);
+  assert.ok(editor.includes("api()('/api/admin/media'"));
+  assert.match(adminPage, /wiki-article-preview/);
+  assert.match(adminPage, /wiki-upload-image/);
+  assert.match(adminApi, /requireOwner\(request,env\)/);
+});
+
+test('Store order and all re-entry tickets are persisted atomically', async () => {
+  const order = await read('functions/api/orders/create.js');
+  const schema = await read('functions/_lib/store-schema.js');
+  assert.match(order, /ensureStoreSchema\(env\.DB\)/);
+  assert.match(order, /env\.DB\.batch\(statements\)/);
+  assert.match(order, /Order creation failed at /);
+  assert.match(schema, /site_content:\s*\{[\s\S]*?image_url:\s*'TEXT'/);
+});
+
+test('Homepage no longer renders the inspiration section', async () => {
+  const home = await read('index.html');
+  assert.doesNotMatch(home, /inspiration-section|Empat gaya RPG/);
+});
+
+test('Obsolete Android Admin source and APK workflow are removed without removing web Admin', async () => {
+  const admin = await read('admin/index.html');
+  assert.match(admin, /wiki-manager-tab/);
+  await assert.rejects(read('android-admin/README.md'));
+  await assert.rejects(read('.github/workflows/android-admin-build.yml'));
+});
