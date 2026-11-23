@@ -17,7 +17,11 @@ export async function onRequestPost({request,env}){
     const row=await env.DB.prepare('SELECT table_name,display_name,schema_json,allow_public_write,allow_public_read FROM studio_backend_tables WHERE table_name=? LIMIT 1').bind(table).first();
     if(!row)return fail('Tabel backend tidak ditemukan.',404);
     const definition=normalizeStudioTableDefinition({tableName:row.table_name,displayName:row.display_name,columns:JSON.parse(row.schema_json||'[]'),allowPublicWrite:Number(row.allow_public_write)===1,allowPublicRead:Number(row.allow_public_read)===1});
-    if(action==='schema'){\n      if(!definition.allowPublicWrite)return fail('Formulir publik tidak diaktifkan Owner untuk tabel ini.',403);\n      return json({ok:true,columns:definition.columns.map(column=>column.name)});\n    }\n    if(action==='submit'){
+    if(action==='schema'){
+      if(!definition.allowPublicWrite)return fail('Formulir publik tidak diaktifkan Owner untuk tabel ini.',403);
+      return json({ok:true,columns:definition.columns.map(column=>column.name)});
+    }
+    if(action==='submit'){
       if(!definition.allowPublicWrite)return fail('Pengiriman data publik tidak diaktifkan Owner untuk tabel ini.',403);
       const parsed=normalizeStudioSubmission(definition,data.values);if(!parsed.names.length)return fail('Tidak ada data untuk disimpan.');
       const columns=['id',...parsed.names],sqlColumns=columns.map(name=>'"'+name+'"').join(','),marks=columns.map(()=>'?').join(',');
