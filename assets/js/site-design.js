@@ -123,6 +123,7 @@ function insertElement(item){
  host.append(node);insertedNodes.set(item.id,node);
 }
 function applyFreeLayers(d){
+ document.querySelectorAll('.slf-free-layer-background-stage,.slf-free-layer-stage').forEach(stage=>stage.remove());
  const items=(Array.isArray(d.freeLayers)?d.freeLayers:[]).filter(layer=>layer&&layer.src&&layer.visible!==false&&(layer.page==='all'||layer.page===pageName()||(layer.page==='wiki'&&pageName().startsWith('wiki-')))&&typeof layer.containerSelector==='string');
  const groups=new Map();
  items.forEach(layer=>{if(!groups.has(layer.containerSelector))groups.set(layer.containerSelector,[]);groups.get(layer.containerSelector).push(layer);});
@@ -136,7 +137,7 @@ function applyFreeLayers(d){
   back.replaceChildren();front.replaceChildren();
   layers.forEach(layer=>{
    const wrapper=document.createElement('div');wrapper.className='studio-free-layer';wrapper.dataset.slfLayerId=layer.id;
-   wrapper.style.cssText='position:absolute;box-sizing:border-box;left:'+clamp(layer.x,0,100,35)+'%;top:'+clamp(layer.y,0,100,24)+'%;width:'+clamp(layer.width,5,100,30)+'%;height:'+clamp(layer.height,5,100,32)+'%;opacity:'+(clamp(layer.opacity,0,100,100)/100)+';z-index:'+clamp(layer.z,0,20,4)+';pointer-events:'+(studioMode&&studioSelect?'auto':'none')+';touch-action:none;user-select:none;cursor:'+(studioMode?'move':'default');
+   wrapper.style.cssText='position:absolute;box-sizing:border-box;left:'+clamp(layer.x,0,100,35)+'%;top:'+clamp(layer.y,0,100,24)+'%;width:'+clamp(layer.width,5,100,30)+'%;height:'+clamp(layer.height,5,100,32)+'%;opacity:'+(clamp(layer.opacity,0,100,100)/100)+';z-index:'+clamp(layer.z,0,20,4)+';pointer-events:'+(studioMode&&studioSelect?'auto':'none')+';touch-action:none;user-select:none;cursor:'+(studioMode&&studioSelect?'move':'default');
    const img=document.createElement('img');img.src=layer.src;img.alt='';img.draggable=false;img.loading='lazy';img.decoding='async';img.style.cssText='display:block;width:100%;height:100%;object-fit:'+(layer.fit==='cover'?'cover':layer.fit==='fill'?'fill':'contain')+';pointer-events:none;user-select:none';
    wrapper.append(img);
    if(studioMode&&studioSelect&&!layer.background){const handle=document.createElement('span');handle.className='studio-free-layer-handle';handle.setAttribute('aria-hidden','true');handle.style.cssText='position:absolute;right:-8px;bottom:-8px;width:16px;height:16px;border:2px solid white;border-radius:50%;background:#9b6cff;box-shadow:0 1px 8px #000;cursor:nwse-resize';wrapper.append(handle);}
@@ -267,7 +268,7 @@ async function init(){
   const response=await fetch('/api/site-design',{cache:'no-store'});
   if(response.ok){const data=await response.json();if(data.design)applyDesign(data.design);}
  }catch(_){}
- if(document.body){let scheduled=false;const observer=new MutationObserver(()=>{if(scheduled||!design)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;(Array.isArray(design.insertedElements)?design.insertedElements:[]).forEach(insertElement);applyFreeLayers(design);const edits=Array.isArray(design.elementEdits)?design.elementEdits:[];edits.filter(x=>x.page==='all').forEach(applyEdit);if(pageName().startsWith('wiki-'))edits.filter(x=>x.page==='wiki').forEach(applyEdit);edits.filter(x=>x.page===pageName()).forEach(applyEdit);});});observer.observe(document.body,{childList:true,subtree:true});}
+ if(document.body){let scheduled=false;const observer=new MutationObserver(()=>{if(scheduled||!design)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;(Array.isArray(design.insertedElements)?design.insertedElements:[]).forEach(insertElement);const edits=Array.isArray(design.elementEdits)?design.elementEdits:[];edits.filter(x=>x.page==='all').forEach(applyEdit);if(pageName().startsWith('wiki-'))edits.filter(x=>x.page==='wiki').forEach(applyEdit);edits.filter(x=>x.page===pageName()).forEach(applyEdit);});});observer.observe(document.body,{childList:true,subtree:true});}
  initStudioBridge();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
