@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const state = { books:[], chapters:[], bookId:'', activeChapterId:'', returnMode:'book' };
+  const state = { books:[], chapters:[], bookId:'', activeChapterId:'', returnMode:'book', readerRequest:0 };
   const year = $('wikiYear');
   if (year) year.textContent = new Date().getFullYear();
 
@@ -87,6 +87,7 @@
   }
 
   function openBook(id) {
+    state.readerRequest += 1;
     const book = state.books.find(item => item.id === id);
     if (!book) return;
     state.bookId = id;
@@ -217,6 +218,8 @@
   async function openChapter(id,mode) {
     const chapter = state.chapters.find(item => item.id === id);
     if (!chapter) return;
+    state.bookId = chapter.book_id;
+    const requestId = ++state.readerRequest;
     state.activeChapterId = id;
     state.returnMode = mode || 'book';
     const book = state.books.find(item => item.id === chapter.book_id);
@@ -237,8 +240,10 @@
     show('wiki-reader');
     try {
       const content = await chapterContent(chapter);
+      if (requestId !== state.readerRequest) return;
       $('wiki-reader-body').innerHTML = content ? renderMarkdown(content) : '<p>Bab ini belum memiliki isi.</p>';
     } catch (error) {
+      if (requestId !== state.readerRequest) return;
       const url = chapter.legacy_url ? new URL(chapter.legacy_url,location.href).href : '';
       $('wiki-reader-body').innerHTML = '<div class="wiki-library-message">' +
         (error.message || 'Bab belum dapat dimuat.') +
