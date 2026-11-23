@@ -4,7 +4,7 @@ const encoder=new TextEncoder();
 async function passwordHash(password,salt){const key=await crypto.subtle.importKey('raw',encoder.encode(password),'PBKDF2',false,['deriveBits']);const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:encoder.encode(salt),iterations:310000,hash:'SHA-256'},key,256);return [...new Uint8Array(bits)].map(x=>x.toString(16).padStart(2,'0')).join('');}
 function equal(a,b){if(typeof a!=='string'||typeof b!=='string'||a.length!==b.length)return false;let n=0;for(let i=0;i<a.length;i++)n|=a.charCodeAt(i)^b.charCodeAt(i);return n===0;}
 async function ensureTables(db){
- await db.prepare('CREATE TABLE IF NOT EXISTS admin_accounts(id TEXT PRIMARY KEY,email TEXT NOT NULL UNIQUE,password_salt TEXT NOT NULL,password_hash TEXT NOT NULL,role TEXT NOT NULL CHECK(role IN (\\'owner\\',\\'admin\\')),active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,last_login_at TEXT)').run();
+ await db.prepare("CREATE TABLE IF NOT EXISTS admin_accounts(id TEXT PRIMARY KEY,email TEXT NOT NULL UNIQUE,password_salt TEXT NOT NULL,password_hash TEXT NOT NULL,role TEXT NOT NULL CHECK(role IN ('owner','admin')),active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,last_login_at TEXT)").run();
  await db.prepare('CREATE TABLE IF NOT EXISTS admin_sessions(id TEXT PRIMARY KEY,account_id TEXT NOT NULL REFERENCES admin_accounts(id),token_hash TEXT NOT NULL UNIQUE,expires_at TEXT NOT NULL,created_at TEXT NOT NULL,last_seen_at TEXT NOT NULL)').run();
  await db.prepare('CREATE TABLE IF NOT EXISTS admin_account_attempts(ip_hash TEXT PRIMARY KEY,attempts INTEGER NOT NULL DEFAULT 0,window_started INTEGER NOT NULL,blocked_until INTEGER NOT NULL DEFAULT 0)').run();
 }
