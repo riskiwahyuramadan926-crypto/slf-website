@@ -174,7 +174,7 @@ function bind(){
   if(m.type==='slf-studio-ready'){$('studio-live-status').textContent='Halaman '+m.page+' siap diedit';}
   if(m.type==='slf-studio-outline'){outlineItems=Array.isArray(m.items)?m.items:[];renderNavigator();}
   if(m.type==='slf-studio-selected'){selected=m;renderSelection();}
-  if(m.type==='slf-studio-layer-selected'){if(selectedLayerId!==m.id)snapshot();selectedLayerId=m.id;renderFreeLayerControls();}
+  if(m.type==='slf-studio-layer-selected'){snapshot();selectedLayerId=m.id;renderFreeLayerControls();}
   if(m.type==='slf-studio-layer-changed'){const layer=(design.freeLayers||[]).find(item=>item.id===m.id);if(layer){layer.x=m.x;layer.y=m.y;layer.width=m.width;layer.height=m.height;setDirty();renderFreeLayerControls();}}
   if(m.type==='slf-studio-inline-text'&&selected){
    snapshot();const entry=ensureEntry();if(entry){entry.text=String(m.text||'').slice(0,4000);setDirty();$('studio-element-text').value=entry.text;renderNavigator();}
