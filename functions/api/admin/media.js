@@ -13,6 +13,7 @@ function tokenReady(env){return typeof env.GITHUB_MEDIA_TOKEN==='string'&&env.GI
 async function github(env,path,options={}){
   const headers={
     accept:'application/vnd.github+json',
+    'user-agent':'Survival-Legacy-Frontier-Website',
     authorization:'Bearer '+env.GITHUB_MEDIA_TOKEN.trim(),
     'x-github-api-version':'2022-11-28',
     'content-type':'application/json'
