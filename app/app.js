@@ -153,6 +153,8 @@
     root.replaceChildren();
     const layer = selectedLayer();
     $('selectedLayerName').textContent = layer ? layer.name : 'Pilih layer untuk mengedit';
+    $('animationPreset').value = layer?.animation || 'none';
+    $('animationLoop').checked = Boolean(layer?.loop);
     if (!layer) {
       const note = document.createElement('p'); note.className = 'muted'; note.textContent = 'Pilih salah satu layer terlebih dahulu.'; root.append(note); return;
     }
@@ -190,8 +192,8 @@
       } else node.textContent = layer.content || layer.name;
       node.addEventListener('click', () => { selectedLayerId = layer.id; renderLayers(); renderPreview(); selectPanel('properties'); });
       root.append(node);
-      node.dataset.animation = layer.animation || 'none';
-      node.classList.toggle('looping', Boolean(layer.loop));
+      const animation = layer.animation || 'none';
+      if (layer.loop && animation !== 'none') node.classList.add('anim-' + animation);
     });
   }
   function addLayer(type) {
