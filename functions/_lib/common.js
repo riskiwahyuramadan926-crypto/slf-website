@@ -124,7 +124,19 @@ function constantTimeHexEqual(a, b) {
   return diff === 0;
 }
 
+
+async function accountSessionRole(db,request){
+  const cookie=request.headers.get('cookie')||'';
+  const match=cookie.match(/(?:^|;\\s*)slf_admin_session=([A-Za-z0-9]+)/);
+  if(!match||!db||typeof db.prepare!=='function')return null;
+  const tokenHash=await sha256Hex(match[1]);
+  const now=new Date().toISOString();
+  const row=await db.prepare(`SELECT a.role FROM admin_sessions s JOIN admin_accounts a ON a.id=s.account_id WHERE s.token_hash=? AND s.expires_at>? AND a.active=1 LIMIT 1`).bind(tokenHash,now).first();
+  return row&&['owner','admin'].includes(row.role)?row.role:null;
+}
+
 async function adminAuthState(db, request, env) {
+  try { const sessionRole=await accountSessionRole(db,request); if(sessionRole)return sessionRole; } catch(error) { console.error('Admin account session lookup failed:',error?.message||error); }
   const credentials = resolveAdminSecrets(env);
   if (!credentials.ready) return null;
 
