@@ -97,7 +97,7 @@ async function exportProject(){
 }
 function openSheet(){$('addSheet').hidden=false;}function closeSheet(){$('addSheet').hidden=true;}
 async function start(){
- const secret=sessionStorage.getItem(SECRET_KEY);if(secret){try{const data=await auth();role=data.role==='owner'?'owner':'admin';}catch{sessionStorage.removeItem(SECRET_KEY);}}
+ try{const data=await auth();sessionStorage.setItem(SECRET_KEY,'cookie-session');role=data.role==='owner'?'owner':'admin';}catch{sessionStorage.removeItem(SECRET_KEY);}
  $('loginButton').onclick=()=>openLogin();$('loginClose').onclick=closeLogin;$('loginSubmit').onclick=login;$('adminPassword').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
  $('moduleBack').onclick=()=>setView('home');$('refreshPreview').onclick=()=>loadPagePreview();$('lobbyBack').onclick=()=>setView('home');$('newProject').onclick=addProject;$('editorBack').onclick=()=>{if(dirty&&!confirm('Perubahan belum disimpan. Keluar dan buang perubahan terakhir?'))return;setView('lobby');};$('saveProject').onclick=saveProject;$('exportProject').onclick=exportProject;
  $('modeMobile').onclick=()=>switchMode('mobile');$('modeDesktop').onclick=()=>switchMode('desktop');
