@@ -280,34 +280,34 @@ export async function ensureStoreSchema(db) {
       activeStep = 'catalog-vip-migration';
       const vip = products.find(p => p[0] === 'VIP_PLUS');
       await db.prepare(`UPDATE store_products SET description=?,tag=?,note=?,updated_at=?
-        WHERE id='VIP_PLUS' AND (description LIKE 'Rank VIP+ dan Custom Rank permanen%' OR description LIKE 'Rank VIP+ dengan fitur Custom Rank permanen%' OR note LIKE '%claim 15 chunk/3 claim%' OR (description='Rank VIP+ tetap dimiliki setelah langganan fitur berakhir; benefit aktif mengikuti masa langganan pada paket' AND note LIKE 'Saat langganan berakhir, rank VIP+ tetap ada%'))`)
+        WHERE id='VIP_PLUS' AND (substr(description,1,length('Rank VIP+ dan Custom Rank permanen'))='Rank VIP+ dan Custom Rank permanen' OR substr(description,1,length('Rank VIP+ dengan fitur Custom Rank permanen'))='Rank VIP+ dengan fitur Custom Rank permanen' OR instr(note,'claim 15 chunk/3 claim')>0 OR (description='Rank VIP+ tetap dimiliki setelah langganan fitur berakhir; benefit aktif mengikuti masa langganan pada paket' AND substr(note,1,length('Saat langganan berakhir, rank VIP+ tetap ada'))='Saat langganan berakhir, rank VIP+ tetap ada'))`)
         .bind(vip[3],vip[5],vip[6],now).run();
       activeStep = 'catalog-reentry-1-migration';
       const ticket1 = products.find(p => p[0] === 'REENTRY_1');
       await db.prepare(`UPDATE store_products SET description=?,note=?,updated_at=?
         WHERE id='REENTRY_1'
-          AND description NOT LIKE '%Maksimal total 3 tiket per pemain per season%'
-          AND note NOT LIKE '%3 tiket per pemain per season%'
-          AND (description LIKE 'Satu tiket re-entry:%' OR description LIKE 'Satu tiket re-entry memberi %' OR description LIKE 'Satu tiket re-entry untuk mengajukan%')
-          AND note LIKE 'Setiap tiket%'`)
+          AND instr(description,'Maksimal total 3 tiket per pemain per season')=0
+          AND instr(note,'3 tiket per pemain per season')=0
+          AND (substr(description,1,length('Satu tiket re-entry:'))='Satu tiket re-entry:' OR substr(description,1,length('Satu tiket re-entry memberi '))='Satu tiket re-entry memberi ' OR substr(description,1,length('Satu tiket re-entry untuk mengajukan'))='Satu tiket re-entry untuk mengajukan')
+          AND substr(note,1,length('Setiap tiket'))='Setiap tiket'`)
         .bind(ticket1[3],ticket1[6],now).run();
       activeStep = 'catalog-reentry-2-migration';
       const ticket2 = products.find(p => p[0] === 'REENTRY_2');
       await db.prepare(`UPDATE store_products SET description=?,note=?,updated_at=?
         WHERE id='REENTRY_2'
-          AND description NOT LIKE '%Maksimal total 3 tiket per pemain per season%'
-          AND note NOT LIKE '%3 tiket per pemain per season%'
-          AND description LIKE 'Paket dua tiket re-entry%'
-          AND note LIKE 'Setiap tiket%'`)
+          AND instr(description,'Maksimal total 3 tiket per pemain per season')=0
+          AND instr(note,'3 tiket per pemain per season')=0
+          AND substr(description,1,length('Paket dua tiket re-entry'))='Paket dua tiket re-entry'
+          AND substr(note,1,length('Setiap tiket'))='Setiap tiket'`)
         .bind(ticket2[3],ticket2[6],now).run();
       activeStep = 'catalog-reentry-3-migration';
       const ticket3 = products.find(p => p[0] === 'REENTRY_3');
       await db.prepare(`UPDATE store_products SET description=?,note=?,updated_at=?
         WHERE id='REENTRY_3'
-          AND description NOT LIKE '%Paket tiga tiket re-entry; tiap tiket memberi 3 nyawa%'
-          AND note NOT LIKE '%3 tiket per pemain per season%'
-          AND description LIKE 'Paket tiga tiket re-entry%'
-          AND note LIKE 'Setiap tiket%'`)
+          AND instr(description,'Paket tiga tiket re-entry; tiap tiket memberi 3 nyawa')=0
+          AND instr(note,'3 tiket per pemain per season')=0
+          AND substr(description,1,length('Paket tiga tiket re-entry'))='Paket tiga tiket re-entry'
+          AND substr(note,1,length('Setiap tiket'))='Setiap tiket'`)
         .bind(ticket3[3],ticket3[6],now).run();
 
       } catch (error) {
