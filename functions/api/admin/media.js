@@ -22,9 +22,12 @@ async function github(env,path,options={}){
   return {response,data};
 }
 function githubFailure(status,data){
-  if(status===401||status===403)return 'Token GitHub tidak valid, kedaluwarsa, atau tidak memiliki izin Contents.';
+  if(status===401||status===403){
+    const reason=String(data?.message||'Tidak ada detail dari GitHub.').slice(0,180);
+    return 'GitHub API '+status+': '+reason;
+  }
   if(status===404)return 'Folder media belum tersedia atau file tidak ditemukan.';
-  if(status===409||status===422)return 'GitHub menolak perubahan. Muat ulang pustaka media lalu coba lagi.';
+  if(status===409||status===422)return 'GitHub menolak perubahan: '+String(data?.message||'Muat ulang pustaka media lalu coba lagi.').slice(0,180);
   return String(data?.message||('GitHub merespons '+status+'.')).slice(0,220);
 }
 function encodeBase64(bytes){
