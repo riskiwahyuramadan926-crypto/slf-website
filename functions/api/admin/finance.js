@@ -43,6 +43,7 @@ export async function onRequestGet({ request, env }) {
 
 export async function onRequestPost({ request, env }) {
   if (!(await requireOwner(request, env))) return fail('Pencatatan keuangan hanya dapat dikelola oleh Owner.', 403);
+  try { await ensureSoftDeleteColumns(env.DB); } catch(error) { return fail('Pembaruan skema soft delete gagal.',503); }
   const d = await readJson(request);
   const now = new Date().toISOString();
   const id = safeText(d.id,60);
