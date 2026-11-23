@@ -45,13 +45,18 @@ function normalize(input){
   if(typeof x.src==='string'){const src=plain(x.src,500);if(src&&!validImage(src))throw new Error('URL gambar tidak valid.');edit.src=src;edit.backgroundImage=x.backgroundImage===true;}
   return edit;
  });
+ const freeLayers=(Array.isArray(d.freeLayers)?d.freeLayers:[]).slice(0,100).map((x,i)=>{
+  if(!x||!pageOk(x.page)||!selectorOk(x.containerSelector)||!/^free-[a-z0-9]{5,12}$/.test(String(x.id||'')))throw new Error('Layer gambar tidak valid. Muat ulang editor lalu coba lagi.');
+  const src=plain(x.src,500);if(!src||!validImage(src))throw new Error('Sumber layer gambar tidak valid.');
+  return {id:x.id,page:x.page,containerSelector:x.containerSelector,src,x:num(x.x,0,100,35),y:num(x.y,0,100,24),width:num(x.width,5,100,30),height:num(x.height,5,100,32),fit:['contain','cover','fill'].includes(x.fit)?x.fit:'contain',opacity:num(x.opacity,0,100,100),z:num(x.z,0,10,4),background:x.background===true,visible:x.visible!==false};
+ });
  const insertedElements=(Array.isArray(d.insertedElements)?d.insertedElements:[]).slice(0,40).map(x=>{
   if(!x||!pageOk(x.page)||!selectorOk(x.containerSelector)||!/^slf-added-[a-z0-9]{5,12}$/.test(String(x.id||'')))throw new Error('Elemen tambahan tidak valid.');
   const type=['image','button','divider','card'].includes(x.type)?x.type:'text',src=plain(x.src,500);
   if(type==='image'&&(!src||!validImage(src)))throw new Error('Gambar tambahan membutuhkan URL gambar yang valid.');
   const href=plain(x.href,500);if(type==='button'&&href&&!(/^(https:\/\/|\/(?!\/)|#)/i.test(href)))throw new Error('Tujuan tombol harus berupa path lokal atau HTTPS.');return {id:x.id,page:x.page,containerSelector:x.containerSelector,type,text:plain(x.text,1000),src,href,alt:plain(x.alt,120),styles:normalizeStyles(x.styles),effects:Array.isArray(x.effects)?x.effects.filter(v=>effects.has(v)).slice(0,12):[]};
  });
- return {version:2,page,accent:color(d.accent)||'#9b6cff',accent2:color(d.accent2)||'#f3cb82',background:color(d.background)||'#100c18',globalFont:fonts.has(d.globalFont)?d.globalFont:'system',overlayColor:color(d.overlayColor)||'#100c18',overlayOpacity:num(d.overlayOpacity,0,100,65),layers,elementEdits,insertedElements};
+ return {version:2,page,accent:color(d.accent)||'#9b6cff',accent2:color(d.accent2)||'#f3cb82',background:color(d.background)||'#100c18',globalFont:fonts.has(d.globalFont)?d.globalFont:'system',overlayColor:color(d.overlayColor)||'#100c18',overlayOpacity:num(d.overlayOpacity,0,100,65),layers,freeLayers,elementEdits,insertedElements};
 }
 export async function onRequestGet({request,env}){
  if(!(await requireOwner(request,env)))return fail('Akses Owner diperlukan.',403);
