@@ -2,8 +2,8 @@
 'use strict';
 const $=id=>document.getElementById(id),secretKey='slf_admin_secret_session';
 const pages={'/':'home','/store/':'store','/wiki/':'wiki','/bantuan/':'help','/store/order.html':'order','/store/review.html':'review','/store/ticket.html':'ticket'};
-const defaults=()=>({version:2,page:'all',accent:'#9b6cff',accent2:'#f3cb82',background:'#100c18',globalFont:'system',overlayColor:'#100c18',overlayOpacity:0,layers:[],elementEdits:[],insertedElements:[]});
-let design=defaults(),selected=null,frameReady=false,dirty=false,mode=true,inlineMode=false,currentPath='/',history=[],redo=[],outlineItems=[],suppress=false;
+const defaults=()=>({version:2,page:'all',accent:'#9b6cff',accent2:'#f3cb82',background:'#100c18',globalFont:'system',overlayColor:'#100c18',overlayOpacity:0,layers:[],freeLayers:[],elementEdits:[],insertedElements:[]});
+let design=defaults(),selected=null,selectedLayerId=null,frameReady=false,dirty=false,mode=true,inlineMode=false,currentPath='/',history=[],redo=[],outlineItems=[],suppress=false;
 const $id=selector=>document.querySelector(selector);
 function api(path,options={}){const headers={...(options.headers||{}),authorization:'Bearer '+(sessionStorage.getItem(secretKey)||'')};if(options.body&&!(options.body instanceof FormData))headers['content-type']='application/json';return fetch(path,{...options,headers,cache:'no-store'}).then(async r=>{const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||'Permintaan gagal ('+r.status+')');return data;});}
 function clone(v){return JSON.parse(JSON.stringify(v));}
@@ -99,6 +99,34 @@ async function optimizeMedia(file){
  try{bitmap=await createImageBitmap(file);const scale=Math.min(1,1920/Math.max(bitmap.width,bitmap.height));const width=Math.max(1,Math.round(bitmap.width*scale)),height=Math.max(1,Math.round(bitmap.height*scale));const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const context=canvas.getContext('2d',{alpha:true});if(!context)return file;context.drawImage(bitmap,0,0,width,height);const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.82));if(!blob||blob.size<1||blob.size>=file.size)return file;const name=String(file.name||'gambar').replace(/\.[^.]+$/,'').replace(/[^A-Za-z0-9_-]/g,'-').slice(0,48)||'gambar';return new File([blob],name+'.webp',{type:'image/webp',lastModified:Date.now()});}
  catch(_){return file;}finally{if(bitmap&&typeof bitmap.close==='function')bitmap.close();}
 }
+function freeLayerContainer(){
+ if(selected){
+  if(['main','section','article','footer','header'].includes(selected.tag))return selected.selector;
+  const parent=(selected.ancestors||[]).find(item=>['main','section','article','footer','header'].includes(item.tag));
+  if(parent)return parent.selector;
+ }
+ return 'main';
+}
+function sendFreeLayers(){msg({type:'slf-studio-free-layers',layers:Array.isArray(design.freeLayers)?design.freeLayers:[]});}
+function addFreeLayer(src){
+ const layer={id:'free-'+Math.random().toString(36).slice(2,11),page:currentPage(),containerSelector:freeLayerContainer(),src:String(src||''),x:35,y:24,width:30,height:32,fit:'contain',opacity:100,z:4,background:false,visible:true};
+ snapshot();design.freeLayers=Array.isArray(design.freeLayers)?design.freeLayers:[];design.freeLayers.push(layer);selectedLayerId=layer.id;setDirty();sendFreeLayers();renderFreeLayerControls();
+}
+function renderFreeLayerControls(){
+ const layer=(design.freeLayers||[]).find(item=>item.id===selectedLayerId);
+ const ids=['studio-layer-position-x','studio-layer-position-y','studio-layer-width','studio-layer-height','studio-layer-opacity','studio-layer-fit','studio-layer-background','studio-layer-delete'];
+ ids.forEach(id=>{const el=$(id);if(el)el.disabled=!layer;});
+ $('studio-layer-label').textContent=layer?'Layer gambar terpilih':'Belum ada layer gambar dipilih';
+ if(!layer)return;
+ $('studio-layer-position-x').value=layer.x??35;$('studio-layer-position-y').value=layer.y??24;
+ $('studio-layer-width').value=layer.width??30;$('studio-layer-height').value=layer.height??32;
+ $('studio-layer-opacity').value=layer.opacity??100;$('studio-layer-fit').value=layer.fit||'contain';
+ $('studio-layer-background').checked=Boolean(layer.background);
+}
+function updateFreeLayer(mutator){
+ const layer=(design.freeLayers||[]).find(item=>item.id===selectedLayerId);if(!layer)return;
+ mutator(layer);setDirty();renderFreeLayerControls();sendFreeLayers();
+}
 async function loadStudioMedia(){
  const root=$('studio-media-library');if(!root)return;
  try{
@@ -110,12 +138,13 @@ async function loadStudioMedia(){
    const card=document.createElement('article');card.className='studio-media-card';
    const image=document.createElement('img');image.src=asset.url;image.alt='Media SLF';image.loading='lazy';image.decoding='async';
    const name=document.createElement('small');name.textContent=asset.key+' · '+Math.max(1,Math.round((asset.size||0)/1024))+' KB';
-   const use=document.createElement('button');use.type='button';use.className='btn btn-quiet';use.textContent='Gunakan gambar';use.addEventListener('click',()=>{
-    if(!selected){alert('Pilih area pada preview terlebih dahulu.');return;}
+   const use=document.createElement('button');use.type='button';use.className='btn btn-quiet';use.textContent='Gunakan / ganti elemen';use.addEventListener('click',()=>{
+    if(!selected){addFreeLayer(asset.url);return;}
     if(selected.tag==='img')change(x=>x.src=asset.url);
     else msg({type:'slf-studio-add',kind:'image',src:asset.url});
    });
-   card.append(image,name,use);root.append(card);
+   const add=document.createElement('button');add.type='button';add.className='btn btn-gold';add.textContent='Tambahkan layer bebas';add.addEventListener('click',()=>addFreeLayer(asset.url));
+   card.append(image,name,use,add);root.append(card);
   });
  }catch(error){root.textContent=error.message||'Pustaka media gagal dimuat.';}
 }
@@ -131,20 +160,22 @@ async function uploadStudioMedia(){
   $('studio-media-file').value='';await loadStudioMedia();
   $('studio-media-note').textContent='Gambar diunggah. Deployment Pages dipicu oleh commit GitHub.';
   if(selected&&selected.tag==='img')change(x=>x.src=result.asset.url);
-  else if(selected)msg({type:'slf-studio-add',kind:'image',src:result.asset.url});
+  else addFreeLayer(result.asset.url);
  }catch(error){$('studio-media-note').textContent=error.message||'Upload gagal.';}
  finally{button.disabled=false;}
 }
 
 function bind(){
  const frame=$('studio-preview-frame');
- frame.addEventListener('load',()=>{frameReady=true;$('studio-preview-frame-wrap').classList.remove('is-loading');msg({type:'slf-studio-mode',enabled:mode});msg({type:'slf-studio-inline-mode',enabled:inlineMode});$('studio-live-status').textContent='Preview siap · pilih elemen atau aktifkan edit teks langsung';});
+ frame.addEventListener('load',()=>{frameReady=true;$('studio-preview-frame-wrap').classList.remove('is-loading');msg({type:'slf-studio-free-layers',layers:design.freeLayers||[]});msg({type:'slf-studio-mode',enabled:mode});msg({type:'slf-studio-inline-mode',enabled:inlineMode});$('studio-live-status').textContent='Preview siap · pilih elemen atau aktifkan edit teks langsung';});
  window.addEventListener('message',event=>{
   if(event.origin!==location.origin||event.source!==frame.contentWindow||!event.data)return;
   const m=event.data;
   if(m.type==='slf-studio-ready'){$('studio-live-status').textContent='Halaman '+m.page+' siap diedit';}
   if(m.type==='slf-studio-outline'){outlineItems=Array.isArray(m.items)?m.items:[];renderNavigator();}
   if(m.type==='slf-studio-selected'){selected=m;renderSelection();}
+  if(m.type==='slf-studio-layer-selected'){selectedLayerId=m.id;renderFreeLayerControls();}
+  if(m.type==='slf-studio-layer-changed'){const layer=(design.freeLayers||[]).find(item=>item.id===m.id);if(layer){layer.x=m.x;layer.y=m.y;layer.width=m.width;layer.height=m.height;setDirty();renderFreeLayerControls();}}
   if(m.type==='slf-studio-inline-text'&&selected){
    snapshot();const entry=ensureEntry();if(entry){entry.text=String(m.text||'').slice(0,4000);setDirty();$('studio-element-text').value=entry.text;renderNavigator();}
   }
@@ -153,6 +184,10 @@ function bind(){
  });
  $('studio-media-upload').addEventListener('click',uploadStudioMedia);
  $('studio-media-reload').addEventListener('click',loadStudioMedia);
+ ['x','y','width','height','opacity'].forEach(key=>{const el=$('studio-layer-'+(key==='x'||key==='y'?'position-'+key:key));el.addEventListener('focus',()=>snapshot());el.addEventListener('input',()=>{const value=Number(el.value);updateFreeLayer(layer=>{layer[key]=value;});});});
+ $('studio-layer-fit').addEventListener('change',e=>updateFreeLayer(layer=>layer.fit=e.target.value));
+ $('studio-layer-background').addEventListener('change',e=>updateFreeLayer(layer=>{layer.background=e.target.checked;if(e.target.checked){layer.x=0;layer.y=0;layer.width=100;layer.height=100;layer.fit='cover';layer.z=0;}}));
+ $('studio-layer-delete').addEventListener('click',()=>{if(!selectedLayerId)return;snapshot();design.freeLayers=(design.freeLayers||[]).filter(item=>item.id!==selectedLayerId);selectedLayerId=null;setDirty();sendFreeLayers();renderFreeLayerControls();});
  $('studio-preview-page').addEventListener('change',e=>{if(dirty&&!confirm('Ada perubahan belum diterbitkan. Buang perubahan lokal sebelum pindah halaman?')){e.target.value=currentPath;return;}if(dirty)loadDesign(false);selectPreview(e.target.value);});
  $('studio-select-mode').addEventListener('click',()=>{mode=!mode;if(mode)inlineMode=false;$('studio-select-mode').textContent='Pilih elemen: '+(mode?'ON':'OFF');$('studio-inline-mode').textContent='Edit teks langsung: '+(inlineMode?'ON':'OFF');msg({type:'slf-studio-mode',enabled:mode});msg({type:'slf-studio-inline-mode',enabled:inlineMode});});
  $('studio-inline-mode').addEventListener('click',()=>{inlineMode=!inlineMode;if(inlineMode)mode=false;$('studio-inline-mode').textContent='Edit teks langsung: '+(inlineMode?'ON':'OFF');$('studio-select-mode').textContent='Pilih elemen: '+(mode?'ON':'OFF');msg({type:'slf-studio-inline-mode',enabled:inlineMode});msg({type:'slf-studio-mode',enabled:mode});});
@@ -187,7 +222,7 @@ function bind(){
 }
 async function loadDesign(showStatus=true){
  try{
-  const data=await api('/api/admin/site-design');design=data.design||defaults();design.elementEdits=Array.isArray(design.elementEdits)?design.elementEdits:[];design.insertedElements=Array.isArray(design.insertedElements)?design.insertedElements:[];
+  const data=await api('/api/admin/site-design');design=data.design||defaults();design.elementEdits=Array.isArray(design.elementEdits)?design.elementEdits:[];design.insertedElements=Array.isArray(design.insertedElements)?design.insertedElements:[];design.freeLayers=Array.isArray(design.freeLayers)?design.freeLayers:[];selectedLayerId=null;renderFreeLayerControls();
   $('studio-global-font').value=design.globalFont||'system';$('studio-global-background').value=design.background||'#100c18';$('studio-global-accent').value=design.accent||'#9b6cff';$('studio-global-accent2').value=design.accent2||'#f3cb82';$('studio-global-overlay').value=design.overlayColor||'#100c18';$('studio-global-overlay-opacity').value=design.overlayOpacity||0;
   dirty=false;$('studio-dirty').textContent='';if(showStatus)$('studio-live-status').textContent=data.storageMessage||'Desain dimuat.';await loadStudioMedia();
  }catch(error){$('studio-error').textContent=error.message||'Desain tidak bisa dimuat.';}
