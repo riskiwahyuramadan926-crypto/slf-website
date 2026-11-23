@@ -109,7 +109,7 @@ test('Wiki uses explicit Books and Chapters with a one-time non-destructive lega
   assert.doesNotMatch(schema, /DROP\s+TABLE/i);
   assert.match(publicApi, /wiki_books/);
   assert.match(publicApi, /wiki_chapters/);
-  assert.match(adminApi, /requireOwner\\(request,\\s*env\\)/);
+  assert.match(adminApi, /requireOwner\(request,\s*env\)/);
   assert.match(adminApi, /wiki_books/);
   assert.match(adminApi, /wiki_chapters/);
 });
@@ -134,8 +134,8 @@ test('Wiki editor supports safe Markdown preview, tables, image URLs, and protec
 test('Store order and all re-entry tickets are persisted atomically', async () => {
   const order = await read('functions/api/orders/create.js');
   const schema = await read('functions/_lib/store-schema.js');
-  assert.match(order, /ensureStoreSchema\\(env\\.DB\\)/);
-  assert.match(order, /env\\.DB\\.batch\\(statements\\)/);
+  assert.match(order, /ensureStoreSchema\(env\.DB\)/);
+  assert.match(order, /env\.DB\.batch\(statements\)/);
   assert.match(order, /Order creation failed at /);
   assert.match(schema, /site_content:\s*\{[\s\S]*?image_url:\s*'TEXT'/);
 });
