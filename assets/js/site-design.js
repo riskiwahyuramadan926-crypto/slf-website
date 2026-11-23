@@ -173,7 +173,7 @@ function applyAppLayers(d){
  if(!layers.length)return;
  let host=document.querySelector('main');if(!host)host=document.body;
  const styleId='slf-app-layer-motion';
- if(!document.getElementById(styleId)){const style=document.createElement('style');style.id=styleId;style.textContent='@keyframes slfAppFade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes slfAppFloat{50%{transform:translateY(-7px)}}@keyframes slfAppPulse{50%{filter:brightness(1.18)}}.slf-app-motion-fade{animation:slfAppFade var(--slf-duration,900ms) ease both}.slf-app-motion-float{animation:slfAppFloat var(--slf-duration,900ms) ease-in-out infinite}.slf-app-motion-pulse{animation:slfAppPulse var(--slf-duration,900ms) ease-in-out infinite}.slf-app-click-fade{animation:slfAppFade 450ms ease both}.slf-app-click-float{animation:slfAppFloat 650ms ease-in-out}.slf-app-click-pulse{animation:slfAppPulse 650ms ease-in-out}';document.head.append(style);}
+ if(!document.getElementById(styleId)){const style=document.createElement('style');style.id=styleId;style.textContent='@keyframes slfAppFade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes slfAppFadeLoop{0%,100%{opacity:.65}50%{opacity:1}}@keyframes slfAppFloat{50%{transform:translateY(-7px)}}@keyframes slfAppPulse{50%{filter:brightness(1.18)}}.slf-app-motion-fade{animation:slfAppFade var(--slf-duration,900ms) ease both}.slf-app-motion-fade-loop{animation:slfAppFadeLoop var(--slf-duration,900ms) ease-in-out infinite}.slf-app-motion-float{animation:slfAppFloat var(--slf-duration,900ms) ease-in-out infinite}.slf-app-motion-pulse{animation:slfAppPulse var(--slf-duration,900ms) ease-in-out infinite}.slf-app-click-fade{animation:slfAppFade 450ms ease both}.slf-app-click-float{animation:slfAppFloat 650ms ease-in-out}.slf-app-click-pulse{animation:slfAppPulse 650ms ease-in-out}';document.head.append(style);}
  layers.forEach(layer=>{
   let node;
   if(layer.type==='image'){node=document.createElement('img');node.src=layer.src;node.alt=layer.name||'Gambar SLF';node.loading='lazy';node.decoding='async';node.style.maxWidth='100%';node.style.height='auto';}
@@ -184,7 +184,7 @@ function applyAppLayers(d){
   else{node=document.createElement('div');node.textContent=layer.content||layer.name||'Teks baru';node.style.whiteSpace='pre-wrap';}
   node.dataset.slfAppLayer='1';node.id=layer.id;node.style.display='block';node.style.position='relative';node.style.margin='12px 0';node.style.zIndex='2';
   node.style.setProperty('--slf-duration',Math.max(200,Math.min(10000,Number(layer.duration)||900))+'ms');
-  if(layer.animation==='fade')node.classList.add('slf-app-motion-fade');if(layer.loop&&layer.animation==='float')node.classList.add('slf-app-motion-float');if(layer.loop&&layer.animation==='pulse')node.classList.add('slf-app-motion-pulse');
+  if(layer.animation==='fade'&&!layer.loop)node.classList.add('slf-app-motion-fade');if(layer.loop&&layer.animation==='fade')node.classList.add('slf-app-motion-fade-loop');if(layer.loop&&layer.animation==='float')node.classList.add('slf-app-motion-float');if(layer.loop&&layer.animation==='pulse')node.classList.add('slf-app-motion-pulse');
   if(layer.type==='button'){
    node.addEventListener('click',()=>{
     if(layer.clickAnimation) {node.classList.remove('slf-app-click-'+layer.clickAnimation);void node.offsetWidth;node.classList.add('slf-app-click-'+layer.clickAnimation);}
@@ -306,7 +306,7 @@ async function init(){
   const response=await fetch('/api/site-design',{cache:'no-store'});
   if(response.ok){const data=await response.json();if(data.design)applyDesign(data.design);}
  }catch(_){}
- if(document.body){let scheduled=false;const observer=new MutationObserver(()=>{if(scheduled||!design)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;(Array.isArray(design.insertedElements)?design.insertedElements:[]).forEach(insertElement);applyAppLayers(design);const edits=Array.isArray(design.elementEdits)?design.elementEdits:[];edits.filter(x=>x.page==='all').forEach(applyEdit);if(pageName().startsWith('wiki-'))edits.filter(x=>x.page==='wiki').forEach(applyEdit);edits.filter(x=>x.page===pageName()).forEach(applyEdit);});});observer.observe(document.body,{childList:true,subtree:true});}
+ if(document.body){let scheduled=false;const observer=new MutationObserver(()=>{if(scheduled||!design)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;(Array.isArray(design.insertedElements)?design.insertedElements:[]).forEach(insertElement);const edits=Array.isArray(design.elementEdits)?design.elementEdits:[];edits.filter(x=>x.page==='all').forEach(applyEdit);if(pageName().startsWith('wiki-'))edits.filter(x=>x.page==='wiki').forEach(applyEdit);edits.filter(x=>x.page===pageName()).forEach(applyEdit);});});observer.observe(document.body,{childList:true,subtree:true});}
  initStudioBridge();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
