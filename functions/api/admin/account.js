@@ -35,5 +35,5 @@ export async function onRequestPost({request,env}){
  await env.DB.prepare('INSERT INTO admin_sessions(id,account_id,token_hash,expires_at,created_at,last_seen_at) VALUES(?,?,?,?,?,?)').bind(sessionId,account.id,tokenHash,expires,now,now).run();
  await env.DB.prepare('UPDATE admin_accounts SET last_login_at=?,updated_at=? WHERE id=?').bind(now,now,account.id).run();
  await env.DB.prepare('DELETE FROM admin_account_attempts WHERE ip_hash=?').bind(await sha256Hex(request.headers.get('cf-connecting-ip')||'local-unknown')).run();
- return json({ok:true,email:account.email,role:account.role,expiresAt:expires},200,{'set-cookie':\`slf_admin_session=\${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000\`});
+ return json({ok:true,email:account.email,role:account.role,expiresAt:expires},200,{'set-cookie':'slf_admin_session='+token+'; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000'});
 }
