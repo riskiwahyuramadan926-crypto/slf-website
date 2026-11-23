@@ -174,7 +174,7 @@ const legacyColumnDefinitions = {
   },
   site_content: {
     kind: "TEXT DEFAULT 'slot'", page: "TEXT DEFAULT 'home'", slot_key: 'TEXT',
-    title: "TEXT DEFAULT ''", body: "TEXT DEFAULT ''", active: 'INTEGER DEFAULT 1',
+    title: "TEXT DEFAULT ''", body: "TEXT DEFAULT ''", image_url: 'TEXT', active: 'INTEGER DEFAULT 1',
     starts_at: 'TEXT', ends_at: 'TEXT', created_by: "TEXT DEFAULT 'owner'", created_at: 'TEXT', updated_at: 'TEXT'
   }
 };
