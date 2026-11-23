@@ -56,7 +56,26 @@ function normalize(input){
   if(type==='image'&&(!src||!validImage(src)))throw new Error('Gambar tambahan membutuhkan URL gambar yang valid.');
   const href=plain(x.href,500);if(type==='button'&&href&&!(/^(https:\/\/|\/(?!\/)|#)/i.test(href)))throw new Error('Tujuan tombol harus berupa path lokal atau HTTPS.');return {id:x.id,page:x.page,containerSelector:x.containerSelector,type,text:plain(x.text,1000),src,href,alt:plain(x.alt,120),styles:normalizeStyles(x.styles),effects:Array.isArray(x.effects)?x.effects.filter(v=>effects.has(v)).slice(0,12):[]};
  });
- return {version:2,page,accent:color(d.accent)||'#9b6cff',accent2:color(d.accent2)||'#f3cb82',background:color(d.background)||'#100c18',globalFont:fonts.has(d.globalFont)?d.globalFont:'system',overlayColor:color(d.overlayColor)||'#100c18',overlayOpacity:num(d.overlayOpacity,0,100,65),layers,freeLayers,elementEdits,insertedElements};
+
+ const appLayers=(Array.isArray(d.appLayers)?d.appLayers:[]).slice(0,100).map((x,i)=>{
+  if(!x||!pageOk(x.page)||!/^app-[A-Za-z0-9_-]{1,100}$/.test(String(x.id||'')))throw new Error('Project layer tidak valid.');
+  const type=['text','image','video','button','table','card'].includes(x.type)?x.type:'text';
+  const src=plain(x.src,500),href=plain(x.href,500);
+  if(['image','video'].includes(type)&&!src)throw new Error('Layer media memerlukan URL sumber.');
+  if(type==='image'&&!validImage(src))throw new Error('URL gambar tidak valid.');
+  if(type==='video'&&!/^https:\/\/[A-Za-z0-9.-]+\/[^\\s"'<>]+$/i.test(src))throw new Error('URL video harus HTTPS.');
+  if(type==='button'&&href&&!(/^(https:\/\/|\/(?!\/)|#)/i.test(href)))throw new Error('Tujuan tombol tidak valid.');
+  const actionType=['none','navigate','external','scroll'].includes(x.action?.type)?x.action.type:'none';
+  const actionTarget=plain(x.action?.target,500);
+  if(actionType==='navigate'&&actionTarget&&!/^\/[A-Za-z0-9/_?&=.-]*$/.test(actionTarget))throw new Error('Perintah navigasi harus berupa path internal.');
+  if(actionType==='external'&&actionTarget&&!/^https:\/\/[^\\s"'<>]+$/i.test(actionTarget))throw new Error('Perintah eksternal harus HTTPS.');
+  if(actionType==='scroll'&&actionTarget&&!/^[A-Za-z0-9_.#-]{1,100}$/.test(actionTarget))throw new Error('Target scroll tidak valid.');
+  const animation=['fade','float','pulse'].includes(x.animation)?x.animation:'none';
+  const clickAnimation=['fade','float','pulse'].includes(x.clickAnimation)?x.clickAnimation:'none';
+  return {id:String(x.id),page:x.page,type,name:plain(x.name,80),content:plain(x.content,5000),src,href,rows:Array.isArray(x.rows)?x.rows.slice(0,20).map(row=>Array.isArray(row)?row.slice(0,8).map(cell=>plain(cell,300)):[]):[],action:{type:actionType,target:actionTarget},animation,clickAnimation,loop:x.loop===true,duration:num(x.duration,200,10000,900),styles:normalizeStyles(x.styles)};
+ });
+
+ return {version:2,page,accent:color(d.accent)||'#9b6cff',accent2:color(d.accent2)||'#f3cb82',background:color(d.background)||'#100c18',globalFont:fonts.has(d.globalFont)?d.globalFont:'system',overlayColor:color(d.overlayColor)||'#100c18',overlayOpacity:num(d.overlayOpacity,0,100,65),layers,freeLayers,elementEdits,insertedElements,appLayers};
 }
 export async function onRequestGet({request,env}){
  if(!(await requireOwner(request,env)))return fail('Akses Owner diperlukan.',403);
