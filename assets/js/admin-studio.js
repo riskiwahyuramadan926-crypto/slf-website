@@ -102,8 +102,8 @@ async function optimizeMedia(file){
 function freeLayerContainer(){
  if(selected){
   if(['main','section','article','footer','header'].includes(selected.tag))return selected.selector;
-  const parent=(selected.ancestors||[]).find(item=>['main','section','article','footer','header'].includes(item.tag));
-  if(parent)return parent.selector;
+  const parent=(selected.ancestors||[])[0];
+  if(parent&&parent.selector)return parent.selector;
  }
  return 'main';
 }
