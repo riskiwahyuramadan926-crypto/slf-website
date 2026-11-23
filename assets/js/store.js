@@ -108,7 +108,7 @@
     try {
       const response = await fetch('/api/orders/create', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || 'Pesanan belum bisa dibuat. Periksa konfigurasi server dan coba lagi.');
+      if (!response.ok) { const detail = data.schemaStep ? ' [' + data.schemaStep + ': ' + String(data.schemaDiagnostic || '').slice(0, 200) + ']' : ''; throw new Error((data.error || 'Pesanan belum bisa dibuat. Periksa konfigurasi server dan coba lagi.') + detail); }
       if (!data.orderUrl) throw new Error('Server tidak mengembalikan tautan status pesanan.');
       if (waPhone) {
         const lines = [
