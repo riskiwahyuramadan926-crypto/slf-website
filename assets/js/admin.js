@@ -193,6 +193,9 @@
       if(o.status==='PAID'){const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='Mulai proses';b.addEventListener('click',async()=>{b.disabled=true;try{await api('/api/admin/process',{method:'POST',body:JSON.stringify({orderId:o.id})});await loadOrders();}catch(e){showAdminError(e.message);b.disabled=false;}});actions.append(b);}
       if(['PAID','PROCESSING'].includes(o.status)){const b=document.createElement('button');b.type='button';b.className='btn btn-gold';b.textContent='Tandai selesai';b.addEventListener('click',async()=>{if(!confirm('Produk sudah benar-benar diberikan ke '+o.minecraft_name+'?'))return;b.disabled=true;try{await api('/api/admin/complete',{method:'POST',body:JSON.stringify({orderId:o.id})});await loadOrders();showToast('Pesanan selesai.');}catch(e){showAdminError(e.message);b.disabled=false;}});actions.append(b);}
       if(['PENDING_PAYMENT','PAID','PROCESSING'].includes(o.status)){const b=document.createElement('button');b.type='button';b.className='btn btn-quiet';b.textContent='Salin pesan status';b.addEventListener('click',()=>copyText(messageFor(o),'Pesan status tersalin.'));actions.append(b);}
+      if(currentRole==='owner'){
+        const remove=document.createElement('button');remove.type='button';remove.className='btn btn-quiet';remove.textContent='Hapus transaksi';remove.addEventListener('click',async()=>{if(!confirm('Sembunyikan transaksi '+o.id+' dari daftar, pendapatan, dan statistik? Data asli tetap disimpan untuk audit.'))return;remove.disabled=true;try{await api('/api/admin/orders',{method:'POST',body:JSON.stringify({action:'soft-delete',id:o.id})});await loadOrders();showToast('Transaksi disembunyikan dari laporan.');}catch(e){showAdminError(e.message);remove.disabled=false;}});actions.append(remove);
+      }
       card.append(actions);root.append(card);
     });
   }
@@ -579,8 +582,8 @@
         vals.forEach(v=>{const td=document.createElement('td');td.textContent=String(v??'—');tr.append(td);});
         const act=document.createElement('td');
         if(x.status==='POSTED'){
-          const btn=document.createElement('button');btn.type='button';btn.className='btn btn-quiet';btn.textContent='Batalkan catatan';
-          btn.addEventListener('click',async()=>{if(!confirm('Tandai catatan '+x.id+' sebagai dibatalkan? Catatan tidak dihapus dari audit.'))return;btn.disabled=true;try{await api('/api/admin/finance',{method:'POST',body:JSON.stringify({id:x.id,void:true})});await loadFinance();showToast('Catatan kas dibatalkan dan tetap tersimpan di audit.');}catch(e){setError('finance-error',e.message);btn.disabled=false;}});
+          const btn=document.createElement('button');btn.type='button';btn.className='btn btn-quiet';btn.textContent='Hapus transaksi';
+          btn.addEventListener('click',async()=>{if(!confirm('Sembunyikan transaksi '+x.id+' dari total kas dan laporan? Data asli tetap disimpan untuk audit.'))return;btn.disabled=true;try{await api('/api/admin/finance',{method:'POST',body:JSON.stringify({id:x.id,void:true})});await loadFinance();showToast('Transaksi disembunyikan dari total kas dan laporan.');}catch(e){setError('finance-error',e.message);btn.disabled=false;}});
           act.append(btn);
         }else act.textContent='—';
         tr.append(act);tbody.append(tr);
