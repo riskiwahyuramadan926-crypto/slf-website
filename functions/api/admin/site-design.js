@@ -63,12 +63,12 @@ function normalize(input){
   const src=plain(x.src,500),href=plain(x.href,500);
   if(['image','video'].includes(type)&&!src)throw new Error('Layer media memerlukan URL sumber.');
   if(type==='image'&&!validImage(src))throw new Error('URL gambar tidak valid.');
-  if(type==='video'&&!/^https:\/\/[A-Za-z0-9.-]+\/[^\\s"'<>]+$/i.test(src))throw new Error('URL video harus HTTPS.');
+  if(type==='video'&&!/^https:\/\/[A-Za-z0-9.-]+\/[^\s"'<>]+$/i.test(src))throw new Error('URL video harus HTTPS.');
   if(type==='button'&&href&&!(/^(https:\/\/|\/(?!\/)|#)/i.test(href)))throw new Error('Tujuan tombol tidak valid.');
   const actionType=['none','navigate','external','scroll'].includes(x.action?.type)?x.action.type:'none';
   const actionTarget=plain(x.action?.target,500);
   if(actionType==='navigate'&&actionTarget&&!/^\/[A-Za-z0-9/_?&=.-]*$/.test(actionTarget))throw new Error('Perintah navigasi harus berupa path internal.');
-  if(actionType==='external'&&actionTarget&&!/^https:\/\/[^\\s"'<>]+$/i.test(actionTarget))throw new Error('Perintah eksternal harus HTTPS.');
+  if(actionType==='external'&&actionTarget&&!/^https:\/\/[^\s"'<>]+$/i.test(actionTarget))throw new Error('Perintah eksternal harus HTTPS.');
   if(actionType==='scroll'&&actionTarget&&!/^[A-Za-z0-9_.#-]{1,100}$/.test(actionTarget))throw new Error('Target scroll tidak valid.');
   const animation=['fade','float','pulse'].includes(x.animation)?x.animation:'none';
   const clickAnimation=['fade','float','pulse'].includes(x.clickAnimation)?x.clickAnimation:'none';
