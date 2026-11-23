@@ -13,11 +13,11 @@ export async function onRequestPost({request,env}){
   try{
     await ensureStudioMetaSchema(env.DB);if(!(await rateLimit(env.DB,request)))return fail('Terlalu banyak permintaan. Coba lagi dalam beberapa menit.',429);
     const data=await readJson(request),action=String(data.action||''),table=String(data.table||'');
-    if(!/^studio_[a-z][a-z0-9_]{0,31}$/.test(table)||!['submit','read'].includes(action))return fail('Perintah atau target backend tidak valid.');
+    if(!/^studio_[a-z][a-z0-9_]{0,31}$/.test(table)||!['submit','read','schema'].includes(action))return fail('Perintah atau target backend tidak valid.');
     const row=await env.DB.prepare('SELECT table_name,display_name,schema_json,allow_public_write,allow_public_read FROM studio_backend_tables WHERE table_name=? LIMIT 1').bind(table).first();
     if(!row)return fail('Tabel backend tidak ditemukan.',404);
     const definition=normalizeStudioTableDefinition({tableName:row.table_name,displayName:row.display_name,columns:JSON.parse(row.schema_json||'[]'),allowPublicWrite:Number(row.allow_public_write)===1,allowPublicRead:Number(row.allow_public_read)===1});
-    if(action==='submit'){
+    if(action==='schema'){\n      if(!definition.allowPublicWrite)return fail('Formulir publik tidak diaktifkan Owner untuk tabel ini.',403);\n      return json({ok:true,columns:definition.columns.map(column=>column.name)});\n    }\n    if(action==='submit'){
       if(!definition.allowPublicWrite)return fail('Pengiriman data publik tidak diaktifkan Owner untuk tabel ini.',403);
       const parsed=normalizeStudioSubmission(definition,data.values);if(!parsed.names.length)return fail('Tidak ada data untuk disimpan.');
       const columns=['id',...parsed.names],sqlColumns=columns.map(name=>'"'+name+'"').join(','),marks=columns.map(()=>'?').join(',');
