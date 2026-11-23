@@ -127,7 +127,7 @@ function constantTimeHexEqual(a, b) {
 
 async function accountSessionRole(db,request){
   const cookie=request.headers.get('cookie')||'';
-  const match=cookie.match(/(?:^|;\\s*)slf_admin_session=([A-Za-z0-9]+)/);
+  const match=cookie.match(/(?:^|;\s*)slf_admin_session=([A-Za-z0-9]+)/);
   if(!match||!db||typeof db.prepare!=='function')return null;
   const tokenHash=await sha256Hex(match[1]);
   const now=new Date().toISOString();
