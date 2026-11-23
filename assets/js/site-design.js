@@ -222,6 +222,7 @@ function initStudioBridge(){
  if(!studioMode||window.parent===window)return;
  document.documentElement.classList.add('slf-studio-mode');
  studioSelect=true;
+ applyFreeLayers(design||{});
  ensureEffectStyles();
  document.querySelectorAll('.slf-published-layers > *').forEach(node=>node.style.pointerEvents='auto');
  let inlineMode=false;
