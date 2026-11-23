@@ -106,7 +106,7 @@ test('Wiki uses explicit Books and Chapters with a one-time non-destructive lega
   assert.match(schema, /CREATE TABLE IF NOT EXISTS wiki_chapters/i);
   assert.match(schema, /wiki_migrations/);
   assert.match(schema, /INSERT OR IGNORE INTO wiki_chapters/i);
-  assert.doesNotMatch(schema, /DROP\\s+TABLE/i);
+  assert.doesNotMatch(schema, /DROP\s+TABLE/i);
   assert.match(publicApi, /wiki_books/);
   assert.match(publicApi, /wiki_chapters/);
   assert.match(adminApi, /requireOwner\\(request,\\s*env\\)/);
@@ -125,7 +125,7 @@ test('Wiki editor supports safe Markdown preview, tables, image URLs, and protec
   assert.match(renderer, /loading="lazy"/);
   assert.match(renderer, /escapeHtml/);
   assert.match(reader, /wiki-chapter-toc/);
-  assert.match(editor, /api\\(\\)\\('\\/api\\/admin\\/media'/);
+  assert.ok(editor.includes("api()('/api/admin/media'"));
   assert.match(adminPage, /wiki-article-preview/);
   assert.match(adminPage, /wiki-upload-image/);
   assert.match(adminApi, /requireOwner\\(request,env\\)/);
@@ -137,7 +137,7 @@ test('Store order and all re-entry tickets are persisted atomically', async () =
   assert.match(order, /ensureStoreSchema\\(env\\.DB\\)/);
   assert.match(order, /env\\.DB\\.batch\\(statements\\)/);
   assert.match(order, /Order creation failed at /);
-  assert.match(schema, /site_content:\s*\\{[\\s\\S]*?image_url:\s*'TEXT'/);
+  assert.match(schema, /site_content:\s*\{[\s\S]*?image_url:\s*'TEXT'/);
 });
 
 test('Homepage no longer renders the inspiration section', async () => {
