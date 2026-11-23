@@ -14,7 +14,7 @@ export async function onRequestPost({request,env}){
  if(!env.DB)return fail('Database D1 belum tersedia.',503);
  let d;try{d=await readJson(request);}catch(e){return fail(e.message);}
  const action=String(d.action||'login');
- if(action==='logout'){const cookie=request.headers.get('cookie')||'',m=cookie.match(/(?:^|;\\s*)slf_admin_session=([A-Za-z0-9]+)/);if(m)await env.DB.prepare('DELETE FROM admin_sessions WHERE token_hash=?').bind(await sha256Hex(m[1])).run();return json({ok:true},200,{'set-cookie':'slf_admin_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'});}
+ if(action==='logout'){const cookie=request.headers.get('cookie')||'',m=cookie.match(/(?:^|;\s*)slf_admin_session=([A-Za-z0-9]+)/);if(m)await env.DB.prepare('DELETE FROM admin_sessions WHERE token_hash=?').bind(await sha256Hex(m[1])).run();return json({ok:true},200,{'set-cookie':'slf_admin_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'});}
  if(action!=='login')return fail('Aksi autentikasi tidak dikenal.');
  try{await ensureTables(env.DB);}catch(error){console.error('[SLF_ACCOUNT] schema:',error?.message||error);return fail('Tabel akun Admin gagal disiapkan.',503);}
  let allowed;try{allowed=await checkRate(env.DB,request);}catch(_){return fail('Pemeriksaan keamanan login gagal. Coba beberapa saat lagi.',503);}if(!allowed)return fail('Terlalu banyak percobaan login. Tunggu 15 menit.',429);
