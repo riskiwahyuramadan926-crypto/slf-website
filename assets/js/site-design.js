@@ -136,10 +136,10 @@ function applyFreeLayers(d){
   back.replaceChildren();front.replaceChildren();
   layers.forEach(layer=>{
    const wrapper=document.createElement('div');wrapper.className='studio-free-layer';wrapper.dataset.slfLayerId=layer.id;
-   wrapper.style.cssText='position:absolute;box-sizing:border-box;left:'+clamp(layer.x,0,100,35)+'%;top:'+clamp(layer.y,0,100,24)+'%;width:'+clamp(layer.width,5,100,30)+'%;height:'+clamp(layer.height,5,100,32)+'%;opacity:'+(clamp(layer.opacity,0,100,100)/100)+';z-index:'+clamp(layer.z,0,20,4)+';pointer-events:'+(studioMode?'auto':'none')+';touch-action:none;user-select:none;cursor:'+(studioMode?'move':'default');
+   wrapper.style.cssText='position:absolute;box-sizing:border-box;left:'+clamp(layer.x,0,100,35)+'%;top:'+clamp(layer.y,0,100,24)+'%;width:'+clamp(layer.width,5,100,30)+'%;height:'+clamp(layer.height,5,100,32)+'%;opacity:'+(clamp(layer.opacity,0,100,100)/100)+';z-index:'+clamp(layer.z,0,20,4)+';pointer-events:'+(studioMode&&studioSelect?'auto':'none')+';touch-action:none;user-select:none;cursor:'+(studioMode?'move':'default');
    const img=document.createElement('img');img.src=layer.src;img.alt='';img.draggable=false;img.loading='lazy';img.decoding='async';img.style.cssText='display:block;width:100%;height:100%;object-fit:'+(layer.fit==='cover'?'cover':layer.fit==='fill'?'fill':'contain')+';pointer-events:none;user-select:none';
    wrapper.append(img);
-   if(studioMode&&!layer.background){const handle=document.createElement('span');handle.className='studio-free-layer-handle';handle.setAttribute('aria-hidden','true');handle.style.cssText='position:absolute;right:-8px;bottom:-8px;width:16px;height:16px;border:2px solid white;border-radius:50%;background:#9b6cff;box-shadow:0 1px 8px #000;cursor:nwse-resize';wrapper.append(handle);}
+   if(studioMode&&studioSelect&&!layer.background){const handle=document.createElement('span');handle.className='studio-free-layer-handle';handle.setAttribute('aria-hidden','true');handle.style.cssText='position:absolute;right:-8px;bottom:-8px;width:16px;height:16px;border:2px solid white;border-radius:50%;background:#9b6cff;box-shadow:0 1px 8px #000;cursor:nwse-resize';wrapper.append(handle);}
    (layer.background?back:front).append(wrapper);
   });
  });
