@@ -25,7 +25,7 @@
 <div class="studio-topline"><button class="back-button" id="editorBack" type="button" aria-label="Kembali ke project">←</button><div class="studio-heading"><b id="editorPageName">Halaman</b><small id="projectStatus">Draft tersimpan</small></div><button class="save-button" id="saveProject" type="button">Simpan Project</button><button class="export-button" id="exportProject" type="button">Export</button></div>
 <section class="preview-region" aria-label="Live preview">
 <div class="preview-head"><span><i class="live-dot"></i> LIVE PREVIEW</span><div class="device-switch"><button id="modeMobile" class="active" type="button">Mobile</button><button id="modeDesktop" type="button">Desktop</button></div><span id="previewSize">Mobile · 390 px</span><button id="refreshPreview" type="button" aria-label="Refresh preview">↻</button></div>
-<div class="preview-stage"><div class="preview-page" id="previewPage"></div></div>
+<div class="preview-stage"><div class="preview-page" id="previewPage"><iframe id="pagePreviewFrame" title="Pratinjau halaman website" loading="lazy"></iframe><div id="previewOverlay"></div></div></div>
 </section>
 <section class="editor-region"><div class="editor-tabs" role="tablist" aria-label="Panel editor"><button class="editor-tab active" data-panel="layers" type="button">Layer</button><button class="editor-tab" data-panel="properties" type="button">Properti</button><button class="editor-tab" data-panel="animation" type="button">Animasi</button><button class="editor-tab" data-panel="actions" type="button">Action</button></div>
 <div class="editor-content" id="editorContent">
