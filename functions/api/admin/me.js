@@ -1,15 +1,6 @@
 import { json, fail, getAdminRole, resolveAdminSecrets } from '../../_lib/common.js';
 
 export async function onRequestGet({ request, env }) {
-  const credentials = resolveAdminSecrets(env);
-
-  if (!credentials.ready) {
-    return fail(
-      'Login memerlukan kode Owner dan Admin yang berbeda, masing-masing minimal 32 karakter. Source menerima OWNER_SECRET/OWNER_CODE/OWNER_LOGIN_CODE dan ADMIN_SECRET/ADMIN_CODE/ADMIN_LOGIN_CODE. TICKET_LINK_SECRET/TICKET_CODE hanya untuk tiket, bukan login.',
-      503
-    );
-  }
-
   let role;
   try {
     role = await getAdminRole(request, env);
@@ -20,7 +11,7 @@ export async function onRequestGet({ request, env }) {
     }
     return fail('Verifikasi login Admin gagal karena masalah penyimpanan database. Periksa koneksi D1 dan Logs deployment.', 503);
   }
-  if (!role) return fail('Akses ditolak. Gunakan OWNER_SECRET untuk Owner atau ADMIN_SECRET untuk staf. TICKET_LINK_SECRET hanya untuk tautan tiket member, bukan untuk login; percobaan salah dibatasi sementara.', 401);
+  if (!role) { const credentials=resolveAdminSecrets(env); if(!credentials.ready) return fail('Kode Owner/Admin belum dikonfigurasi dengan benar pada environment ini.',503); return fail('Akses ditolak. Gunakan OWNER_SECRET untuk Owner atau ADMIN_SECRET untuk staf. TICKET_LINK_SECRET hanya untuk tautan tiket member, bukan untuk login; percobaan salah dibatasi sementara.', 401); }
 
   return json({
     role,
