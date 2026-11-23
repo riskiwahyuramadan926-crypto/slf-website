@@ -9,7 +9,7 @@ export async function onRequest(context) {
   // Keep health and credential verification reachable during D1/schema incidents.
   // Store data endpoints remain protected by the normal database/schema gate.
   // These endpoints bootstrap their own small tables so a Wiki migration can never block Store or announcements.
-  const isolatedDataRoutes = new Set(['/api/wiki','/api/admin/wiki','/api/announcements','/api/admin/announcements']);
+  const isolatedDataRoutes = new Set(['/api/wiki','/api/admin/wiki','/api/announcements','/api/admin/announcements','/api/studio/data']);
   if (isolatedDataRoutes.has(pathname) || pathname === '/api/support/chat' || pathname === '/api/health' || pathname === '/api/admin/me' || pathname.startsWith('/api/media/')) return context.next();
   if (!env.DB) {
     return new Response(JSON.stringify({
