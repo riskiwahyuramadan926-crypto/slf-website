@@ -11,7 +11,7 @@ function syncCategorySelect(selected){const s=$('wiki-article-category');s.repla
 async function load(){
  error('wiki-admin-error','');
  try{
-  const d=await api()('/api/admin/wiki');categories=d.categories||[];articles=d.articles||[];
+  const d=await api()('/api/admin/wiki');categories=d.books||d.categories||[];articles=d.chapters||d.articles||[];
   syncCategorySelect($('wiki-article-category').value);
   renderCategories();renderArticles();loaded=true;
  }catch(e){error('wiki-admin-error',e.message||'Gagal memuat perpustakaan Wiki.');}
@@ -23,11 +23,11 @@ function renderCategories(){
   const count=articles.filter(a=>a.category_id===c.id).length;
   const card=document.createElement('article');card.className='admin-list-card';
   const h=document.createElement('h3');h.textContent=(c.icon||'📚')+' '+c.name;
-  const meta=document.createElement('p');meta.className='admin-muted';meta.textContent='Slug: '+c.slug+' · '+count+' artikel · '+(c.active?'Tampil di publik':'Disembunyikan');
+  const meta=document.createElement('p');meta.className='admin-muted';meta.textContent='Slug: '+c.slug+' · '+count+' bab · '+(c.active?'Tampil di publik':'Disembunyikan');
   const desc=document.createElement('p');desc.textContent=c.description||'Tanpa deskripsi';
   const actions=document.createElement('div');actions.className='admin-inline-actions';
   const edit=document.createElement('button');edit.type='button';edit.className='btn';edit.textContent='Edit buku';edit.addEventListener('click',()=>editCategory(c.id));
-  const del=document.createElement('button');del.type='button';del.className='btn btn-quiet';del.textContent='Hapus buku';del.disabled=count>0;del.title=count?'Kosongkan artikel dahulu':'Hapus kategori';del.addEventListener('click',()=>deleteItem('category',c.id,c.name));
+  const del=document.createElement('button');del.type='button';del.className='btn btn-quiet';del.textContent='Hapus buku';del.disabled=count>0;del.title=count?'Kosongkan artikel dahulu':'Hapus kategori';del.addEventListener('click',()=>deleteItem('book',c.id,c.name));
   actions.append(edit,del);card.append(h,meta,desc,actions);root.append(card);
  });
 }
@@ -41,13 +41,13 @@ function renderArticles(){
   const meta=document.createElement('p');meta.className='admin-muted';meta.textContent=(cat?.name||'Kategori tidak ada')+' · '+a.slug+' · '+(a.status==='published'?'Diterbitkan':'Draft')+(a.legacy_url?' · Artikel lama':' · Artikel baru');
   const desc=document.createElement('p');desc.textContent=a.summary||'Tanpa ringkasan';
   const actions=document.createElement('div');actions.className='admin-inline-actions';
-  const edit=document.createElement('button');edit.type='button';edit.className='btn';edit.textContent='Edit artikel';edit.addEventListener('click',()=>editArticle(a.id));
-  const del=document.createElement('button');del.type='button';del.className='btn btn-quiet';del.textContent='Hapus artikel';del.addEventListener('click',()=>deleteItem('article',a.id,a.title));
+  const edit=document.createElement('button');edit.type='button';edit.className='btn';edit.textContent='Edit bab';edit.addEventListener('click',()=>editArticle(a.id));
+  const del=document.createElement('button');del.type='button';del.className='btn btn-quiet';del.textContent='Hapus bab';del.addEventListener('click',()=>deleteItem('chapter',a.id,a.title));
   actions.append(edit,del);card.append(h,meta,desc,actions);root.append(card);
  });
 }
 function resetCategory(){ $('wiki-category-form').reset();$('wiki-category-id').value='';$('wiki-category-icon').value='📚';$('wiki-category-order').value='10';$('wiki-category-active').value='1';$('wiki-category-form-title').textContent='Tambah buku / kategori';error('wiki-admin-error','');$('wiki-category-slug').dataset.manual='';}
-function resetArticle(){ $('wiki-article-form').reset();$('wiki-article-id').value='';$('wiki-article-icon').value='📖';$('wiki-article-order').value='10';$('wiki-article-status').value='published';$('wiki-article-form-title').textContent='Tambah artikel';$('wiki-legacy-note').hidden=true;syncCategorySelect(categories.find(c=>c.active)?.id||'');error('wiki-admin-error','');$('wiki-article-slug').dataset.manual='';}
+function resetArticle(){ $('wiki-article-form').reset();$('wiki-article-id').value='';$('wiki-article-icon').value='📖';$('wiki-article-order').value='10';$('wiki-article-status').value='published';$('wiki-article-form-title').textContent='Tambah bab';$('wiki-legacy-note').hidden=true;syncCategorySelect(categories.find(c=>c.active)?.id||'');error('wiki-admin-error','');$('wiki-article-slug').dataset.manual='';}
 function editCategory(id){const c=categories.find(x=>x.id===id);if(!c)return;$('wiki-category-id').value=c.id;$('wiki-category-name').value=c.name;$('wiki-category-slug').value=c.slug;$('wiki-category-icon').value=c.icon||'📚';$('wiki-category-description').value=c.description||'';$('wiki-category-order').value=c.sort_order||0;$('wiki-category-active').value=c.active?'1':'0';$('wiki-category-form-title').textContent='Edit buku: '+c.name;$('wiki-category-form').scrollIntoView({behavior:'smooth',block:'start'});}
 
 function legacyInline(node,base){
@@ -97,7 +97,7 @@ async function editArticle(id){
  $('wiki-article-summary').value=a.summary||'';$('wiki-article-order').value=a.sort_order||0;
  $('wiki-article-status').value=a.status||'published';$('wiki-article-form-title').textContent='Edit artikel: '+a.title;
  $('wiki-legacy-note').hidden=!a.legacy_url;
- $('wiki-article-content').value=a.content||'';
+ $('wiki-article-content').value=a.content||'';updateWikiPreview();
  if(a.legacy_url&&!String(a.content||'').trim()){
   $('wiki-legacy-note').textContent='Sedang memuat isi artikel lama ke editor…';
   try{
@@ -109,7 +109,7 @@ async function editArticle(id){
    if(!body)throw new Error('Bagian isi artikel lama tidak ditemukan.');
    const content=legacyBlocks(body,new URL(a.legacy_url,location.href).href);
    if(content.length<10)throw new Error('Isi artikel lama kosong atau tidak terbaca.');
-   $('wiki-article-content').value=content.slice(0,20000);
+   $('wiki-article-content').value=content.slice(0,50000);updateWikiPreview();
    $('wiki-legacy-note').textContent='Isi artikel lama sudah dimuat ke editor. Ubah bagian yang diperlukan, lalu tekan “Simpan artikel”. Setelah disimpan, versi yang diedit akan digunakan oleh perpustakaan Wiki.';
   }catch(e){
    $('wiki-legacy-note').textContent='Isi lama belum berhasil dimuat otomatis: '+(e.message||'Kesalahan tidak diketahui')+' Artikel lama tetap aman; jangan simpan isi kosong. Muat ulang editor lalu coba lagi.';
@@ -121,9 +121,64 @@ async function editArticle(id){
  articleLoading=false;
  $('wiki-article-form').scrollIntoView({behavior:'smooth',block:'start'});
 }
-async function deleteItem(type,id,name){if(!confirm('Hapus '+(type==='category'?'buku ':'artikel ')+name+'? Tindakan ini tidak bisa dibatalkan.'))return;try{await api()('/api/admin/wiki?type='+encodeURIComponent(type)+'&id='+encodeURIComponent(id),{method:'DELETE'});await load();resetCategory();resetArticle();toast(type==='category'?'Buku dihapus.':'Artikel dihapus.');}catch(e){error('wiki-admin-error',e.message);}}
-async function saveCategory(e){e.preventDefault();error('wiki-admin-error','');const payload={type:'category',id:$('wiki-category-id').value||undefined,name:$('wiki-category-name').value.trim(),slug:$('wiki-category-slug').value.trim(),icon:$('wiki-category-icon').value.trim(),description:$('wiki-category-description').value.trim(),sortOrder:Number($('wiki-category-order').value),active:$('wiki-category-active').value==='1'};const b=$('wiki-category-form').querySelector('[type=submit]');b.disabled=true;try{await api()('/api/admin/wiki',{method:'POST',body:JSON.stringify(payload)});await load();resetCategory();toast('Buku Wiki tersimpan.');}catch(e){error('wiki-admin-error',e.message);}finally{b.disabled=false;}}
-async function saveArticle(e){e.preventDefault();if(articleLoading){error('wiki-admin-error','Tunggu sampai isi artikel lama selesai dimuat.');return;}error('wiki-admin-error','');const payload={type:'article',id:$('wiki-article-id').value||undefined,categoryId:$('wiki-article-category').value,title:$('wiki-article-title').value.trim(),slug:$('wiki-article-slug').value.trim(),icon:$('wiki-article-icon').value.trim(),summary:$('wiki-article-summary').value.trim(),sortOrder:Number($('wiki-article-order').value),content:$('wiki-article-content').value.trim(),legacyUrl:(articles.find(x=>x.id===$('wiki-article-id').value)?.legacy_url)||undefined,status:$('wiki-article-status').value};const b=$('wiki-article-form').querySelector('[type=submit]');b.disabled=true;try{await api()('/api/admin/wiki',{method:'POST',body:JSON.stringify(payload)});await load();resetArticle();toast('Artikel tersimpan.');}catch(e){error('wiki-admin-error',e.message);}finally{b.disabled=false;}}
+async function deleteItem(type,id,name){if(!confirm('Hapus '+(type==='book'?'buku ':'bab ')+name+'? Tindakan ini tidak bisa dibatalkan.'))return;try{await api()('/api/admin/wiki?type='+encodeURIComponent(type)+'&id='+encodeURIComponent(id),{method:'DELETE'});await load();resetCategory();resetArticle();toast(type==='book'?'Buku dihapus.':'Bab dihapus.');}catch(e){error('wiki-admin-error',e.message);}}
+async function saveCategory(e){e.preventDefault();error('wiki-admin-error','');const payload={type:'book',id:$('wiki-category-id').value||undefined,name:$('wiki-category-name').value.trim(),slug:$('wiki-category-slug').value.trim(),icon:$('wiki-category-icon').value.trim(),description:$('wiki-category-description').value.trim(),sortOrder:Number($('wiki-category-order').value),active:$('wiki-category-active').value==='1'};const b=$('wiki-category-form').querySelector('[type=submit]');b.disabled=true;try{await api()('/api/admin/wiki',{method:'POST',body:JSON.stringify(payload)});await load();resetCategory();toast('Buku Wiki tersimpan.');}catch(e){error('wiki-admin-error',e.message);}finally{b.disabled=false;}}
+async function saveArticle(e){e.preventDefault();if(articleLoading){error('wiki-admin-error','Tunggu sampai isi artikel lama selesai dimuat.');return;}error('wiki-admin-error','');const payload={type:'chapter',id:$('wiki-article-id').value||undefined,bookId:$('wiki-article-category').value,title:$('wiki-article-title').value.trim(),slug:$('wiki-article-slug').value.trim(),icon:$('wiki-article-icon').value.trim(),summary:$('wiki-article-summary').value.trim(),sortOrder:Number($('wiki-article-order').value),content:$('wiki-article-content').value.trim(),legacyUrl:(articles.find(x=>x.id===$('wiki-article-id').value)?.legacy_url)||undefined,status:$('wiki-article-status').value};const b=$('wiki-article-form').querySelector('[type=submit]');b.disabled=true;try{await api()('/api/admin/wiki',{method:'POST',body:JSON.stringify(payload)});await load();resetArticle();toast('Bab tersimpan.');}catch(e){error('wiki-admin-error',e.message);}finally{b.disabled=false;}}
+
+function updateWikiPreview(){
+ const root=$('wiki-article-preview'),source=$('wiki-article-content');
+ if(!root||!source)return;
+ root.innerHTML=window.SLFWikiMarkdown?window.SLFWikiMarkdown.render(source.value):'<p>Pratinjau belum tersedia.</p>';
+}
+function insertWikiMarkdown(before,after=''){
+ const editor=$('wiki-article-content');
+ if(!editor)return;
+ const start=editor.selectionStart,end=editor.selectionEnd;
+ const selected=editor.value.slice(start,end)||'teks';
+ editor.setRangeText(before+selected+after,start,end,'select');
+ editor.dispatchEvent(new Event('input',{bubbles:true}));
+ editor.focus();
+}
+document.querySelectorAll('[data-wiki-command]').forEach(button=>button.addEventListener('click',()=>{
+ const command=button.dataset.wikiCommand;
+ const formats={
+  bold:['**','**'],italic:['*','*'],heading2:['## ',''],heading3:['### ',''],
+  unordered:['- ',''],ordered:['1. ',''],callout:['> ','']
+ };
+ if(command==='table'){
+  insertWikiMarkdown('', '\n\n| Kolom 1 | Kolom 2 |\n| --- | --- |\n| Isi | Isi |');
+ }else if(formats[command]){
+  insertWikiMarkdown(formats[command][0],formats[command][1]);
+ }
+}));
+$('wiki-article-content').addEventListener('input',updateWikiPreview);
+$('wiki-insert-image-url').addEventListener('click',()=>{
+ const entered=window.prompt('Masukkan URL gambar HTTPS atau path gambar dari website SLF:');
+ if(!entered)return;
+ const safe=window.SLFWikiMarkdown?.safeUrl(entered,true);
+ if(!safe){error('wiki-admin-error','URL gambar tidak valid. Gunakan HTTPS atau gambar dari domain SLF.');return;}
+ insertWikiMarkdown('!['+((safe.split('/').pop()||'Gambar').replace(/[\]\\]/g,' '))+']('+safe+')');
+});
+$('wiki-upload-image').addEventListener('click',()=>$('wiki-image-file').click());
+$('wiki-image-file').addEventListener('change',async event=>{
+ const file=event.target.files?.[0];
+ if(!file)return;
+ const status=$('wiki-upload-status'),button=$('wiki-upload-image');
+ const form=new FormData();form.append('file',file);
+ button.disabled=true;status.textContent='Mengunggah gambar ke pustaka media SLF…';
+ try{
+  const result=await api()('/api/admin/media',{method:'POST',body:form});
+  const imageUrl=result.asset?.url;
+  if(!imageUrl)throw new Error('Server tidak mengembalikan URL gambar.');
+  insertWikiMarkdown('!['+file.name.replace(/[\]\\]/g,' ')+']('+imageUrl+')');
+  status.textContent='Gambar berhasil diunggah dan ditambahkan ke isi bab.';
+ }catch(uploadError){
+  status.textContent=uploadError.message||'Upload gambar gagal.';
+ }finally{
+  button.disabled=false;event.target.value='';
+ }
+});
+
 $('wiki-category-form').addEventListener('submit',saveCategory);$('wiki-article-form').addEventListener('submit',saveArticle);$('wiki-category-reset').addEventListener('click',resetCategory);$('wiki-article-reset').addEventListener('click',resetArticle);
 $('wiki-category-name').addEventListener('input',()=>{if(!$('wiki-category-slug').dataset.manual)$('wiki-category-slug').value=slugify($('wiki-category-name').value);});
 $('wiki-article-title').addEventListener('input',()=>{if(!$('wiki-article-slug').dataset.manual)$('wiki-article-slug').value=slugify($('wiki-article-title').value);});
