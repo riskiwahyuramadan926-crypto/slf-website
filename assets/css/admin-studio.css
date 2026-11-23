@@ -26,3 +26,11 @@
 
 .studio-control-group{grid-column:1/-1;padding:8px 2px 3px;margin-top:5px;border-bottom:1px solid var(--line);color:var(--gold2);font-size:.72rem;font-weight:850;letter-spacing:.07em;text-transform:uppercase}
 .studio-inspector .studio-panel textarea:focus,.studio-inspector .studio-panel input:focus,.studio-inspector .studio-panel select:focus{outline:2px solid rgba(180,154,255,.5);outline-offset:1px}
+
+/* Free image layer transform controls */
+.studio-inspector #studio-layer-label{padding:8px 10px;background:#120d1c;border:1px solid var(--line);border-radius:8px;font-size:.78rem}
+.studio-inspector #studio-layer-background{width:auto;display:inline-block;margin-right:6px}
+.studio-free-layer{box-sizing:border-box;position:absolute;user-select:none;touch-action:none;cursor:move}
+.studio-free-layer img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}
+.studio-free-layer.is-selected{outline:2px solid #f3cb82;outline-offset:2px}
+.studio-free-layer-handle{position:absolute;right:-7px;bottom:-7px;width:16px;height:16px;border:2px solid #fff;border-radius:50%;background:#9b6cff;box-shadow:0 1px 8px #000;cursor:nwse-resize}
