@@ -30,7 +30,7 @@ export function normalizeStudioTableDefinition(input={}) {
     if(!FIELD_TYPES.has(type)) throw new Error('Tipe kolom tidak didukung: '+type+'.');
     seen.add(name);return {name,type,required:column.required===true,unique:column.unique===true};
   });
-  return {tableName:STUDIO_TABLE_PREFIX+slug,displayName:plain(input.displayName??slug,60)||slug,columns:normalized,allowPublicWrite:input.allowPublicWrite!==false,allowPublicRead:input.allowPublicRead===true};
+  return {tableName:STUDIO_TABLE_PREFIX+slug,displayName:plain(input.displayName??slug,60)||slug,columns:normalized,allowPublicWrite:input.allowPublicWrite===true,allowPublicRead:input.allowPublicRead===true};
 }
 export function buildStudioCreateTableSql(definition) {
   const safe=normalizeStudioTableDefinition(definition);

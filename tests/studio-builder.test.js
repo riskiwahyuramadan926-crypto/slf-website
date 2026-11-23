@@ -8,7 +8,8 @@ test('custom route accepts a clean slug and blocks reserved routes',()=>{
 });
 test('backend table schema is namespaced and SQL identifiers use a strict allowlist',()=>{
  const schema=normalizeStudioTableDefinition({slug:'event-signups',columns:[{name:'player_name',type:'text',required:true}]});
- assert.equal(schema.tableName,'studio_event_signups');assert.match(buildStudioCreateTableSql(schema),/^CREATE TABLE "studio_event_signups"/);
+ assert.equal(schema.tableName,'studio_event_signups');assert.equal(schema.allowPublicWrite,false,'public writes are disabled by default');assert.match(buildStudioCreateTableSql(schema),/^CREATE TABLE "studio_event_signups"/);
+ assert.equal(normalizeStudioTableDefinition({slug:'public_form',columns:[{name:'value'}],allowPublicWrite:true}).allowPublicWrite,true);
  assert.throws(()=>normalizeStudioTableDefinition({slug:'orders',columns:[{name:'id',type:'text'}]}),/Nama kolom tidak valid/);
  assert.throws(()=>normalizeStudioTableDefinition({slug:'events',columns:[{name:'name',type:'text); DROP TABLE orders;--'}]}),/Tipe kolom tidak didukung/);
 });
