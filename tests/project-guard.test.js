@@ -128,7 +128,7 @@ test('Wiki editor supports safe Markdown preview, tables, image URLs, and protec
   assert.ok(editor.includes("api()('/api/admin/media'"));
   assert.match(adminPage, /wiki-article-preview/);
   assert.match(adminPage, /wiki-upload-image/);
-  assert.match(adminApi, /requireOwner\\(request,env\\)/);
+  assert.match(adminApi, /requireOwner\(request,env\)/);
 });
 
 test('Store order and all re-entry tickets are persisted atomically', async () => {
