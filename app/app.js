@@ -160,7 +160,7 @@
     }
     const name = document.createElement('label'); name.className = 'field-label'; name.textContent = 'Nama layer';
     const nameInput = document.createElement('input'); nameInput.value = layer.name; nameInput.maxLength = 80;
-    nameInput.addEventListener('input', () => { layer.name = nameInput.value; renderLayers(); });
+    nameInput.addEventListener('input', () => { layer.name = nameInput.value; const activeName = document.querySelector('.layer-row.active .layer-label b'); if (activeName) activeName.textContent = layer.name; });
     name.append(nameInput); root.append(name);
     if (['text','button','card'].includes(layer.type)) {
       const content = document.createElement('label'); content.className = 'field-label'; content.textContent = layer.type === 'text' ? 'Isi teks' : 'Label / konten';
