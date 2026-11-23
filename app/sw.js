@@ -1,7 +1,7 @@
 'use strict';
-const VERSION='slf-app-v2';
+const VERSION='slf-app-v3';
 const SHELL_CACHE=VERSION;
-const SHELL=['./','./index.html','./app.css?v=2','./app.js?v=2','./manifest.webmanifest','./icon.svg'];
+const SHELL=['./','./index.html','./app.css?v=3','./app.js?v=3','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{event.waitUntil((async()=>{const cache=await caches.open(SHELL_CACHE);await cache.addAll(SHELL);await self.skipWaiting();})());});
 self.addEventListener('activate',event=>{event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(key=>key.startsWith('slf-app-')&&key!==SHELL_CACHE).map(key=>caches.delete(key)));await self.clients.claim();})());});
 self.addEventListener('fetch',event=>{
