@@ -155,7 +155,7 @@ function sendStudioMessage(payload){const frame=$('pagePreviewFrame');if(frame?.
 function currentStudioPage(){return project?.pagePath==='/'?'home':project?.pagePath==='/store/'?'store':project?.pagePath==='/wiki/'?'wiki':project?.pagePath==='/bantuan/'?'help':project?.pagePath==='/store/order.html'?'order':project?.pagePath==='/store/review.html'?'review':project?.pagePath==='/store/ticket.html'?'ticket':project?.pagePath?.startsWith('/wiki/artikel/')?'wiki-'+project.pagePath.split('/').pop().replace('.html',''):'home';}
 function getElementEdit(){if(!selectedElement||!siteDesign)return null;const page=currentStudioPage();return siteDesign.elementEdits.find(x=>x.selector===selectedElement.selector&&x.page===page)||(page.startsWith('wiki-')?siteDesign.elementEdits.find(x=>x.selector===selectedElement.selector&&x.page==='wiki'):null)||siteDesign.elementEdits.find(x=>x.selector===selectedElement.selector&&x.page==='all')||null;}
 function ensureElementEdit(){if(!selectedElement||!siteDesign)return null;let item=getElementEdit();if(!item){item={page:currentStudioPage(),selector:selectedElement.selector,tag:selectedElement.tag,styles:{},effects:[],hidden:false};siteDesign.elementEdits.push(item);}return item;}
-function sendElementEdit(){const edit=getElementEdit();if(edit)sendStudioMessage({type:'slf-studio-edit',edit:{text:edit.text,src:edit.src,href:edit.href,backgroundImage:edit.backgroundImage,hidden:edit.hidden,styles:edit.styles,effects:edit.effects,keyframes:edit.keyframes,duration:edit.duration,easing:edit.easing}});
+function sendElementEdit(){const edit=getElementEdit();if(edit)sendStudioMessage({type:'slf-studio-edit',edit:{text:edit.text,src:edit.src,href:edit.href,backgroundImage:edit.backgroundImage,hidden:edit.hidden,styles:edit.styles,effects:edit.effects,keyframes:edit.keyframes,duration:edit.duration,easing:edit.easing}});}
 function changeElement(mutator){const item=ensureElementEdit();if(!item)return;mutator(item);if(project)project.designDraft=siteDesign;setDirty();sendElementEdit();}
 function pushEditorHistory(){if(!project)return;elementUndo.push(JSON.stringify({project,siteDesign}));if(elementUndo.length>30)elementUndo.shift();elementRedo=[];}
 function undoEditor(){if(!elementUndo.length)return;elementRedo.push(JSON.stringify({project,siteDesign}));const old=JSON.parse(elementUndo.pop());project=old.project;siteDesign=old.siteDesign;selectedElement=null;setDirty();applyCanvasSettings();loadPagePreview();renderLayers();}
@@ -265,6 +265,7 @@ async function checkSession(){
  }finally{if(timer)clearTimeout(timer);try{renderHome();}catch(err){console.error('[SLF Mobile] Render menu gagal:',err);}}
 }
 function start(){
+ window.__SLF_APP_READY=true;
  try{renderHome();}catch(err){console.error('[SLF Mobile] Render awal beranda gagal:',err);}
  try{bindHomeAuth();}catch(err){console.error('[SLF Mobile] Binding login gagal:',err);}
  window.addEventListener('online',()=>{const el=$('connectionState');if(el)el.textContent='Online';});
