@@ -1,6 +1,6 @@
 import { json, fail, readJson, sha256Hex, randomHex } from '../../_lib/common.js';
 
-const emailOk = value => /^[a-z0-9._%+-]+@gmail\\.com$/i.test(value) && value.length <= 254;
+const emailOk = value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 254;
 const encoder = new TextEncoder();
 
 async function passwordHash(password, salt) {
@@ -149,7 +149,7 @@ export async function onRequestPost({ request, env }) {
     }
   }
 
-  const email = String(data.email || '').trim().toLowerCase();
+  const email = String(data.email || '').trim().toLowerCase().replace(/\s+/g, '');
   const password = String(data.password || '');
   const accessCode = String(data.accessCode || '').trim();
 
@@ -189,22 +189,6 @@ export async function onRequestPost({ request, env }) {
     role = access.role;
     accountId = existing?.id || ('ADM-' + randomHex(12));
 
-    // Keep the existing single-Owner invariant; never silently demote or transfer another account.
-    if (role === 'owner') {
-      try {
-        const otherOwner = await env.DB.prepare(
-          "SELECT id,email FROM admin_accounts WHERE role='owner' AND id<>? LIMIT 1"
-        ).bind(accountId).first();
-        if (otherOwner) {
-          return fail('Role Owner sudah terikat pada akun lain. Login memakai Gmail akun Owner tersebut atau ubah aksesnya melalui proses pengelolaan akses resmi.', 409);
-        }
-      } catch (error) {
-        const detail = d1Message(error);
-        console.error('[SLF_ACCOUNT] owner binding check failed:', detail);
-        return fail('Error D1 saat memeriksa ikatan Owner: ' + detail, 503);
-      }
-    }
-
     // A valid one-time code provisions a new account or explicitly rebinds an existing email.
     // Existing sessions are revoked so the new password and role take effect immediately.
     const salt = randomHex(32);
@@ -221,8 +205,25 @@ export async function onRequestPost({ request, env }) {
     const sessionId = 'SES-' + randomHex(12);
     const ipHash = await sha256Hex(request.headers.get('cf-connecting-ip') || 'local-unknown');
 
-    batchStatements = [
-      env.DB.prepare(`INSERT INTO admin_accounts
+    batchStatements = [];
+
+    // A valid Owner code may transfer the single Owner role to this email.
+    // Revoke the previous Owner's sessions before demoting that account to Admin.
+    // Both operations and the new Owner bind are committed atomically by D1 batch().
+    if (role === 'owner') {
+      batchStatements.push(
+        env.DB.prepare(\`DELETE FROM admin_sessions
+          WHERE account_id IN (
+            SELECT id FROM admin_accounts WHERE role='owner' AND id<>?
+          )\`).bind(accountId),
+        env.DB.prepare(\`UPDATE admin_accounts
+          SET role='admin', updated_at=?
+          WHERE role='owner' AND id<>?\`).bind(now, accountId)
+      );
+    }
+
+    batchStatements.push(
+      env.DB.prepare(\`INSERT INTO admin_accounts
         (id,email,password_salt,password_hash,role,active,created_at,updated_at,last_login_at)
         VALUES(?,?,?,?,?,1,?,?,?)
         ON CONFLICT(email) DO UPDATE SET
@@ -231,13 +232,13 @@ export async function onRequestPost({ request, env }) {
           role=excluded.role,
           active=1,
           updated_at=excluded.updated_at,
-          last_login_at=excluded.last_login_at`)
+          last_login_at=excluded.last_login_at\`)
         .bind(accountId, email, salt, hash, role, now, now, now),
       env.DB.prepare('DELETE FROM admin_sessions WHERE account_id=?').bind(accountId),
       env.DB.prepare('INSERT INTO admin_sessions(id,account_id,token_hash,expires_at,created_at,last_seen_at) VALUES(?,?,?,?,?,?)')
         .bind(sessionId, accountId, tokenHash, expires, now, now),
       env.DB.prepare('DELETE FROM admin_account_attempts WHERE ip_hash=?').bind(ipHash)
-    ];
+    );
 
     try {
       await env.DB.batch(batchStatements);
