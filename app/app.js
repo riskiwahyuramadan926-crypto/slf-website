@@ -585,7 +585,7 @@ function renderMobileSubpanel(){
   const stroke=value('visual.strokeEnabled',false),shadow=value('visual.shadowEnabled',false);
   let detail='';
   if(mobileBorderTab==='stroke')detail='<div class="subpanel-toggle"><span>Stroke</span><button type="button" data-visual-toggle="strokeEnabled" class="'+(stroke?'on':'')+'">'+(stroke?'ON':'OFF')+'</button></div><label>Warna Stroke<input type="color" data-visual-field="strokeColor" value="'+value('visual.strokeColor','#4dd0c8')+'"></label>'+drumRulerMarkup('visual.strokeWidth','Ketebalan Stroke',0,40,0.5,value('visual.strokeWidth',4),' px')+'<label>Sambungan Sudut<select data-visual-field="strokeJoin"><option value="round">Round</option><option value="bevel">Bevel</option><option value="miter">Miter</option></select></label><div class="coordinate-grid"><label>Mulai (%)<input type="number" data-visual-field="strokeStart" value="'+value('visual.strokeStart',0)+'"></label><label>End (%)<input type="number" data-visual-field="strokeEnd" value="'+value('visual.strokeEnd',100)+'"></label></div>';
-  if(mobileBorderTab==='border')detail='<p class="subpanel-hint">Posisi border pada tepi layer.</p><div class="blend-list"><button data-border-position="inside" class="'+(value('visual.borderPosition','center')==='inside'?'active':'')+'">DI DALAM</button><button data-border-position="center" class="'+(value('visual.borderPosition','center')==='center'?'active':'')+'">TENGAH</button><button data-border-position="outside" class="'+(value('visual.borderPosition','center')==='outside'?'active':'')+'">DI LUAR</button></div><label>Warna Border<input type="color" data-visual-field="borderColor" value="'+value('visual.borderColor','#4dd0c8')+'"></label>'+drumRulerMarkup('visual.borderWidth','Ukuran Border',0,40,0.5,value('visual.borderWidth',2),' px')+drumRulerMarkup('visual.borderRadius','Radius Sudut',0,100,1,value('visual.borderRadius',8),' px');
+  if(mobileBorderTab==='border')detail='<button type="button" class="tool-action-button" data-border-add>＋ Tambahkan Border</button><p class="subpanel-hint">Posisi border pada tepi layer.</p><div class="blend-list"><button data-border-position="inside" class="'+(value('visual.borderPosition','center')==='inside'?'active':'')+'">DI DALAM</button><button data-border-position="center" class="'+(value('visual.borderPosition','center')==='center'?'active':'')+'">TENGAH</button><button data-border-position="outside" class="'+(value('visual.borderPosition','center')==='outside'?'active':'')+'">DI LUAR</button></div><label>Warna Border<input type="color" data-visual-field="borderColor" value="'+value('visual.borderColor','#4dd0c8')+'"></label>'+drumRulerMarkup('visual.borderWidth','Ukuran Border',0,40,0.5,value('visual.borderWidth',2),' px')+drumRulerMarkup('visual.borderRadius','Radius Sudut',0,100,1,value('visual.borderRadius',8),' px');
   if(mobileBorderTab==='shadow')detail='<div class="subpanel-toggle"><span>Shadow</span><button type="button" data-visual-toggle="shadowEnabled" class="'+(shadow?'on':'')+'">'+(shadow?'ON':'OFF')+'</button></div><label>Warna Bayangan<input type="color" data-visual-field="shadowColor" value="'+value('visual.shadowColor','#000000')+'"></label>'+drumRulerMarkup('visual.shadowBlur','Ukuran Shadow',0,100,1,value('visual.shadowBlur',12),' px')+drumRulerMarkup('visual.shadowAlpha','Alpha Shadow',0,100,1,value('visual.shadowAlpha',55),'%')+'<p class="subpanel-hint">Geser touchpad untuk posisi bayangan (X/Y).</p><div class="shadow-position-pad" id="shadowPositionPad">✥</div><div class="coordinate-grid"><label>X<input type="number" data-field="shadowX" value="'+value('visual.shadowX',0)+'"></label><label>Y<input type="number" data-field="shadowY" value="'+value('visual.shadowY',6)+'"></label></div>';
   body='<div class="border-transform-layout"><div>'+detail+'</div><nav class="border-transform-tabs"><button class="'+(mobileBorderTab==='stroke'?'active':'')+'" data-border-tab="stroke" title="Stroke">▱</button><button class="'+(mobileBorderTab==='border'?'active':'')+'" data-border-tab="border" title="Border">▣</button><button class="'+(mobileBorderTab==='shadow'?'active':'')+'" data-border-tab="shadow" title="Bayangan">◒</button></nav></div>';
  }else if(mobileEditorPanel==='blend'){
@@ -619,6 +619,7 @@ function renderMobileSubpanel(){
  root.querySelectorAll('[data-field]').forEach(el=>el.addEventListener('input',e=>{const key=e.target.dataset.field;let val=(e.target.type==='number'||e.target.type==='range')?Number(e.target.value):e.target.value;if(key==='opacity')val/=100;if(key.startsWith('visual.'))updateSelectedProperty(key.slice(7),val,true);else updateSelectedProperty(key,val);}));
  root.querySelectorAll('[data-visual-field]').forEach(el=>el.addEventListener('input',e=>updateSelectedProperty(e.target.dataset.visualField,e.target.type==='color'?e.target.value:(Number(e.target.value)||e.target.value),true)));
  root.querySelectorAll('[data-visual-toggle]').forEach(btn=>btn.addEventListener('click',()=>{const key=btn.dataset.visualToggle,val=!(selectedLayer()?.visual?.[key]);updateSelectedProperty(key,val,true);renderMobileSubpanel();}));
+ root.querySelectorAll('[data-border-add]').forEach(btn=>btn.addEventListener('click',()=>{const layer=selectedLayer();if(!layer)return;updateSelectedProperty('borderEnabled',true,true);if(!(Number(layer.visual?.borderWidth)>0))updateSelectedProperty('borderWidth',2,true);renderMobileSubpanel();}));
  root.querySelectorAll('[data-border-position]').forEach(btn=>btn.addEventListener('click',()=>{updateSelectedProperty('borderPosition',btn.dataset.borderPosition,true);renderMobileSubpanel();}));
  root.querySelectorAll('[data-blend]').forEach(btn=>btn.addEventListener('click',()=>{updateSelectedProperty('blendMode',btn.dataset.blend);root.querySelectorAll('[data-blend]').forEach(x=>x.classList.toggle('active',x===btn));}));
  root.querySelectorAll('[data-speed]').forEach(btn=>btn.addEventListener('click',()=>{updateSelectedProperty('speed',Number(btn.dataset.speed));renderMobileSubpanel();}));
@@ -867,9 +868,8 @@ function renderPreviewLegacy(){
   const node=document.createElement('div');node.className='preview-layer'+(layer.id===selectedLayerId?' selected':'');node.dataset.layerId=layer.id;node.style.position='absolute';node.style.left=(layer.x??8)+'%';node.style.top=(layer.y??(12+index*15))+'%';node.style.width=(layer.width??84)+'%';node.style.height=(layer.height??((layer.type==='image'||layer.type==='video')?65:20))+'%';node.style.minHeight='0';node.style.background=(layer.type==='image'||layer.type==='video'||layer.type==='audio')?'transparent':(layer.color||layer.visual?.backgroundColor||'#4dd0c8');node.style.opacity=String(layer.opacity??1);node.style.mixBlendMode=layer.blendMode==='contrast'?'difference':(layer.blendMode||'normal');node.style.willChange='transform,left,top,width,height';node.style.touchAction='none';node.style.userSelect='none';
   if(layer.fontSize)node.style.fontSize=layer.fontSize+'px';if(layer.fontFamily)node.style.fontFamily=layer.fontFamily;if(layer.textAlign)node.style.textAlign=layer.textAlign;if(layer.visual?.borderRadius)node.style.borderRadius=layer.visual.borderRadius+'px';node.style.zIndex=String(layer.z??(100-index));applyLayerTransformStyle(node,layer);
   if(layer.visual?.gradient?.stops?.length>=2){const st=layer.visual.gradient.stops;node.style.backgroundImage='linear-gradient('+(layer.visual.gradient.angle||135)+'deg,'+st[0].color+' 0%,'+st[1].color+' 100%)';}
-  if(layer.visual?.borderWidth||layer.visual?.strokeEnabled)node.style.border=(Number(layer.visual?.borderWidth||layer.visual?.strokeWidth||1))+'px solid '+(layer.visual?.borderColor||layer.visual?.strokeColor||'#4dd0c8');
-  if(layer.visual?.shadowEnabled||layer.visual?.shadowBlur)node.style.boxShadow=(layer.visual?.shadowX||0)+'px '+(layer.visual?.shadowY||6)+'px '+(layer.visual?.shadowBlur||0)+'px '+(layer.visual?.shadowColor||'#000000');
   if(layer.geometry){const clip=geometryClipPath(layer.geometry);if(clip!=='none')node.style.clipPath=clip;if(layer.geometry==='circle'||layer.geometry==='ellipse')node.style.borderRadius='50%';if(layer.geometry==='square')node.style.borderRadius='0';if(layer.geometry==='round-rect')node.style.borderRadius='16%';if(layer.geometry==='arc')node.style.border='8px solid '+(layer.color||'#4dd0c8');}else if(layer.type==='shape')node.style.borderRadius='50%';
+  applyLayerVisualStyles(node,layer);
   (layer.visual?.effects||[]).forEach(effect=>node.classList.add('slf-effect-'+effect));applyPreviewKeyframes(node,layer);
   if(layer.type==='image'&&layer.src){const img=document.createElement('img');img.src=layer.previewSrc||layer.src;img.alt=layer.name;img.style.width='100%';img.style.height='100%';img.style.objectFit=layer.mediaFit||'contain';img.draggable=false;node.append(img);}
   else if(layer.type==='video'&&layer.src){const media=document.createElement('video');media.src=layer.previewSrc||layer.src;media.controls=true;media.muted=true;media.playsInline=true;media.style.width='100%';media.style.height='100%';media.style.objectFit='contain';node.append(media);}
@@ -1241,21 +1241,35 @@ function startMovePad(event){
  const end=()=>{if(raf)cancelAnimationFrame(raf);pad.removeEventListener('pointermove',move);pad.removeEventListener('pointerup',end);pad.removeEventListener('pointercancel',end);hideCenterSnapGuides();setDirty();renderTimeline();};
  pad.addEventListener('pointermove',move);pad.addEventListener('pointerup',end);pad.addEventListener('pointercancel',end);
 }
+function applyLayerVisualStyles(node,layer){
+ const visual=layer.visual||{},borderWidth=Math.max(0,Number(visual.borderWidth)||0),borderColor=visual.borderColor||'#4dd0c8';
+ if(node.dataset.slfVisualBorder==='1'){node.style.border='';node.style.outline='';node.style.outlineOffset='';delete node.dataset.slfVisualBorder;}
+ if(node.dataset.slfVisualShadow==='1'){node.style.boxShadow='';delete node.dataset.slfVisualShadow;}
+ const shadows=[],borderEnabled=visual.borderEnabled!==false&&borderWidth>0;
+ if(borderEnabled){
+  node.dataset.slfVisualBorder='1';
+  if(visual.borderPosition==='inside')shadows.push('inset 0 0 0 '+borderWidth+'px '+borderColor);
+  else if(visual.borderPosition==='outside'){node.style.outline=borderWidth+'px solid '+borderColor;node.style.outlineOffset='0px';}
+  else node.style.border=borderWidth+'px solid '+borderColor;
+ }
+ if(visual.strokeEnabled){
+  const strokeWidth=Math.max(0,Number(visual.strokeWidth)||1),strokeColor=visual.strokeColor||'#4dd0c8';
+  if(strokeWidth>0){node.dataset.slfVisualBorder='1';node.style.outline=strokeWidth+'px solid '+strokeColor;node.style.outlineOffset='0px';}
+ }
+ const shadowOn=visual.shadowEnabled===true||(visual.shadowEnabled!==false&&Number(visual.shadowBlur)>0);
+ if(shadowOn){
+  const hex=String(visual.shadowColor||'#000000').replace('#',''),rgb=/^[0-9a-f]{6}$/i.test(hex)?[parseInt(hex.slice(0,2),16),parseInt(hex.slice(2,4),16),parseInt(hex.slice(4,6),16)]:[0,0,0];
+  const alpha=Math.max(0,Math.min(100,Number(visual.shadowAlpha??55)))/100;
+  shadows.push((Number(visual.shadowX)||0)+'px '+(Number(visual.shadowY)||0)+'px '+Math.max(0,Number(visual.shadowBlur)||0)+'px rgba('+rgb.join(',')+','+alpha+')');
+ }
+ if(shadows.length){node.dataset.slfVisualShadow='1';node.style.boxShadow=shadows.join(', ');}
+}
 function applyFastLayerField(layer,key,value){
  if(key.startsWith('visual.'))layer.visual={...(layer.visual||{}),[key.slice(7)]:value};else layer[key]=value;
  const node=document.querySelector('#previewOverlay .preview-layer[data-layer-id="'+layer.id+'"]');if(!node)return;
  if(key==='x')node.style.left=value+'%';else if(key==='y')node.style.top=value+'%';else if(key==='opacity')node.style.opacity=String(value);
  else if(['rotation','scaleX','scaleY','skewX','skewY'].includes(key))applyLayerTransformStyle(node,layer);
- else if(['visual.borderWidth','visual.borderColor','visual.strokeWidth','visual.strokeColor','visual.strokeEnabled'].includes(key)){
-  const width=layer.visual?.strokeEnabled?Number(layer.visual?.strokeWidth||1):Number(layer.visual?.borderWidth||0),color=layer.visual?.strokeColor||layer.visual?.borderColor||'#4dd0c8';
-  node.style.border=width>0?width+'px solid '+color:'none';
- }
- else if(['visual.shadowBlur','visual.shadowX','visual.shadowY','visual.shadowColor','visual.shadowEnabled','visual.shadowAlpha'].includes(key)){
-  const alpha=Math.max(0,Math.min(100,Number(layer.visual?.shadowAlpha??55)))/100,hex=String(layer.visual?.shadowColor||'#000000').replace('#','');
-  const rgb=hex.length===6?[parseInt(hex.slice(0,2),16),parseInt(hex.slice(2,4),16),parseInt(hex.slice(4,6),16)]:[0,0,0];
-  node.style.boxShadow=layer.visual?.shadowEnabled===false?'none':(layer.visual?.shadowX||0)+'px '+(layer.visual?.shadowY||6)+'px '+(layer.visual?.shadowBlur||0)+'px rgba('+rgb.join(',')+','+alpha+')';
- }
- else if(key==='visual.borderRadius')node.style.borderRadius=value+'px';
+ else if(key.startsWith('visual.'))applyLayerVisualStyles(node,layer);
 }
 function initMobileEditorUI(){
  const back=$('editorBack');if(back)back.onclick=()=>{if(mobileSelectedItem()||mobileEditorPanel){clearMobileSelection();return;}if(dirty&&!confirm('Perubahan belum disimpan. Keluar dan buang perubahan terakhir?'))return;setView('lobby');};
