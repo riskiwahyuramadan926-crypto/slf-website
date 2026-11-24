@@ -42,3 +42,50 @@
 .project-create-card{width:100%;min-height:68px;display:flex;align-items:center;justify-content:center;gap:12px;border:2px dashed rgba(25,230,176,.55);border-radius:15px;background:rgba(25,230,176,.07);color:#20e7b4;font-size:15px;margin:8px 0 18px}.project-create-card span{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:#19e6b0;color:#092018;font-size:30px}.project-thumb{position:relative;display:grid;place-items:center}.project-thumb>span{font-weight:900;letter-spacing:2px;color:#d8e9ff;font-size:19px;text-shadow:0 3px 14px #000}.project-thumb .project-ratio{position:absolute;right:7px;bottom:7px;left:auto;top:auto;background:#0b1225cc;border-radius:5px;padding:4px 7px;color:#e1e8f7;font-size:10px}.preview-page{position:relative}.preview-page.show-grid:after{content:'';position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(#8ba7bf22 1px,transparent 1px),linear-gradient(90deg,#8ba7bf22 1px,transparent 1px);background-size:24px 24px}.add-options button[hidden]{display:none!important}.module-view #adminFrame{width:100%;min-height:calc(100dvh - 70px);height:calc(100dvh - 70px);border:0;background:#0d1322}
 
 .project-modal-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;border-radius:12px;background:#171d30;margin:8px 0 16px}.project-modal-tabs button{min-height:42px;border:0;border-radius:9px;background:transparent;color:#bfc8dc;font-weight:800}.project-modal-tabs button.active{background:#1b2941;color:#19e6b0;box-shadow:0 2px 10px #0004}
+
+
+/* SLF Studio editor layout v7 */
+.topbar[hidden]{display:none!important}
+.studio-view{height:100%;min-height:0;overflow:hidden}
+.studio-topline{height:48px;min-height:48px;padding:0 8px;gap:7px}
+.studio-heading{min-width:0;flex:1}
+.studio-heading b{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.studio-heading small{display:none}
+.top-device-switch{height:32px;flex:none;gap:2px;padding:2px}
+.top-device-switch button{padding:0 7px;font-size:9px}
+.studio-topline .save-button{padding:7px 8px;font-size:9px}
+.studio-topline .icon-button,.studio-topline .export-button{width:31px;height:31px;min-width:31px;padding:0}
+.preview-region{height:55dvh;min-height:190px;max-height:58dvh;flex:0 0 55dvh}
+.preview-stage{position:relative;display:block;min-height:0;width:100%;height:100%;padding:0;overflow:hidden}
+.preview-page{position:absolute;left:50%;top:50%;width:390px;height:844px;max-width:none;max-height:none;min-height:0;padding:0;margin:0;border-radius:8px;overflow:hidden;transform:translate(-50%,-50%) scale(var(--preview-scale,.4));transform-origin:center center;background:#080b12;background-size:cover;background-position:center}
+.preview-page.desktop-preview{width:1280px;height:720px}
+.preview-page iframe{position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;margin:0;background:transparent}
+.preview-page #previewOverlay{position:absolute;inset:0;padding:0;overflow:hidden;pointer-events:none}
+.preview-page #previewOverlay .preview-layer{pointer-events:auto;max-height:none;overflow:auto;background:rgba(18,20,34,.28);backdrop-filter:none}
+.preview-page #previewOverlay .preview-layer img{width:100%;height:100%;max-width:none;max-height:none;object-fit:cover}
+.preview-page #previewOverlay .preview-layer video{width:100%;height:100%;object-fit:contain}
+.editor-actionbar{height:44px;min-height:44px;padding:2px 6px;justify-content:space-between}
+.editor-actionbar button{min-width:34px;min-height:34px;font-size:18px}
+.action-timecode{min-width:66px;text-align:center;color:#cfd5e5;font:600 10px ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.timeline-panel{display:none!important}
+.editor-region{flex:1 1 auto;min-height:0;overflow:hidden}
+.editor-tabs{display:none;height:34px;min-height:34px;flex:none}
+.studio-view.has-selection .editor-tabs{display:flex}
+.editor-tab{min-height:34px;font-size:9px}
+.editor-content{padding:8px 10px 74px}
+.editor-panel{display:none}
+.editor-panel.active{display:block}
+.panel-heading{margin-bottom:8px}
+.panel-heading-actions{display:flex;gap:6px}
+.panel-close{width:30px;height:30px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);font-size:20px}
+.timeline-tracks{display:flex;gap:6px;max-height:42px;overflow-x:auto;overflow-y:hidden;padding:0 0 5px}
+.timeline-track{width:auto;min-width:100px;flex:none;min-height:30px}
+.layer-list{gap:5px}
+.layer-row{padding:7px 9px}
+.floating-add{position:fixed;z-index:30;left:auto;right:20px;bottom:calc(20px + env(safe-area-inset-bottom));transform:none;width:56px;height:56px;border-radius:50%;border:1px solid #8bffe1;background:#13e1a9;color:#071d19;box-shadow:0 6px 25px #05cf9a66;font-size:29px}
+.editor-side-tools{position:absolute;top:auto;right:8px;bottom:calc(78px + env(safe-area-inset-bottom))}
+.layer-menu{bottom:calc(80px + env(safe-area-inset-bottom));right:68px}
+.sheet-backdrop{z-index:60}
+.add-sheet{max-height:80dvh;overflow-y:auto}
+.module-view #adminFrame{height:calc(100dvh - 52px);min-height:calc(100dvh - 52px)}
+@media(min-width:700px){.preview-region{height:55dvh;flex-basis:55dvh}.preview-page{max-width:none}}
