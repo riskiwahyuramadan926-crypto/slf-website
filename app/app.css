@@ -103,3 +103,10 @@
 .preview-layer .resize-handle{position:absolute;right:-7px;bottom:-7px;width:14px;height:14px;border:2px solid #fff;border-radius:3px;background:#4dd0c8;touch-action:none}
 .preview-layer.slf-effect-glow{filter:drop-shadow(0 0 12px #4dd0c8)}.preview-layer.slf-effect-glass{backdrop-filter:blur(12px);background:#ffffff22}.preview-layer.slf-effect-neon{text-shadow:0 0 10px #4dd0c8}.preview-layer.slf-effect-soft{box-shadow:0 8px 28px #0007}.preview-layer.slf-effect-outline{outline:1px solid #4dd0c8}.preview-layer.slf-effect-border-glow{box-shadow:0 0 20px #4dd0c8}.preview-layer.slf-effect-float{animation:slfFloat 3s ease-in-out infinite}.preview-layer.slf-effect-pulse{animation:slfPulse 2s ease-in-out infinite}
 @media(min-width:700px){.timeline-tracks{max-height:140px}.export-backdrop{place-items:center}.export-sheet{border-radius:18px}}
+
+/* SLF Mobile boot safety: hidden overlays never intercept taps. */
+[hidden],.hidden,.modal:not(.open),.sheet:not(.open),.studio-overlay:not(.open){display:none!important;pointer-events:none!important}
+.view:not(.active){display:none!important;pointer-events:none!important}
+#studioView:not(.active),#studioLobby:not(.active),#moduleView:not(.active){display:none!important;pointer-events:none!important}
+.modal-backdrop[hidden],.sheet-backdrop[hidden],.export-backdrop[hidden]{display:none!important;pointer-events:none!important}
+#slfBootError{pointer-events:auto!important}
