@@ -322,3 +322,57 @@ html:has(#studioView.active),body:has(#studioView.active){height:100dvh!importan
 /* Final SLF Studio touch controls: explicit border action and compact magnifier. */
 #studioView.active .border-transform-layout [data-border-add]{width:100%;min-height:36px;margin:0 0 8px}
 #studioView.active .canvas-magnifier{font-size:18px;line-height:1}
+
+/* SLF Studio mobile editor: fixed canvas and compact lower controls. */
+html:has(#studioView.active),body:has(#studioView.active){height:100dvh!important;max-height:100dvh!important;overflow:hidden!important;overscroll-behavior:none!important}
+#studioView.active{height:100dvh!important;max-height:100dvh!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;gap:0!important;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)!important}
+#studioView.active .studio-topline{flex:0 0 40px!important;height:40px!important;min-height:40px!important;max-height:44px!important;padding:0 10px!important;box-sizing:border-box!important}
+#studioView.active .preview-region{flex:0 0 55dvh!important;height:55dvh!important;min-height:55dvh!important;max-height:58dvh!important;flex-shrink:0!important;overflow:hidden!important;padding:0!important}
+#studioView.active .preview-stage{height:100%!important;min-height:0!important;max-height:100%!important}
+#studioView.active .editor-actionbar{flex:0 0 32px!important;height:32px!important;min-height:32px!important;max-height:36px!important;padding:0 8px!important;gap:6px!important}
+#studioView.active .editor-actionbar button{width:30px!important;height:30px!important;min-width:30px!important;padding:4px!important}
+#studioView.active .editor-actionbar svg{width:18px!important;height:18px!important}
+#studioView.active .mobile-editor-dock{flex:0 0 36dvh!important;height:36dvh!important;min-height:0!important;max-height:38dvh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+#studioView.active .mobile-editor-dock.has-selected-layer .timeline-track-viewport{flex:0 0 38px!important;height:38px!important;min-height:38px!important;max-height:38px!important;overflow:hidden!important}
+#studioView.active .mobile-editor-dock.has-selected-layer .timeline-tracks{height:32px!important;min-height:32px!important;max-height:32px!important;overflow:hidden!important;padding:0 6px!important}
+#studioView.active .mobile-editor-dock.has-selected-layer .timeline-row{height:28px!important;min-height:28px!important}
+#studioView.active .mobile-editor-dock.has-selected-layer .track-label{height:26px!important;top:1px!important;width:76px!important}
+#studioView.active .mobile-editor-dock.has-selected-layer .track-lane{height:26px!important;top:1px!important}
+#studioView.active .mobile-editor-dock.has-selected-layer .track-clip{height:26px!important;font-size:11px!important;margin:0!important}
+#studioView.active .selection-tools{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;gap:6px!important;padding:6px 10px!important;box-sizing:border-box!important}
+#studioView.active .selection-tools[hidden],#studioView.active .tool-grid[hidden],#studioView.active .tool-panel[hidden]{display:none!important}
+#studioView.active .clip-action-row{height:30px!important;min-height:30px!important;max-height:30px!important;display:flex!important;gap:6px!important;margin:0!important;padding:0!important}
+#studioView.active .clip-action-row button{height:30px!important;min-height:30px!important;padding:2px 8px!important;font-size:11px!important}
+#studioView.active .tool-grid{display:grid!important;grid-template-columns:repeat(12,minmax(0,1fr))!important;grid-auto-rows:52px!important;gap:6px!important;padding:0!important;min-height:0!important;overflow:hidden!important}
+#studioView.active .tool-grid .tool-card{grid-column:span 4!important;height:52px!important;min-height:52px!important;max-height:52px!important;padding:4px!important;gap:2px!important}
+#studioView.active .tool-grid .tool-card:nth-child(n+4){grid-column:span 3!important}
+#studioView.active .tool-grid .tool-card span{font-size:18px!important;line-height:18px!important}
+#studioView.active .tool-grid .tool-card b{font-size:10px!important;line-height:12px!important;white-space:normal!important}
+#studioView.active .tool-panel{flex:1 1 auto!important;min-height:0!important;height:100%!important;overflow:hidden!important}
+#studioView.active .subpanel-layout{display:grid!important;grid-template-columns:42px minmax(0,1fr)!important;height:100%!important;min-height:0!important;max-height:185px!important;overflow:hidden!important;gap:6px!important}
+#studioView.active .subpanel-sidebar{width:42px!important;min-width:42px!important;max-width:42px!important;display:flex!important;flex-direction:column!important;gap:4px!important}
+#studioView.active .subpanel-sidebar button{width:38px!important;height:36px!important;min-height:36px!important;padding:0!important}
+#studioView.active .subpanel-content{min-width:0!important;min-height:0!important;height:100%!important;max-height:185px!important;overflow:hidden!important;padding:4px 6px!important}
+#studioView.active .subpanel-title,#studioView.active .subpanel-hint,#studioView.active .edit-canvas-hint{display:none!important}
+#studioView.active .transform-layout,#studioView.active .border-transform-layout{display:grid!important;grid-template-columns:minmax(0,1fr) 46px!important;gap:6px!important;height:100%!important;min-height:0!important}
+#studioView.active .transform-tabs,#studioView.active .border-transform-tabs{width:46px!important;min-width:46px!important;display:flex!important;flex-direction:column!important;gap:4px!important}
+#studioView.active .transform-tabs button,#studioView.active .border-transform-tabs button{width:42px!important;height:38px!important;min-height:38px!important}
+#studioView.active .drum-control{margin:3px 0!important;gap:5px!important}
+#studioView.active .drum-ruler{height:42px!important;min-height:42px!important;touch-action:none!important;user-select:none!important;-webkit-user-select:none!important;overflow:hidden!important}
+#studioView.active .ruler-ticks{will-change:transform}
+#studioView.active .move-pad,#studioView.active .shadow-position-pad,#studioView.active .degree-wheel,#studioView.active .selection-handle{touch-action:none!important;user-select:none!important;-webkit-user-select:none!important}
+#studioView.active .move-pad{height:72px!important;min-height:72px!important}
+#studioView.active .degree-wheel{width:110px!important;height:110px!important;min-width:110px!important;min-height:110px!important;position:relative!important;touch-action:none!important}
+#studioView.active .degree-knob{position:absolute!important;left:50%!important;top:50%!important;width:10px!important;height:10px!important;border-radius:50%!important;background:#fff!important;box-shadow:0 0 0 3px #19e6b055!important;transform:rotate(0deg) translateY(-48px);pointer-events:none!important}
+#studioView.active .coordinate-grid{display:flex!important;gap:8px!important;justify-content:space-between!important}
+#studioView.active .coordinate-grid input{display:none!important}
+#studioView.active .coordinate-grid output{color:#19e6b0!important;font-variant-numeric:tabular-nums!important}
+#studioView.active .track-eye{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:22px!important;height:22px!important;font-size:15px!important;color:#19e6b0!important}
+#studioView.active .track-color-chip,#studioView.active .track-thumbnail{width:22px!important;height:22px!important;border-radius:5px!important;display:inline-block!important;object-fit:cover!important}
+#studioView.active .timeline-row.multi-selected .track-clip{outline:2px solid #19e6b0!important}
+#studioView.active .edit-text-bar{display:flex!important;gap:4px!important;height:34px!important}
+#studioView.active .edit-text-bar select{max-width:84px!important;height:30px!important;font-size:11px!important}
+#studioView.active .edit-text-bar button{height:30px!important;min-width:32px!important}
+#studioView.active .stroke-options,#studioView.active .stroke-range-buttons{display:flex!important;gap:5px!important}
+#studioView.active .stroke-options button,#studioView.active .stroke-range-buttons button{height:28px!important;min-width:30px!important;padding:3px 8px!important}
+@media(max-height:650px){#studioView.active .preview-region{flex-basis:55dvh!important;height:55dvh!important;min-height:55dvh!important}#studioView.active .mobile-editor-dock{flex-basis:36dvh!important;height:36dvh!important}#studioView.active .subpanel-layout,#studioView.active .subpanel-content{max-height:180px!important}}
