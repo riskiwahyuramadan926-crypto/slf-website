@@ -212,18 +212,18 @@ export async function onRequestPost({ request, env }) {
     // Both operations and the new Owner bind are committed atomically by D1 batch().
     if (role === 'owner') {
       batchStatements.push(
-        env.DB.prepare(\`DELETE FROM admin_sessions
+        env.DB.prepare(`DELETE FROM admin_sessions
           WHERE account_id IN (
             SELECT id FROM admin_accounts WHERE role='owner' AND id<>?
-          )\`).bind(accountId),
-        env.DB.prepare(\`UPDATE admin_accounts
+          )`).bind(accountId),
+        env.DB.prepare(`UPDATE admin_accounts
           SET role='admin', updated_at=?
-          WHERE role='owner' AND id<>?\`).bind(now, accountId)
+          WHERE role='owner' AND id<>?`).bind(now, accountId)
       );
     }
 
     batchStatements.push(
-      env.DB.prepare(\`INSERT INTO admin_accounts
+      env.DB.prepare(`INSERT INTO admin_accounts
         (id,email,password_salt,password_hash,role,active,created_at,updated_at,last_login_at)
         VALUES(?,?,?,?,?,1,?,?,?)
         ON CONFLICT(email) DO UPDATE SET
@@ -232,7 +232,7 @@ export async function onRequestPost({ request, env }) {
           role=excluded.role,
           active=1,
           updated_at=excluded.updated_at,
-          last_login_at=excluded.last_login_at\`)
+          last_login_at=excluded.last_login_at`)
         .bind(accountId, email, salt, hash, role, now, now, now),
       env.DB.prepare('DELETE FROM admin_sessions WHERE account_id=?').bind(accountId),
       env.DB.prepare('INSERT INTO admin_sessions(id,account_id,token_hash,expires_at,created_at,last_seen_at) VALUES(?,?,?,?,?,?)')
