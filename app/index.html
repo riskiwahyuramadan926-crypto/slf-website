@@ -5,13 +5,36 @@
 <meta name="theme-color" content="#0b0912"><meta name="description" content="Aplikasi operasional Survival Legacy Frontier.">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>SLF Mobile</title><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./app.css?v=cc39c93-fix1"><script src="./app.js?v=cc39c93-fix1" defer></script>
+<link rel="stylesheet" href="./app.css?v=slf-hotfix-20261124a">
+<script>
+(function(){
+  window.__SLF_APP_READY=false;
+  function showBootError(message,source,line,column){
+    try{
+      var box=document.getElementById('slfBootError');
+      if(!box){box=document.createElement('pre');box.id='slfBootError';box.setAttribute('role','alert');box.style.cssText='position:fixed!important;z-index:2147483647!important;top:8px!important;left:8px!important;right:8px!important;max-height:38vh!important;overflow:auto!important;margin:0!important;padding:14px!important;background:#8b1010!important;color:#fff!important;border:2px solid #ffb4b4!important;border-radius:10px!important;font:12px/1.5 monospace!important;white-space:pre-wrap!important;pointer-events:auto!important';(document.body||document.documentElement).appendChild(box);}
+      box.textContent='SLF MOBILE GAGAL MEMUAT\n'+String(message||'Kesalahan tidak diketahui')+'\nFile: '+String(source||'')+'\nBaris: '+String(line||'-')+' · Kolom: '+String(column||'-');
+    }catch(_){}
+  }
+  window.onerror=function(message,source,line,column){showBootError(message,source,line,column);return false;};
+  window.onunhandledrejection=function(event){var reason=event&&event.reason;showBootError(reason&&reason.message?reason.message:String(reason||'Promise ditolak'),'Promise',0,0);};
+  document.addEventListener('click',function(event){
+    if(window.__SLF_APP_READY)return;
+    var target=event.target&&event.target.closest?event.target.closest('#loginButton,#roleAction,[data-fallback-menu]'):null;
+    if(!target)return;
+    event.preventDefault();
+    var modal=document.getElementById('loginModal');
+    if(modal){modal.hidden=false;modal.classList.add('open');modal.style.setProperty('display','flex','important');}
+  },true);
+})();
+</script>
+<script src="./app.js?v=slf-hotfix-20261124a" defer></script>
 </head>
 <body><div class="app-shell">
 <header class="topbar"><a class="brand" href="#home"><span class="brand-mark">✦</span><span><b>SLF MOBILE</b><small>SURVIVAL LEGACY FRONTIER</small></span></a><div class="top-actions"><span class="connection" id="connectionState"><i></i> Memeriksa</span><button class="profile-action" id="loginButton" type="button"><span id="roleLabel">Belum terhubung</span><b id="roleAction">Masuk Admin</b></button></div></header>
 <main id="homeView" class="view active">
 <section class="welcome"><div class="eyebrow">PUSAT KENDALI SERVER</div><h1>Admin Tools.<br><span>Versi Mobile SLF.</span></h1><p>Susunan menu mengikuti Pusat Operasional Admin website SLF. Hak akses Owner dan Admin mengikuti verifikasi server.</p></section>
-<section class="section-block"><div class="section-heading"><div><span class="eyebrow">MENU RESMI ADMIN TOOLS</span><h2>Menu Aplikasi</h2></div><span class="muted">Sesuai website</span></div><div id="menuGroups"></div></section>
+<section class="section-block"><div class="section-heading"><div><span class="eyebrow">MENU RESMI ADMIN TOOLS</span><h2>Menu Aplikasi</h2></div><span class="muted">Sesuai website</span></div><div id="menuGroups"><section class="menu-group"><div class="menu-group-title">Operasional · Admin dan Owner</div><div class="module-grid"><button class="module-card" type="button" data-fallback-menu="orders"><span class="module-icon">◈</span><span class="module-copy"><b>Pesanan & Transaksi</b><small>Menu Admin Tools</small></span><span class="arrow">↗</span></button><button class="module-card" type="button" data-fallback-menu="tickets"><span class="module-icon">▣</span><span class="module-copy"><b>Tiket Re-entry</b><small>Menu Admin Tools</small></span><span class="arrow">↗</span></button><button class="module-card" type="button" data-fallback-menu="reviews"><span class="module-icon">☆</span><span class="module-copy"><b>Ulasan</b><small>Menu Admin Tools</small></span><span class="arrow">↗</span></button><button class="module-card" type="button" data-fallback-menu="customers"><span class="module-icon">♙</span><span class="module-copy"><b>Pelanggan</b><small>Menu Admin Tools</small></span><span class="arrow">↗</span></button><button class="module-card" type="button" data-fallback-menu="activity"><span class="module-icon">◷</span><span class="module-copy"><b>Aktivitas</b><small>Menu Admin Tools</small></span><span class="arrow">↗</span></button><button class="module-card" type="button" data-fallback-menu="support"><span class="module-icon">?</span><span class="module-copy"><b>Pusat Bantuan</b><small>Menu Admin Tools</small></span><span class="arrow">↗</span></button><button class="module-card" type="button" data-fallback-menu="announcements"><span class="module-icon">▤</span><span class="module-copy"><b>Pengumuman</b><small>Menu Admin Tools</small></span><span class="arrow">↗</span></button><button class="module-card" type="button" data-fallback-menu="notes"><span class="module-icon">✎</span><span class="module-copy"><b>Catatan Tim</b><small>Menu Admin Tools</small></span><span class="arrow">↗</span></button></div></section><section class="menu-group owner-menu"><div class="menu-group-title">Khusus Owner · Tidak tersedia untuk Admin</div><div class="module-grid"><button class="module-card owner-card" type="button" data-fallback-menu="products"><span class="module-icon">◇</span><span class="module-copy"><b>Produk</b><small>Khusus Owner</small></span><span class="arrow">↗</span></button><button class="module-card owner-card" type="button" data-fallback-menu="promos"><span class="module-icon">％</span><span class="module-copy"><b>Promo</b><small>Khusus Owner</small></span><span class="arrow">↗</span></button><button class="module-card owner-card" type="button" data-fallback-menu="reports"><span class="module-icon">▥</span><span class="module-copy"><b>Statistik & Laporan</b><small>Khusus Owner</small></span><span class="arrow">↗</span></button><button class="module-card owner-card" type="button" data-fallback-menu="finance"><span class="module-icon">Rp</span><span class="module-copy"><b>Kas & Keuangan</b><small>Khusus Owner</small></span><span class="arrow">↗</span></button><button class="module-card owner-card" type="button" data-fallback-menu="site-content"><span class="module-icon">✧</span><span class="module-copy"><b>Editor Website</b><small>Khusus Owner</small></span><span class="arrow">↗</span></button><button class="module-card owner-card" type="button" data-fallback-menu="wiki-manager"><span class="module-icon">▤</span><span class="module-copy"><b>Perpustakaan Wiki</b><small>Khusus Owner</small></span><span class="arrow">↗</span></button><button class="module-card owner-card" type="button" data-fallback-menu="studio"><span class="module-icon">✦</span><span class="module-copy"><b>✦ SLF Studio</b><small>Khusus Owner</small></span><span class="arrow">↗</span></button><button class="module-card owner-card" type="button" data-fallback-menu="access"><span class="module-icon">♛</span><span class="module-copy"><b>Akses & Role</b><small>Khusus Owner</small></span><span class="arrow">↗</span></button></div></section></div></section>
 
 <footer class="app-footer">SLF Mobile <span>•</span> Panel operasional internal</footer>
 </main>
