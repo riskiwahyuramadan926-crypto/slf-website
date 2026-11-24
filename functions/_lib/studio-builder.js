@@ -11,8 +11,8 @@ const clamp = (v,min,max,fallback) => { const n=Number(v); return Number.isFinit
 const plain = (v,max=5000) => String(v ?? '').replace(/[<>\u0000-\u001f]/g,' ').trim().slice(0,max);
 
 const SCOPES = {
-  production: { environment:'production', tablePrefix:STUDIO_TABLE_PREFIX, pagesTable:'studio_pages', backendTablesTable:'studio_backend_tables', rateLimitTable:'studio_data_rate_limits' },
-  preview: { environment:'preview', tablePrefix:STUDIO_PREVIEW_TABLE_PREFIX, pagesTable:'studio_preview_pages', backendTablesTable:'studio_preview_backend_tables', rateLimitTable:'studio_preview_data_rate_limits' }
+  production: { environment:'production', tablePrefix:STUDIO_TABLE_PREFIX, pagesTable:'studio_pages', draftsTable:'studio_drafts', backendTablesTable:'studio_backend_tables', rateLimitTable:'studio_data_rate_limits' },
+  preview: { environment:'preview', tablePrefix:STUDIO_PREVIEW_TABLE_PREFIX, pagesTable:'studio_preview_pages', draftsTable:'studio_preview_drafts', backendTablesTable:'studio_preview_backend_tables', rateLimitTable:'studio_preview_data_rate_limits' }
 };
 
 export function getStudioScope(request) {
@@ -75,6 +75,26 @@ export function normalizeStudioSubmission(definition,payload) {
   return {names,values};
 }
 
+const EASINGS = new Set(['linear','ease','ease-in','ease-out','ease-in-out']);
+const EFFECTS = new Set(['glass','glow','float','pulse','gradient','hover','outline','neon','shine','tilt','soft','border-glow']);
+function normalizeKeyframes(input) {
+ if(!Array.isArray(input))return [];if(input.length>60)throw new Error('Maksimal 60 keyframe per layer.');let previous=-1;
+ return input.map((frame,index)=>{const time=clamp(frame?.time,0,3600000,0);if(time<previous)throw new Error('Urutan waktu keyframe harus berurutan.');previous=time;const values={};
+ for(const [key,min,max,fallback] of [['x',-100,200,0],['y',-100,200,0],['rotation',-3600,3600,0],['scaleX',.01,20,1],['scaleY',.01,20,1],['skewX',-85,85,0],['skewY',-85,85,0],['opacity',0,1,1]])if(frame?.[key]!==undefined)values[key]=clamp(frame[key],min,max,fallback);
+ return {id:String(frame?.id||'kf-'+index).replace(/[^A-Za-z0-9_-]/g,'').slice(0,40)||'kf-'+index,time,easing:EASINGS.has(frame?.easing)?frame.easing:'linear',values};});
+}
+function normalizeStudioVisual(input={}) {
+ const x=input&&typeof input==='object'?input:{},out={};
+ for(const key of ['color','backgroundColor','borderColor','shadowColor'])if(color(x[key]))out[key]=color(x[key]);
+ for(const [key,min,max,fallback] of [['rotation',-3600,3600,0],['scaleX',.01,20,1],['scaleY',.01,20,1],['skewX',-85,85,0],['skewY',-85,85,0],['opacity',0,1,1],['borderWidth',0,40,0],['borderRadius',0,500,0],['shadowBlur',0,120,0],['shadowX',-120,120,0],['shadowY',-120,120,0],['fontSize',8,240,16],['fontWeight',100,900,700],['letterSpacing',-10,50,0],['lineHeight',.5,4,1.2]])if(x[key]!==undefined)out[key]=clamp(x[key],min,max,fallback);
+ if(['solid','dashed','dotted','double','none'].includes(x.borderStyle))out.borderStyle=x.borderStyle;
+ if(['cover','contain','fill'].includes(x.objectFit))out.objectFit=x.objectFit;
+ if(['left','center','right','justify'].includes(x.textAlign))out.textAlign=x.textAlign;
+ if(x.gradient&&typeof x.gradient==='object'){const stops=Array.isArray(x.gradient.stops)?x.gradient.stops.slice(0,8).map(v=>({color:color(v?.color)||'#000000',position:clamp(v?.position,0,100,0)})):[];if(stops.length>=2)out.gradient={type:x.gradient.type==='radial'?'radial':'linear',angle:clamp(x.gradient.angle,0,360,135),stops};}
+ if(Array.isArray(x.effects))out.effects=x.effects.filter(v=>EFFECTS.has(v)).slice(0,12);if(typeof x.shadow==='boolean')out.shadow=x.shadow;
+ if(['none','soft','deep','glow','gold'].includes(x.shadowPreset))out.shadowPreset=x.shadowPreset;return out;
+}
+
 export function normalizeStudioLayers(input, tablePrefix=STUDIO_TABLE_PREFIX) {
   if(!Array.isArray(input)||input.length>100) throw new Error('Halaman hanya boleh memiliki maksimal 100 layer.');
   const prefix=tablePrefix===STUDIO_PREVIEW_TABLE_PREFIX?STUDIO_PREVIEW_TABLE_PREFIX:STUDIO_TABLE_PREFIX;
@@ -104,7 +124,7 @@ export function normalizeStudioLayers(input, tablePrefix=STUDIO_TABLE_PREFIX) {
     if(['system','serif','sans','mono','rounded'].includes(styles.fontFamily))safeStyles.fontFamily=styles.fontFamily;
     const fieldName=String(item.fieldName??'').trim().toLowerCase();
     if(type==='input'&&(!IDENTIFIER.test(fieldName)||fieldNames.has(fieldName)))throw new Error('Input layer harus memiliki nama field unik, misalnya player_name.');if(type==='input')fieldNames.add(fieldName);
-    return {id,type,name:plain(item.name,80)||'Layer '+(index+1),content:plain(item.content,5000),src,href,fieldName,rows,action:{type:actionType,target:actionTarget},animation:ANIMATIONS.has(item.animation)?item.animation:'none',clickAnimation:ANIMATIONS.has(item.clickAnimation)?item.clickAnimation:'none',loop:item.loop===true,duration:clamp(item.duration,200,10000,900),styles:safeStyles};
+    const visual=normalizeStudioVisual(item.visual||item.styles||{}),keyframes=normalizeKeyframes(item.keyframes);return {id,type,name:plain(item.name,80)||'Layer '+(index+1),content:plain(item.content,5000),src,href,fieldName,rows,action:{type:actionType,target:actionTarget},animation:ANIMATIONS.has(item.animation)?item.animation:'none',clickAnimation:ANIMATIONS.has(item.clickAnimation)?item.clickAnimation:'none',loop:item.loop===true,duration:clamp(item.duration,200,10000,900),x:clamp(item.x,-100,200,0),y:clamp(item.y,-100,200,0),width:clamp(item.width,0,200,100),height:clamp(item.height,0,200,0),z:clamp(item.z,0,100,index+1),visible:item.visible!==false,positioned:['x','y','width','height'].some(key=>item[key]!==undefined),rotation:clamp(item.rotation,-3600,3600,0),scaleX:clamp(item.scaleX,.01,20,1),scaleY:clamp(item.scaleY,.01,20,1),skewX:clamp(item.skewX,-85,85,0),skewY:clamp(item.skewY,-85,85,0),opacity:clamp(item.opacity,0,1,1),easing:EASINGS.has(item.easing)?item.easing:'ease',keyframes,visual,styles:safeStyles};
   });
 }
 
@@ -112,6 +132,7 @@ export async function ensureStudioMetaSchema(db, scope='production') {
   const selected=typeof scope==='string'?(scope==='preview'?SCOPES.preview:SCOPES.production):scope;
   const safe=selected?.environment==='preview'?SCOPES.preview:SCOPES.production;
   await db.prepare('CREATE TABLE IF NOT EXISTS "'+safe.pagesTable+'" (id TEXT PRIMARY KEY NOT NULL,route_path TEXT NOT NULL UNIQUE,page_name TEXT NOT NULL,layers_json TEXT NOT NULL,is_published INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)').run();
+  await db.prepare('CREATE TABLE IF NOT EXISTS "'+safe.draftsTable+'" (id TEXT PRIMARY KEY NOT NULL,project_name TEXT NOT NULL,page_path TEXT NOT NULL,project_json TEXT NOT NULL,is_template INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)').run();
   await db.prepare('CREATE TABLE IF NOT EXISTS "'+safe.backendTablesTable+'" (table_name TEXT PRIMARY KEY NOT NULL,display_name TEXT NOT NULL,schema_json TEXT NOT NULL,allow_public_write INTEGER NOT NULL DEFAULT 1,allow_public_read INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL)').run();
   await db.prepare('CREATE TABLE IF NOT EXISTS "'+safe.rateLimitTable+'" (ip_hash TEXT PRIMARY KEY NOT NULL,attempts INTEGER NOT NULL DEFAULT 0,window_started INTEGER NOT NULL)').run();
   return safe;

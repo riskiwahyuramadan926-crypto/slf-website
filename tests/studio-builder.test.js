@@ -65,3 +65,18 @@ test('Studio pages and backend table creation both enforce Owner authorization a
  assert.match(pages,/getStudioScope/);assert.match(backend,/scope\.tablePrefix/);
  assert.match(data,/scope\.backendTablesTable/);assert.match(data,/scope\.rateLimitTable/);
 });
+
+test('Studio layer transforms, keyframes, gradients, border, shadow and effects normalize safely',()=>{
+ const [layer]=normalizeStudioLayers([{id:'animated',type:'shape',x:12,y:24,width:50,height:30,rotation:45,scaleX:1.4,scaleY:.8,skewX:12,opacity:.7,easing:'ease-in-out',visual:{gradient:{type:'linear',angle:120,stops:[{color:'#112233',position:0},{color:'#aabbcc',position:100}]},borderWidth:3,borderColor:'#ffffff',shadowBlur:12,effects:['glow','neon','invalid']},keyframes:[{time:0,x:0,y:0,rotation:0},{time:900,x:40,y:25,rotation:180,easing:'ease-out'}]}]);
+ assert.equal(layer.rotation,45);assert.equal(layer.scaleX,1.4);assert.equal(layer.skewX,12);assert.equal(layer.visual.gradient.stops.length,2);assert.deepEqual(layer.visual.effects,['glow','neon']);assert.equal(layer.keyframes[1].values.rotation,180);assert.equal(layer.easing,'ease-in-out');assert.equal(layer.positioned,true);
+ assert.throws(()=>normalizeStudioLayers([{id:'bad',type:'shape',keyframes:[{time:900},{time:100}]}]),/berurutan/);
+ assert.throws(()=>normalizeStudioLayers([{id:'many',type:'shape',keyframes:Array.from({length:61},(_,i)=>({time:i}))}]),/60 keyframe/);
+});
+test('Studio metadata creates isolated draft tables for production and preview',async()=>{
+ const source=await readFile(new URL('../functions/_lib/studio-builder.js',import.meta.url),'utf8');
+ assert.match(source,/draftsTable:'studio_drafts'/);assert.match(source,/draftsTable:'studio_preview_drafts'/);assert.match(source,/safe\.draftsTable/);
+});
+test('Studio Draft D1 endpoint is Owner-only and scope-isolated',async()=>{
+ const source=await readFile(new URL('../functions/api/admin/studio/drafts.js',import.meta.url),'utf8');
+ assert.match(source,/requireOwner/);assert.match(source,/getStudioScope/);assert.match(source,/scope\.draftsTable/);assert.match(source,/onRequestPost/);assert.match(source,/onRequestDelete/);
+});

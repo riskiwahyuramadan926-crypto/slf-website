@@ -11,6 +11,9 @@ const fonts=new Set(['system','serif','sans','rounded','mono','fantasy','display
 const shadows=new Set(['none','soft','deep','glow','gold']);
 const filters=new Set(['none','softBlur','gray','warm','vivid']);
 const effects=new Set(['glass','glow','float','pulse','gradient','hover','outline','neon','shine','tilt','soft','border-glow']);
+const easingValues=new Set(['linear','ease','ease-in','ease-out','ease-in-out']);
+function normalizeKeyframes(input){if(!Array.isArray(input))return [];if(input.length>60)throw new Error('Maksimal 60 keyframe per layer.');let previous=-1;return input.map((frame,index)=>{const time=num(frame?.time,0,3600000,0);if(time<previous)throw new Error('Urutan waktu keyframe harus berurutan.');previous=time;const values={};for(const [key,min,max,fallback] of [['x',-100,200,0],['y',-100,200,0],['translateX',-100,100,0],['translateY',-100,100,0],['x',-100,200,0],['y',-100,200,0],['rotation',-3600,3600,0],['scaleX',.01,20,1],['scaleY',.01,20,1],['skewX',-85,85,0],['skewY',-85,85,0],['shadowBlur',0,120,0],['shadowX',-120,120,0],['shadowY',-120,120,0],['rotation',-3600,3600,0],['scaleX',.01,20,1],['scaleY',.01,20,1],['skewX',-85,85,0],['skewY',-85,85,0],['opacity',0,1,1]])if(frame?.[key]!==undefined)values[key]=num(frame[key],min,max,fallback);return {id:String(frame?.id||'kf-'+index).replace(/[^A-Za-z0-9_-]/g,'').slice(0,40)||'kf-'+index,time,easing:easingValues.has(frame?.easing)?frame.easing:'linear',values};});}
+
 function normalizeStyles(input){
  const x=input&&typeof input==='object'?input:{},out={};
  if(color(x.color))out.color=color(x.color);
@@ -25,6 +28,9 @@ function normalizeStyles(input){
  if(['left','center','right','justify'].includes(x.textAlign))out.textAlign=x.textAlign;
  if(['none','uppercase','lowercase','capitalize'].includes(x.textTransform))out.textTransform=x.textTransform;
  if(shadows.has(x.boxShadow))out.boxShadow=x.boxShadow;
+ if(x.gradient&&typeof x.gradient==='object'){const stops=Array.isArray(x.gradient.stops)?x.gradient.stops.slice(0,8).map(v=>({color:color(v?.color)||'#000000',position:num(v?.position,0,100,0)})):[];if(stops.length>=2)out.gradient={type:x.gradient.type==='radial'?'radial':'linear',angle:num(x.gradient.angle,0,360,135),stops};}
+ if(typeof x.shadow==='boolean')out.shadow=x.shadow;if(color(x.shadowColor))out.shadowColor=color(x.shadowColor);
+ if(['solid','dashed','dotted','double','none'].includes(x.borderStyle))out.borderStyle=x.borderStyle;
  if(filters.has(x.filter))out.filter=x.filter;
  if(['cover','contain','fill'].includes(x.objectFit))out.objectFit=x.objectFit;
  return out;
@@ -41,7 +47,7 @@ function normalize(input){
  });
  const elementEdits=(Array.isArray(d.elementEdits)?d.elementEdits:[]).slice(0,160).map(x=>{
   if(!x||!pageOk(x.page)||!selectorOk(x.selector))throw new Error('Target elemen tidak valid. Pilih ulang elemen pada preview.');
-  const edit={page:x.page,selector:x.selector,tag:plain(x.tag,20),styles:normalizeStyles(x.styles),effects:Array.isArray(x.effects)?x.effects.filter(v=>effects.has(v)).slice(0,7):[],hidden:x.hidden===true};
+  const edit={page:x.page,selector:x.selector,tag:plain(x.tag,20),styles:normalizeStyles(x.styles),effects:Array.isArray(x.effects)?x.effects.filter(v=>effects.has(v)).slice(0,12):[],keyframes:normalizeKeyframes(x.keyframes),duration:num(x.duration,200,10000,900),easing:easingValues.has(x.easing)?x.easing:'ease',hidden:x.hidden===true};
   if(typeof x.text==='string')edit.text=plain(x.text,4000);if(typeof x.href==='string'){const href=plain(x.href,500);if(href&&!(/^(https:\/\/|\/(?!\/)|#)/i.test(href)))throw new Error('Tautan harus berupa path lokal atau HTTPS.');edit.href=href;}
   if(typeof x.src==='string'){const src=plain(x.src,500);const valid=x.tag==='video'?/^\/assets\/images\/uploads\/slf-[a-f0-9]{24}\.(?:mp4|webm)$/i.test(src):x.tag==='audio'?/^\/assets\/images\/uploads\/slf-[a-f0-9]{24}\.(?:mp3|m4a|wav|ogg|webm)$/i.test(src):!src||validImage(src);if(src&&!valid)throw new Error('URL media tidak valid.');edit.src=src;edit.backgroundImage=x.backgroundImage===true;}
   return edit;
@@ -78,7 +84,7 @@ function normalize(input){
   const fieldName=plain(x.fieldName,32).toLowerCase();if(type==='input'&&!/^[a-z][a-z0-9_]{0,31}$/.test(fieldName))throw new Error('Nama field input tidak valid.');
   const animation=['fade','float','pulse'].includes(x.animation)?x.animation:'none';
   const clickAnimation=['fade','float','pulse'].includes(x.clickAnimation)?x.clickAnimation:'none';
-  return {id:String(x.id),page:x.page,type,name:plain(x.name,80),content:plain(x.content,5000),src,href,fieldName,rows:Array.isArray(x.rows)?x.rows.slice(0,20).map(row=>Array.isArray(row)?row.slice(0,8).map(cell=>plain(cell,300)):[]):[],action:{type:actionType,target:actionTarget},animation,clickAnimation,loop:x.loop===true,duration:num(x.duration,200,10000,900),styles:normalizeStyles(x.styles)};
+  return {id:String(x.id),page:x.page,type,name:plain(x.name,80),content:plain(x.content,5000),src,href,fieldName,rows:Array.isArray(x.rows)?x.rows.slice(0,20).map(row=>Array.isArray(row)?row.slice(0,8).map(cell=>plain(cell,300)):[]):[],action:{type:actionType,target:actionTarget},animation,clickAnimation,loop:x.loop===true,duration:num(x.duration,200,10000,900),x:num(x.x,-100,200,0),y:num(x.y,-100,200,0),width:num(x.width,0,200,100),height:num(x.height,0,200,0),z:num(x.z,0,100,i+1),visible:x.visible!==false,positioned:['x','y','width','height'].some(key=>x[key]!==undefined),rotation:num(x.rotation,-3600,3600,0),scaleX:num(x.scaleX,.01,20,1),scaleY:num(x.scaleY,.01,20,1),skewX:num(x.skewX,-85,85,0),skewY:num(x.skewY,-85,85,0),opacity:num(x.opacity,0,1,1),easing:easingValues.has(x.easing)?x.easing:'ease',keyframes:normalizeKeyframes(x.keyframes),visual:normalizeStyles(x.visual),styles:normalizeStyles(x.styles)};
  });
 
  return {version:2,page,accent:color(d.accent)||'#9b6cff',accent2:color(d.accent2)||'#f3cb82',background:color(d.background)||'#100c18',globalFont:fonts.has(d.globalFont)?d.globalFont:'system',overlayColor:color(d.overlayColor)||'#100c18',overlayOpacity:num(d.overlayOpacity,0,100,65),layers,freeLayers,elementEdits,insertedElements,appLayers};
