@@ -46,7 +46,28 @@ function openAdminMenu(key,label,ownerOnly){if(!role){openLogin('Masuk Admin unt
 function openLogin(message){$('loginModal').hidden=false;$('loginMessage').textContent=message||'Masukkan Gmail dan password akun SLF.';$('adminEmail').focus();}
 function closeLogin(){$('loginModal').hidden=true;}
 async function auth(){const response=await fetch('/api/admin/me',{credentials:'same-origin',cache:'no-store'});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Sesi belum aktif.');return data;}
-async function login(){const email=$('adminEmail').value.trim(),password=$('adminPassword').value,accessCode=$('adminAccessCode').value.trim();if(!email||password.length<12){$('loginMessage').textContent='Isi Gmail dan password minimal 12 karakter.';return;}const btn=$('loginSubmit');btn.disabled=true;btn.textContent='Memeriksa…';try{const response=await fetch('/api/admin/account',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({action:'login',email,password,accessCode})});let data;try{data=await response.json();}catch{throw new Error('Endpoint autentikasi mengirim respons tidak valid (HTTP '+response.status+').');}if(!response.ok)throw new Error(data.error||('Login ditolak oleh server (HTTP '+response.status+').'));if(!data.ok||!['owner','admin'].includes(data.role))throw new Error(data.error||'Respons login tidak lengkap: role akun tidak diterima.');sessionStorage.setItem(SECRET_KEY,'cookie-session');role=data.role; $('adminPassword').value='';$('adminAccessCode').value='';closeLogin();renderHome();notify('Login '+(role==='owner'?'Owner':'Admin')+' berhasil.');}catch(e){const reason=String(e&&e.message?e.message:e||'Kesalahan tidak diketahui');$('loginMessage').textContent=reason==='Failed to fetch'?'Tidak dapat terhubung ke endpoint login. Periksa koneksi internet atau status deployment Preview.':reason.slice(0,320);}finally{btn.disabled=false;btn.textContent='Masuk';}}
+const normalizeLoginEmail = value => String(value ?? '').trim().toLowerCase().replace(/\s+/g, '');
+const validLoginEmail = value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 254;
+async function login(){
+ const emailField=$('adminEmail');
+ if(!emailField){$('loginMessage').textContent='Kolom email tidak ditemukan. Periksa elemen #adminEmail pada app/index.html.';return;}
+ const email=normalizeLoginEmail(emailField.value),password=$('adminPassword').value,accessCode=$('adminAccessCode').value.trim();
+ if(!validLoginEmail(email)){$('loginMessage').textContent='Format email tidak valid. Periksa alamat email yang dimasukkan.';return;}
+ if(password.length<12){$('loginMessage').textContent='Password harus minimal 12 karakter.';return;}
+ emailField.value=email;
+ const btn=$('loginSubmit');btn.disabled=true;btn.textContent='Memeriksa…';
+ try{
+  const response=await fetch('/api/admin/account',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({action:'login',email,password,accessCode})});
+  let data;
+  try{data=await response.json();}catch{throw new Error('Endpoint autentikasi mengirim respons tidak valid (HTTP '+response.status+').');}
+  if(!response.ok)throw new Error(data.error||('Login ditolak oleh server (HTTP '+response.status+').'));
+  if(!data.ok||!['owner','admin'].includes(data.role))throw new Error(data.error||'Respons login tidak lengkap: role akun tidak diterima.');
+  sessionStorage.setItem(SECRET_KEY,'cookie-session');role=data.role;$('adminPassword').value='';$('adminAccessCode').value='';closeLogin();renderHome();notify('Login '+(role==='owner'?'Owner':'Admin')+' berhasil.');
+ }catch(e){
+  const reason=String(e&&e.message?e.message:e||'Kesalahan tidak diketahui');
+  $('loginMessage').textContent=reason==='Failed to fetch'?'Tidak dapat terhubung ke endpoint login. Periksa koneksi internet atau status deployment Preview.':reason.slice(0,320);
+ }finally{btn.disabled=false;btn.textContent='Masuk';}
+}
 async function logout(){try{await fetch('/api/admin/account',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({action:'logout'})});}catch{}sessionStorage.removeItem(SECRET_KEY);role='';renderHome();notify('Sesi aplikasi berakhir.');}
 async function loadProjects(){projects=await get(PROJECTS_KEY)||[];if(!Array.isArray(projects))projects=[];const byPath=new Map(projects.filter(p=>p.isDefault).map(p=>[p.pagePath,p]));PAGE_SEEDS.forEach(page=>{if(!byPath.has(page.path))projects.push(createProject(page));});await put(PROJECTS_KEY,projects);renderLobby();}
 function renderLobby(){
