@@ -5,6 +5,10 @@
   let allOrders = [], allReviews = [], allProducts = [], allPromos = [], allCustomers = [], allTickets = [], allAnnouncements = [], allNotes = [], allCmsItems = [], allFinanceEntries = [], currentFinance = {}, currentRole = '', ownerSecretConfigured = false, lastCmsKind = 'slot', knownOrderIds = new Set(), knownTicketIds = new Set(), firstLoad = true, firstTicketLoad = true, activeTab = 'orders';
   const ownerOnlyTabs = new Set(['products','promos','reports','finance','site-content','studio','access','wiki-manager']);
   const allTabNames = ['orders','tickets','reviews','products','promos','customers','reports','activity','support','announcements','notes','finance','site-content','studio','access','wiki-manager'];
+  const mobileAppTarget = new URLSearchParams(location.search).get('mobile_app');
+  const mobileAppMode = allTabNames.includes(mobileAppTarget);
+  let mobileAppTabLoaded = false;
+  if(mobileAppMode){activeTab=mobileAppTarget;document.body.classList.add('mobile-app-mode');}
   const statusLabels = {PENDING_PAYMENT:'Menunggu pembayaran',PAID:'Pembayaran berhasil',PROCESSING:'Sedang diproses',COMPLETED:'Selesai',EXPIRED:'Kedaluwarsa',CANCELLED:'Dibatalkan'};
   const idr = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -135,6 +139,7 @@
       $('login-panel').hidden=true;$('dashboard').hidden=false;
       renderStats(result.stats||{});
       renderOrders();
+      if(mobileAppMode){applyTabVisibility();if(!mobileAppTabLoaded){mobileAppTabLoaded=true;if(activeTab!=='orders')loadTab(activeTab);}}
       $('last-updated').textContent='Pembaruan terakhir: '+new Date(result.generatedAt||Date.now()).toLocaleString('id-ID')+' · '+allOrders.length+' pesanan terakhir';
       if(manual)showToast('Data pesanan diperbarui.');
     }catch(e){

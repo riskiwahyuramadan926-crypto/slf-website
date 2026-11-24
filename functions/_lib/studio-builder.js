@@ -61,12 +61,13 @@ export function normalizeStudioLayers(input) {
   const layerIds=new Set(),fieldNames=new Set();
   return input.map((item,index)=>{
     if(!item||typeof item!=='object') throw new Error('Layer '+(index+1)+' tidak valid.');
-    const type=['text','image','video','button','table','card','input'].includes(item.type)?item.type:'';
+    const type=['text','image','video','audio','shape','button','table','card','input'].includes(item.type)?item.type:'';
     if(!type) throw new Error('Jenis layer '+(index+1)+' tidak didukung.');
     const id=String(item.id??'layer-'+index);if(!/^[A-Za-z0-9_-]{1,120}$/.test(id)||layerIds.has(id))throw new Error('ID layer tidak valid atau duplikat.');layerIds.add(id);
     const src=plain(item.src,1000);
-    if(type==='image'&&!(/^(https:\/\/[^\s"'<>]+|\/(?:api\/media\/slf-[a-f0-9]{24}\.(?:png|jpe?g|webp|gif|avif)|assets\/images\/[A-Za-z0-9_./-]+\.(?:png|jpe?g|webp|gif|avif)))$/i.test(src)))throw new Error('URL gambar harus HTTPS atau aset gambar SLF yang valid.');
-    if(type==='video'&&!/^https:\/\/[^\s"'<>]+$/i.test(src))throw new Error('URL video harus HTTPS.');
+    if(type==='image'&&!(/^(https:\/\/[^\s"'<>]+|\/assets\/images\/uploads\/slf-[a-f0-9]{24}\.(?:png|jpe?g|webp|gif|avif))$/i.test(src)))throw new Error('URL gambar harus HTTPS atau aset gambar SLF yang valid.');
+    if(type==='video'&&!(/^(https:\/\/[^\s"'<>]+|\/assets\/images\/uploads\/slf-[a-f0-9]{24}\.(?:mp4|webm))$/i.test(src)))throw new Error('URL video harus HTTPS atau aset video SLF.');
+    if(type==='audio'&&!(/^(https:\/\/[^\s"'<>]+|\/assets\/images\/uploads\/slf-[a-f0-9]{24}\.(?:mp3|m4a|wav|ogg|webm))$/i.test(src)))throw new Error('URL audio harus HTTPS atau aset audio SLF.');
     const href=plain(item.href,1000);
     if(href&&!(/^(https:\/\/[^\s"'<>]+|\/(?!\/)[A-Za-z0-9/_?&=.%#-]*|#[A-Za-z0-9_.-]+)$/i.test(href)))throw new Error('Tautan tombol harus path internal, anchor, atau HTTPS.');
     const actionType=ACTIONS.has(item.action?.type)?item.action.type:'none',actionTarget=plain(item.action?.target,120);

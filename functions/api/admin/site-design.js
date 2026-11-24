@@ -1,5 +1,6 @@
 import { json, fail, readJson, requireOwner, logAdminActivity } from '../../_lib/common.js';
 
+function productionOnly(request){const host=new URL(request.url).hostname.toLowerCase();return host==='legacy-frontier.web.id'||host==='www.legacy-frontier.web.id';}
 const color=v=>/^#[0-9a-f]{6}$/i.test(String(v||''))?String(v).toLowerCase():'';
 const num=(v,min,max,fallback)=>{const n=Number(v);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;};
 const plain=(v,max)=>String(v==null?'':v).replace(/[<>]/g,'').replace(/[\u0000-\u001f]/g,' ').trim().slice(0,max);
@@ -42,7 +43,7 @@ function normalize(input){
   if(!x||!pageOk(x.page)||!selectorOk(x.selector))throw new Error('Target elemen tidak valid. Pilih ulang elemen pada preview.');
   const edit={page:x.page,selector:x.selector,tag:plain(x.tag,20),styles:normalizeStyles(x.styles),effects:Array.isArray(x.effects)?x.effects.filter(v=>effects.has(v)).slice(0,7):[],hidden:x.hidden===true};
   if(typeof x.text==='string')edit.text=plain(x.text,4000);if(typeof x.href==='string'){const href=plain(x.href,500);if(href&&!(/^(https:\/\/|\/(?!\/)|#)/i.test(href)))throw new Error('Tautan harus berupa path lokal atau HTTPS.');edit.href=href;}
-  if(typeof x.src==='string'){const src=plain(x.src,500);if(src&&!validImage(src))throw new Error('URL gambar tidak valid.');edit.src=src;edit.backgroundImage=x.backgroundImage===true;}
+  if(typeof x.src==='string'){const src=plain(x.src,500);const valid=x.tag==='video'?/^\/assets\/images\/uploads\/slf-[a-f0-9]{24}\.(?:mp4|webm)$/i.test(src):x.tag==='audio'?/^\/assets\/images\/uploads\/slf-[a-f0-9]{24}\.(?:mp3|m4a|wav|ogg|webm)$/i.test(src):!src||validImage(src);if(src&&!valid)throw new Error('URL media tidak valid.');edit.src=src;edit.backgroundImage=x.backgroundImage===true;}
   return edit;
  });
  const freeLayers=(Array.isArray(d.freeLayers)?d.freeLayers:[]).slice(0,100).map((x,i)=>{
@@ -52,18 +53,21 @@ function normalize(input){
  });
  const insertedElements=(Array.isArray(d.insertedElements)?d.insertedElements:[]).slice(0,40).map(x=>{
   if(!x||!pageOk(x.page)||!selectorOk(x.containerSelector)||!/^slf-added-[a-z0-9]{5,12}$/.test(String(x.id||'')))throw new Error('Elemen tambahan tidak valid.');
-  const type=['image','button','divider','card'].includes(x.type)?x.type:'text',src=plain(x.src,500);
+  const type=['image','video','audio','button','divider','card','shape'].includes(x.type)?x.type:'text',src=plain(x.src,500);
   if(type==='image'&&(!src||!validImage(src)))throw new Error('Gambar tambahan membutuhkan URL gambar yang valid.');
+  if(type==='video'&&!/^\/assets\/images\/uploads\/slf-[a-f0-9]{24}\.(?:mp4|webm)$/i.test(src))throw new Error('Video tambahan harus berasal dari pustaka media SLF.');
+  if(type==='audio'&&!/^\/assets\/images\/uploads\/slf-[a-f0-9]{24}\.(?:mp3|m4a|wav|ogg|webm)$/i.test(src))throw new Error('Audio tambahan harus berasal dari pustaka media SLF.');
   const href=plain(x.href,500);if(type==='button'&&href&&!(/^(https:\/\/|\/(?!\/)|#)/i.test(href)))throw new Error('Tujuan tombol harus berupa path lokal atau HTTPS.');return {id:x.id,page:x.page,containerSelector:x.containerSelector,type,text:plain(x.text,1000),src,href,alt:plain(x.alt,120),styles:normalizeStyles(x.styles),effects:Array.isArray(x.effects)?x.effects.filter(v=>effects.has(v)).slice(0,12):[]};
  });
 
  const appLayers=(Array.isArray(d.appLayers)?d.appLayers:[]).slice(0,100).map((x,i)=>{
   if(!x||!pageOk(x.page)||!/^app-[A-Za-z0-9_-]{1,100}$/.test(String(x.id||'')))throw new Error('Project layer tidak valid.');
-  const type=['text','image','video','button','table','card','input'].includes(x.type)?x.type:'text';
+  const type=['text','image','video','audio','shape','button','table','card','input'].includes(x.type)?x.type:'text';
   const src=plain(x.src,500),href=plain(x.href,500);
-  if(['image','video'].includes(type)&&!src)throw new Error('Layer media memerlukan URL sumber.');
+  if(['image','video','audio'].includes(type)&&!src)throw new Error('Layer media memerlukan URL sumber.');
   if(type==='image'&&!validImage(src))throw new Error('URL gambar tidak valid.');
-  if(type==='video'&&!/^https:\/\/[A-Za-z0-9.-]+\/[^\s"'<>]+$/i.test(src))throw new Error('URL video harus HTTPS.');
+  if(type==='video'&&!(/^(https:\/\/[A-Za-z0-9.-]+\/[^\s"'<>]+|\/assets\/images\/uploads\/slf-[a-f0-9]{24}\.(?:mp4|webm))$/i.test(src)))throw new Error('URL video harus HTTPS atau aset video SLF.');
+  if(type==='audio'&&!(/^(https:\/\/[A-Za-z0-9.-]+\/[^\s"'<>]+|\/assets\/images\/uploads\/slf-[a-f0-9]{24}\.(?:mp3|m4a|wav|ogg|webm))$/i.test(src)))throw new Error('URL audio harus HTTPS atau aset audio SLF.');
   if(type==='button'&&href&&!(/^(https:\/\/|\/(?!\/)|#)/i.test(href)))throw new Error('Tujuan tombol tidak valid.');
   const actionType=['none','navigate','external','scroll','backend-submit','backend-read'].includes(x.action?.type)?x.action.type:'none';
   const actionTarget=plain(x.action?.target,120);
@@ -86,6 +90,7 @@ export async function onRequestGet({request,env}){
  return json({design,storageReady:typeof env.GITHUB_MEDIA_TOKEN==='string'&&env.GITHUB_MEDIA_TOKEN.trim().length>20,storageMessage:env.GITHUB_MEDIA_TOKEN?'Penyimpanan media GitHub aktif.':'Secret GITHUB_MEDIA_TOKEN belum dipasang; URL HTTPS dan aset lokal tetap bisa digunakan.'});
 }
 export async function onRequestPost({request,env}){
+ if(!productionOnly(request))return fail('Export desain dinonaktifkan di Preview untuk melindungi database Production.',409);
  if(!(await requireOwner(request,env)))return fail('Akses Owner diperlukan.',403);
  const d=await readJson(request);let design;
  try{design=normalize(d.design);}catch(error){return fail(error.message||'Konfigurasi desain tidak valid.');}

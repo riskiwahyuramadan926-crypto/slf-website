@@ -1,11 +1,11 @@
 import { json, fail, requireOwner, randomHex, logAdminActivity } from '../../_lib/common.js';
 
 const REPO='riskiwahyuramadan926-crypto/slf-website';
-const BRANCH='main';
 const DIR='assets/images/uploads';
-const MAX_BYTES=2*1024*1024;
-const allowed={'image/png':'png','image/jpeg':'jpg','image/webp':'webp','image/gif':'gif'};
-const validName=name=>/^slf-[a-f0-9]{24}\.(?:png|jpg|webp|gif)$/.test(String(name||''));
+const MAX_BYTES=15*1024*1024;
+const allowed={'image/png':'png','image/jpeg':'jpg','image/webp':'webp','image/gif':'gif','image/avif':'avif','video/mp4':'mp4','video/webm':'webm','audio/mpeg':'mp3','audio/mp3':'mp3','audio/mp4':'m4a','audio/x-m4a':'m4a','audio/wav':'wav','audio/x-wav':'wav','audio/ogg':'ogg','audio/webm':'webm'};
+const validName=name=>/^slf-[a-f0-9]{24}\.(?:png|jpg|webp|gif|avif|mp4|webm|mp3|m4a|wav|ogg)$/.test(String(name||''));
+function targetBranch(request){const host=new URL(request.url).hostname.toLowerCase();return host==='slf-website.pages.dev'||host==='legacy-frontier.web.id'||host==='www.legacy-frontier.web.id'?'main':'feat/slf-mobile-pwa';}
 const publicUrl=name=>'/assets/images/uploads/'+name;
 const apiUrl=path=>'https://api.github.com/repos/'+REPO+'/contents/'+path;
 
@@ -55,7 +55,8 @@ function encodeBase64(bytes){
 export async function onRequestGet({request,env}){
   if(!(await requireOwner(request,env)))return fail('Akses Owner diperlukan.',403);
   if(!tokenReady(env))return json({storageReady:false,assets:[],message:'Tambahkan secret GITHUB_MEDIA_TOKEN di Cloudflare Pages untuk mengaktifkan upload.'});
-  const {response,data}=await github(env,DIR+'?ref='+BRANCH);
+  const branch=targetBranch(request);
+  const {response,data}=await github(env,DIR+'?ref='+encodeURIComponent(branch));
   if(response.status===404)return json({storageReady:true,assets:[],message:'Pustaka media masih kosong.'});
   if(!response.ok)return fail(githubFailure(response.status,data),response.status===403?503:502);
   const assets=(Array.isArray(data)?data:[])
@@ -70,17 +71,18 @@ export async function onRequestPost({request,env}){
   let form;try{form=await request.formData();}catch(_){return fail('Form upload tidak dapat dibaca.');}
   const file=form.get('file');
   if(!file||typeof file.arrayBuffer!=='function')return fail('Pilih file gambar terlebih dahulu.');
-  if(!Object.prototype.hasOwnProperty.call(allowed,file.type))return fail('Format didukung: PNG, JPG, WEBP, dan GIF.');
-  if(file.size<1||file.size>MAX_BYTES)return fail('Ukuran file setelah optimasi maksimal 2 MB.');
+  if(!Object.prototype.hasOwnProperty.call(allowed,file.type))return fail('Format didukung: PNG, JPG, WEBP, GIF, AVIF, MP4, WEBM, MP3, M4A, WAV, dan OGG.');
+  if(file.size<1||file.size>MAX_BYTES)return fail('Ukuran file maksimal 15 MB.');
   const name='slf-'+randomHex(24)+'.'+allowed[file.type];
   const bytes=new Uint8Array(await file.arrayBuffer());
   const content=encodeBase64(bytes);
+  const branch=targetBranch(request);
   const {response,data}=await github(env,DIR+'/'+name,{
     method:'PUT',
-    body:JSON.stringify({message:'Upload media SLF Studio: '+name,branch:BRANCH,content})
+    body:JSON.stringify({message:'Upload media SLF Studio: '+name,branch,content})
   });
   if(!response.ok)return fail(githubFailure(response.status,data),response.status===403?503:502);
-  await logAdminActivity(env.DB,'media_uploaded','media',name,{size:file.size,type:file.type,storage:'github-static'});
+  if(branch==='main')await logAdminActivity(env.DB,'media_uploaded','media',name,{size:file.size,type:file.type,storage:'github-static'});
   return json({ok:true,asset:{key:name,url:publicUrl(name),size:file.size},commit:data.commit?.sha||null,deploymentTriggered:true},201);
 }
 
@@ -94,13 +96,14 @@ export async function onRequestDelete({request,env}){
   if(design&&String(design.config_json||'').includes(url))return fail('Gambar masih dipakai oleh desain website. Lepaskan dari layer aktif sebelum menghapus.');
   const usedCard=await env.DB.prepare('SELECT id FROM site_content WHERE image_url=? LIMIT 1').bind(url).first();
   if(usedCard)return fail('Gambar masih dipakai oleh kartu informasi website. Ganti atau lepaskan gambarnya sebelum menghapus.');
-  const {response:readResponse,data:current}=await github(env,DIR+'/'+key+'?ref='+BRANCH);
+  const branch=targetBranch(request);
+  const {response:readResponse,data:current}=await github(env,DIR+'/'+key+'?ref='+encodeURIComponent(branch));
   if(!readResponse.ok)return fail(githubFailure(readResponse.status,current),readResponse.status===404?404:502);
   const {response,data}=await github(env,DIR+'/'+key,{
     method:'DELETE',
-    body:JSON.stringify({message:'Hapus media SLF Studio: '+key,branch:BRANCH,sha:current.sha})
+    body:JSON.stringify({message:'Hapus media SLF Studio: '+key,branch,sha:current.sha})
   });
   if(!response.ok)return fail(githubFailure(response.status,data),response.status===403?503:502);
-  await logAdminActivity(env.DB,'media_deleted','media',key,{storage:'github-static'});
+  if(branch==='main')await logAdminActivity(env.DB,'media_deleted','media',key,{storage:'github-static'});
   return json({ok:true,key,deploymentTriggered:true});
 }

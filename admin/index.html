@@ -35,7 +35,16 @@
 .owner-admin-menu .admin-tab-group-label{color:var(--gold2)}
 .admin-tab-group[hidden]{display:none!important}
 
-.wiki-admin-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:16px;align-items:start}.wiki-admin-grid>.admin-form{min-width:0}#wiki-article-content{min-height:340px;font-family:ui-monospace,monospace;font-size:.82rem;line-height:1.55}#wiki-admin-error.show{display:block}@media(max-width:900px){.wiki-admin-grid{grid-template-columns:1fr}}\n</style></head>
+.wiki-admin-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:16px;align-items:start}.wiki-admin-grid>.admin-form{min-width:0}#wiki-article-content{min-height:340px;font-family:ui-monospace,monospace;font-size:.82rem;line-height:1.55}#wiki-admin-error.show{display:block}@media(max-width:900px){.wiki-admin-grid{grid-template-columns:1fr}}\n
+body.mobile-app-mode .topline,body.mobile-app-mode>header,body.mobile-app-mode main.wrap>.hero,body.mobile-app-mode .admin-tabs{display:none!important}
+body.mobile-app-mode main.wrap{width:100%;max-width:none;margin:0;padding:10px 12px 24px}
+body.mobile-app-mode #dashboard{display:block;min-height:100vh}
+body.mobile-app-mode #dashboard>section{max-width:100%}
+body.mobile-app-mode .admin-panel,body.mobile-app-mode .panel{border-radius:12px}
+body.mobile-app-mode .admin-order,body.mobile-app-mode .admin-list-card{padding:13px}
+body.mobile-app-mode .admin-inline-actions{display:flex;flex-wrap:wrap;gap:8px}
+body.mobile-app-mode button,body.mobile-app-mode .btn{min-height:42px}
+</style></head>
 <body><div class="topline"><b>SLF ADMIN</b> · PUSAT OPERASIONAL STORE</div>
 <header><div class="wrap nav"><a class="brand" href="/"><span class="mark">✦</span><span><strong>SURVIVAL LEGACY FRONTIER</strong><small>PUSAT OPERASIONAL ADMIN</small></span></a><div><a class="btn" href="/store/">Store</a> <span id="role-pill" class="admin-badge">Belum masuk</span> <button class="btn btn-quiet" id="logout" type="button">Keluar</button></div></div></header>
 <main class="wrap"><section class="hero"><div class="section-head"><div class="eyebrow">Panel staf privat</div><h1>Pusat<span>Operasional.</span></h1><p>Panel dibagi dua: Admin mengelola operasional; Owner mendapat semua menu, termasuk keuangan, produk, konfigurasi, dan akses staf. Pembayaran Store tetap dicocokkan dengan transaksi masuk di DANA.</p></div></section>

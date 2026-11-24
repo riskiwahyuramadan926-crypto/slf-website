@@ -20,6 +20,8 @@ function renderLayer(layer) {
   const base = 'class="slf-layer'+animation+'" data-layer="'+id+'" style="'+style+'"';
   if (layer.type === 'image') return '<figure '+base+'><img loading="lazy" src="'+esc(layer.src)+'" alt="'+esc(layer.name)+'"></figure>';
   if (layer.type === 'video') return '<div '+base+'><video controls playsinline preload="metadata" src="'+esc(layer.src)+'"></video></div>';
+  if (layer.type === 'audio') return '<div '+base+'><audio controls preload="metadata" src="'+esc(layer.src)+'"></audio></div>';
+  if (layer.type === 'shape') return '<div class="slf-layer'+animation+'" data-layer="'+id+'" style="min-width:90px;min-height:90px;border-radius:18px;background:#19e6b0;'+style+'">'+esc(layer.content)+'</div>';
   if (layer.type === 'table') {
     const rows = (layer.rows || []).map((row, i) => '<tr>'+row.map(cell => '<'+(i===0?'th':'td')+'>'+esc(cell)+'</'+(i===0?'th':'td')+'>').join('')+'</tr>').join('');
     return '<div '+base+'><table>'+rows+'</table></div>';

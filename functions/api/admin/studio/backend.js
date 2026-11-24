@@ -1,11 +1,15 @@
 import { json, fail, readJson, requireOwner, logAdminActivity } from '../../../_lib/common.js';
+function productionOnly(request){const host=new URL(request.url).hostname.toLowerCase();return host==='legacy-frontier.web.id'||host==='www.legacy-frontier.web.id';}
+
 import { buildStudioCreateTableSql, ensureStudioMetaSchema, normalizeStudioTableDefinition } from '../../../_lib/studio-builder.js';
 export async function onRequestGet({request,env}) {
+  if(!productionOnly(request))return fail('Backend Builder dinonaktifkan di Preview karena D1 berbagi database Production.',409);
   if(!(await requireOwner(request,env)))return fail('Backend Builder hanya dapat dibuka Owner.',403);
   try{await ensureStudioMetaSchema(env.DB);const {results=[]}=await env.DB.prepare('SELECT table_name,display_name,schema_json,allow_public_write,allow_public_read,created_at FROM studio_backend_tables ORDER BY created_at DESC LIMIT 100').all();return json({tables:results.map(row=>({...row,columns:JSON.parse(row.schema_json||'[]')}))});}
   catch(error){console.error('[SLF_STUDIO_BACKEND] list failed:',error?.message||error);return fail('Daftar tabel backend tidak dapat dimuat.',503);}
 }
 export async function onRequestPost({request,env}) {
+  if(!productionOnly(request))return fail('Pembuatan tabel D1 dinonaktifkan di Preview untuk melindungi database Production.',409);
   if(!(await requireOwner(request,env)))return fail('Pembuatan tabel D1 hanya dapat dilakukan Owner.',403);
   try{
     await ensureStudioMetaSchema(env.DB);const definition=normalizeStudioTableDefinition(await readJson(request));

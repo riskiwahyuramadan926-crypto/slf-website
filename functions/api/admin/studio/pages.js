@@ -1,11 +1,15 @@
 import { json, fail, readJson, requireOwner, logAdminActivity } from '../../../_lib/common.js';
+function productionOnly(request){const host=new URL(request.url).hostname.toLowerCase();return host==='legacy-frontier.web.id'||host==='www.legacy-frontier.web.id';}
+
 import { ensureStudioMetaSchema, normalizeStudioLayers, normalizeStudioRoute } from '../../../_lib/studio-builder.js';
 export async function onRequestGet({request,env}) {
+  if(!productionOnly(request))return fail('Studio Pages hanya dapat membaca database dari Production; Preview memakai D1 bersama.',409);
   if(!(await requireOwner(request,env)))return fail('Akses Owner diperlukan.',403);
   try{await ensureStudioMetaSchema(env.DB);const {results=[]}=await env.DB.prepare('SELECT id,route_path,page_name,is_published,created_at,updated_at FROM studio_pages ORDER BY updated_at DESC LIMIT 100').all();return json({pages:results});}
   catch(error){console.error('[SLF_STUDIO_PAGES] list failed:',error?.message||error);return fail('Daftar halaman Studio tidak dapat dimuat.',503);}
 }
 export async function onRequestPost({request,env}) {
+  if(!productionOnly(request))return fail('Publikasi halaman dinonaktifkan di Preview untuk melindungi database Production.',409);
   if(!(await requireOwner(request,env)))return fail('Publikasi halaman hanya dapat dilakukan Owner.',403);
   try{
     if(Number(request.headers.get('content-length')||0)>524288)return fail('Project halaman terlalu besar.',413);

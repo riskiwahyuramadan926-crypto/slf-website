@@ -22,6 +22,8 @@ async function executeBackend(action,button,output){
  const wrap=document.createElement('article');wrap.className='slf-page-layer';wrap.dataset.layerId=layer.id;let node;
  if(layer.type==='image'){node=document.createElement('img');node.src=safeUrl(layer.src);node.alt=layer.name||'Gambar SLF';node.loading='lazy';node.decoding='async';}
  else if(layer.type==='video'){node=document.createElement('video');node.src=safeUrl(layer.src);node.controls=true;node.preload='metadata';node.playsInline=true;}
+ else if(layer.type==='audio'){node=document.createElement('audio');node.src=safeUrl(layer.src);node.controls=true;node.preload='metadata';}
+ else if(layer.type==='shape'){node=document.createElement('div');node.className='slf-page-shape';node.textContent=layer.content||'';node.style.cssText='min-width:90px;min-height:90px;border-radius:18px;background:#19e6b0';}
  else if(layer.type==='button'){node=document.createElement('button');node.type='button';node.className='slf-page-button';node.textContent=layer.content||layer.name||'Tombol';}
  else if(layer.type==='table'){node=document.createElement('div');node.className='slf-page-table-wrap';const table=document.createElement('table'),body=document.createElement('tbody');(Array.isArray(layer.rows)?layer.rows:[]).forEach((row,index)=>{const tr=document.createElement('tr');(Array.isArray(row)?row:[]).forEach(cell=>{const td=document.createElement(index===0?'th':'td');td.textContent=String(cell??'');tr.append(td);});body.append(tr);});table.append(body);node.append(table);}
  else if(layer.type==='card'){node=document.createElement('div');node.className='slf-page-card';node.textContent=layer.content||layer.name||'Kartu informasi';}
