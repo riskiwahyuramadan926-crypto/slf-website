@@ -87,24 +87,23 @@ function resolveAccessRole(code, env) {
   if (!ownerSecret && !adminSecret) {
     return { error: 'Variabel OWNER_SECRET dan ADMIN_SECRET belum terbaca di environment Preview ini. Periksa Settings → Variables and Secrets, lalu deploy ulang Preview.' };
   }
-  if (ownerSecret && !ownerReady) {
-    return { error: 'OWNER_SECRET terbaca, tetapi panjangnya kurang dari 32 karakter. Perbarui secret Owner di Preview.' };
-  }
-  if (adminSecret && !adminReady) {
-    return { error: 'ADMIN_SECRET terbaca, tetapi panjangnya kurang dari 32 karakter. Perbarui secret Admin di Preview.' };
-  }
   if (ownerReady && adminReady && ownerSecret === adminSecret) {
     return { error: 'Konfigurasi tidak valid: OWNER_SECRET dan ADMIN_SECRET harus berbeda.' };
   }
 
+  // A valid configured role can still authenticate when the other secret is absent.
   if (ownerReady && equal(code, ownerSecret)) return { role: 'owner' };
   if (adminReady && equal(code, adminSecret)) return { role: 'admin' };
 
-  if (!ownerReady) {
-    return { error: 'Variabel OWNER_SECRET belum terbaca atau belum valid di environment Preview ini.' };
+  if (!ownerSecret || !ownerReady) {
+    return { error: ownerSecret
+      ? 'OWNER_SECRET terbaca, tetapi panjangnya kurang dari 32 karakter. Perbarui secret Owner di Preview.'
+      : 'Variabel OWNER_SECRET belum terbaca di environment Preview ini.' };
   }
-  if (!adminReady) {
-    return { error: 'Variabel ADMIN_SECRET belum terbaca atau belum valid di environment Preview ini.' };
+  if (!adminSecret || !adminReady) {
+    return { error: adminSecret
+      ? 'ADMIN_SECRET terbaca, tetapi panjangnya kurang dari 32 karakter. Perbarui secret Admin di Preview.'
+      : 'Variabel ADMIN_SECRET belum terbaca di environment Preview ini.' };
   }
   return { error: 'Kode Owner/Admin tidak cocok. Periksa kode akses yang dimasukkan.' };
 }
