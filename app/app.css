@@ -126,3 +126,110 @@
 .preview-layer.slf-effect-blur{filter:blur(2px)}.preview-layer.slf-effect-glow{filter:drop-shadow(0 0 9px #5fffe1)}.preview-layer.slf-effect-shadow{box-shadow:0 8px 20px #000b!important}.preview-layer.slf-effect-neon{outline:2px solid #4dd0c8;box-shadow:0 0 12px #4dd0c8}.preview-layer.slf-effect-fade{opacity:.58}
 .timeline-empty{padding:12px;color:#8ea1ba;font-size:10px}
 .mobile-editor-dock.sidebar-expanded .selection-tools{flex-basis:75%}
+
+/* SLF Studio editor: fixed viewport and independent scrolling regions */
+#studioView.active{position:fixed!important;inset:0!important;z-index:30!important;width:100vw!important;height:100dvh!important;min-height:0!important;max-height:100dvh!important;margin:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)!important;gap:0!important;overscroll-behavior:none;touch-action:pan-y}
+#studioView.active .studio-topline{flex:0 0 48px;height:48px;min-height:48px}
+#studioView.active .preview-region{flex:0 0 32%;height:32%;min-height:110px;max-height:38%;padding:0;overflow:hidden}
+#studioView.active .editor-actionbar{flex:0 0 44px;height:44px;min-height:44px}
+#studioView.active .mobile-editor-dock{flex:1 1 0;min-height:0;height:auto;overflow:hidden;display:flex;flex-direction:column;overscroll-behavior:none}
+#studioView.active .timeline-track-viewport{flex:1 1 auto;min-height:0;max-height:none;overflow:auto;overscroll-behavior:contain;touch-action:pan-y}
+#studioView.active .timeline-tracks{max-height:none;min-height:100%;align-content:start;overflow:visible}
+#studioView.active .selection-tools{display:none;flex:1 1 0;min-height:0;max-height:none;overflow:hidden}
+#studioView.active .selection-tools:not([hidden]){display:flex}
+#studioView.active .selection-tools[hidden]{display:none!important}
+#studioView.active .mobile-editor-dock.has-selected-layer .timeline-track-viewport{flex:0 0 40px;height:40px;min-height:40px;max-height:40px;overflow:hidden}
+#studioView.active .mobile-editor-dock.has-selected-layer .timeline-tracks{display:block;min-height:0;height:34px;overflow:hidden;padding:2px 8px}
+#studioView.active .mobile-editor-dock.has-selected-layer .timeline-row:not(.selected){display:none!important}
+#studioView.active .mobile-editor-dock.has-selected-layer .selection-tools{flex:1 1 0;min-height:0}
+#studioView.active .mobile-editor-dock.is-subpanel .clip-action-row,
+#studioView.active .mobile-editor-dock.is-subpanel .tool-grid{display:none!important}
+#studioView.active .mobile-editor-dock.is-subpanel .tool-panel{display:block!important;flex:1 1 auto;min-height:0;height:100%;overflow:hidden}
+#studioView.active .mobile-editor-dock.is-subpanel .subpanel-layout{height:100%;min-height:0;overflow:hidden}
+#studioView.active .mobile-editor-dock.is-subpanel .subpanel-content{overflow:auto;overscroll-behavior:contain;padding:8px 10px 10px}
+#studioView.active .mobile-editor-dock.is-subpanel .subpanel-title{display:none!important}
+#studioView.active .mobile-editor-dock.is-subpanel .subpanel-content>*:first-child{margin-top:0}
+#studioView.active .timeline-head{flex:0 0 35px;height:35px;min-height:35px}
+#studioView.active .timeline-head .add-layer-icon{display:none!important}
+#studioView.active .timeline-playhead{left:92px;pointer-events:none}
+#studioView.active .floating-add:not([hidden]){position:fixed!important;right:16px!important;bottom:calc(16px + env(safe-area-inset-bottom))!important;left:auto!important;top:auto!important;width:56px!important;height:56px!important;min-width:56px!important;min-height:56px!important;border-radius:50%!important;display:grid!important;place-items:center!important;z-index:85!important;background:#4dd0c8!important;color:#062422!important;border:1px solid #b4fff3!important;box-shadow:0 7px 22px #0008,0 0 0 4px #4dd0c822!important;font-size:30px!important}
+#studioView.active .floating-add[hidden]{display:none!important}
+#studioView.active #addLayerInline{display:none!important}
+#studioView.active .canvas-magnifier{position:absolute;left:10px;top:9px;z-index:8;width:32px;height:32px;display:grid;place-items:center;border:1px solid #344258;border-radius:50%;background:#121b2aee;color:#ecf4ff;font-size:20px;box-shadow:0 3px 12px #0007}
+#studioView.active .preview-stage.desktop-mode{display:grid;place-items:center}
+#studioView.active .preview-stage.desktop-mode:before{content:"";display:block;width:min(100%,calc((100dvh * .32) * 1.7778));aspect-ratio:16/9;max-height:100%;border:1px solid #41526a;border-radius:4px;pointer-events:none;position:absolute;z-index:0}
+#studioView.active .preview-page.desktop-preview{width:1280px!important;height:720px!important;max-width:none!important;max-height:none!important;aspect-ratio:16/9!important;border-radius:2px}
+#studioView.active .preview-stage.desktop-mode .preview-page{z-index:1}
+#studioView.active #editorSidebar:not([hidden]){position:fixed!important;right:10px!important;top:50%!important;bottom:auto!important;z-index:90!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:8px!important;padding:10px 7px!important;border:1px solid #3b4d66!important;border-radius:15px!important;background:#172337f5!important;box-shadow:0 12px 32px #000a!important;transform:translateY(-50%)!important}
+#studioView.active #editorSidebar button{width:34px;height:34px;border:1px solid #344860;border-radius:9px;background:#213149;color:#e5efff}
+#studioView.active #editorSidebar[hidden]{display:none!important}
+#studioView.active .top-project-actions .compact-save{width:30px;height:30px;min-width:30px;min-height:30px}
+#studioView.active .track-thumbnail{width:18px;height:18px;flex:0 0 18px;border-radius:4px;object-fit:cover;background:#293b52;display:block}
+#studioView.active .track-color-chip{width:17px;height:17px;flex:0 0 17px;border-radius:4px;border:1px solid #ffffff66;display:block}
+#studioView.active .track-clip.media-clip{background-color:#26465a;background-size:auto 100%;background-repeat:repeat-x}
+#studioView.active .track-clip.media-clip b{padding:2px 4px;border-radius:3px;background:#061720aa;color:#fff;text-shadow:0 1px 2px #000}
+#studioView.active .track-row.selected .track-clip{outline:2px solid #fff;outline-offset:1px}
+#studioView.active .track-type-icon{display:none}
+#studioView.active .track-label{justify-content:flex-start;overflow:hidden}
+#studioView.active .track-eye{font-size:14px}
+#studioView.active .selection-handle{touch-action:none}
+#studioView.active .preview-layer{touch-action:none;will-change:transform,left,top,width,height;user-select:none;-webkit-user-select:none}
+#studioView.active .preview-layer img,#studioView.active .preview-layer video{pointer-events:none}
+#studioView.active .center-snap-guide{position:absolute;z-index:60;pointer-events:none;background:#ff394d;box-shadow:0 0 4px #ff394d}
+#studioView.active .center-snap-guide.vertical{left:50%;top:0;bottom:0;width:1px}
+#studioView.active .center-snap-guide.horizontal{top:50%;left:0;right:0;height:1px}
+#studioView.active .drum-control{display:grid;grid-template-columns:minmax(0,1fr) 38px;gap:8px;align-items:center;margin:7px 0}
+#studioView.active .drum-control-label{font-size:10px;color:#aebdd0}
+#studioView.active .drum-control output{font:10px ui-monospace,monospace;color:#4dd0c8;text-align:center}
+#studioView.active .drum-ruler{height:36px;position:relative;border:1px solid #30435b;border-radius:8px;background:#17253a;overflow:hidden;touch-action:pan-y;user-select:none}
+#studioView.active .drum-ruler:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0,transparent 7px,#70839a 7px,#70839a 8px,transparent 8px,transparent 15px);opacity:.65}
+#studioView.active .drum-ruler:after{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;background:#4dd0c8;box-shadow:0 0 8px #4dd0c8aa;transform:translateX(-1px)}
+#studioView.active .drum-ruler .ruler-major{position:absolute;top:0;left:50%;height:100%;width:1px;background:#d4e3f6aa;pointer-events:none}
+#studioView.active .drum-ruler .ruler-center{position:absolute;left:50%;top:0;bottom:0;width:12px;background:#4dd0c812;transform:translateX(-50%);pointer-events:none}
+#studioView.active .degree-wheel{touch-action:none;cursor:grab;user-select:none}
+#studioView.active .degree-wheel:active{cursor:grabbing}
+#studioView.active .transform-tabs{grid-template-rows:repeat(4,36px)}
+#studioView.active .border-transform-layout{display:grid;grid-template-columns:minmax(0,1fr) 38px;gap:8px}
+#studioView.active .border-transform-tabs{display:grid;align-content:start;gap:6px}
+#studioView.active .border-transform-tabs button{width:36px;height:36px;border:1px solid #30435b;border-radius:8px;background:#1a293c;color:#b9cada}
+#studioView.active .border-transform-tabs button.active{color:#4dd0c8;border-color:#4dd0c8}
+#studioView.active .shadow-position-pad{height:64px;display:grid;place-items:center;touch-action:none;border:1px solid #3b506b;border-radius:10px;background:#142236;color:#4dd0c8;font-size:22px}
+#studioView.active .add-sheet.motion-add-sheet{width:100%;max-width:760px;max-height:82dvh;height:auto;display:grid;grid-template-columns:minmax(0,1fr) 62px;gap:8px;padding:12px 10px calc(12px + env(safe-area-inset-bottom));overflow:hidden;border:1px solid #34455e;border-radius:20px 20px 0 0;background:#111b2a;box-shadow:0 -16px 45px #0009}
+#studioView.active .sheet-backdrop{align-items:end;justify-content:center;padding:0 8px calc(0px + env(safe-area-inset-bottom));}
+#studioView.active .add-sheet-main{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
+#studioView.active .motion-add-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;flex:0 0 58px;height:58px;border:0;border-bottom:1px solid #2a3c53;border-radius:0;background:transparent;padding:0 0 8px}
+#studioView.active .motion-add-tabs button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;border:1px solid #2c4058;border-radius:9px;background:#18273a;color:#aebfd3}
+#studioView.active .motion-add-tabs button span{font-size:17px;line-height:1}
+#studioView.active .motion-add-tabs button small{font-size:8px}
+#studioView.active .motion-add-tabs button.active{border-color:#4dd0c8;background:#4dd0c814;color:#4dd0c8}
+#studioView.active .motion-add-content{min-height:0;flex:1 1 auto;overflow:auto;overscroll-behavior:contain;padding:9px 2px 4px}
+#studioView.active .geometry-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+#studioView.active .geometry-grid button{min-height:57px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:1px solid #2d4059;border-radius:9px;background:#18263a;color:#d9e7f7;padding:4px}
+#studioView.active .geometry-grid button span{font-size:21px;color:#4dd0c8;line-height:1}
+#studioView.active .geometry-grid button b{font-size:8px;font-weight:650}
+#studioView.active .add-sheet-side-tools{display:flex;flex-direction:column;align-items:center;justify-content:space-around;gap:6px;padding:3px 0}
+#studioView.active .add-sheet-side-tools button{width:54px;min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:1px solid #2f435c;border-radius:10px;background:#19283b;color:#d8e6f7}
+#studioView.active .add-sheet-side-tools button span{font-size:20px;color:#4dd0c8}
+#studioView.active .add-sheet-side-tools button small{font-size:7px}
+#studioView.active .add-sheet-side-tools #closeSheet{background:#39222c;border-color:#764253;color:#ffb3c0}
+#studioView.active .add-sheet-side-tools #closeSheet span{color:#ffb3c0;font-size:24px}
+#studioView.active .media-library-panel[hidden],#studioView.active .object-grid[hidden],#studioView.active .motion-template-grid[hidden]{display:none!important}
+#studioView.active .pick-gallery-button{width:100%;display:flex;align-items:center;gap:11px;text-align:left;padding:12px;border:1px dashed #4dd0c8aa;border-radius:11px;background:#4dd0c80c;color:#e8f3ff}
+#studioView.active .pick-gallery-button>span{font-size:22px;color:#4dd0c8}
+#studioView.active .pick-gallery-button b{font-size:11px}.pick-gallery-button small{display:block;font-size:9px;color:#91a4bb}
+#studioView.active .media-library-heading{display:flex;justify-content:space-between;align-items:center;margin:14px 2px 8px;color:#e4efff}
+#studioView.active .media-library-heading b{font-size:10px}.media-library-heading small{font-size:8px;color:#91a4bb}
+#studioView.active .media-library-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+#studioView.active .media-library-item{min-width:0;display:grid;gap:4px;padding:4px;border:1px solid #2e4058;border-radius:8px;background:#17263a;color:#dce8f8}
+#studioView.active .media-library-item img,.media-library-item video{width:100%;height:55px;object-fit:cover;border-radius:5px;background:#08101b}
+#studioView.active .media-library-item b{font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#studioView.active .media-empty{grid-column:1/-1;font-size:9px;color:#8297b0;padding:12px;text-align:center}
+#studioView.active .object-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#studioView.active .object-grid button{min-height:64px;display:grid;place-items:center;gap:3px;border:1px solid #2e4058;border-radius:9px;background:#18273a;color:#dbe7f7}
+#studioView.active .object-grid span{font-size:20px;color:#4dd0c8}
+#studioView.active .object-grid b{font-size:9px}
+#studioView.active .motion-template-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#studioView.active .motion-template-grid button{min-height:62px;border:1px solid #32465f;border-radius:9px;background:#1b2a40;color:#e6f0ff}
+#studioView.active #studioMediaFile,#studioView.active #studioAudioFile{display:none!important}
+@media(min-width:700px){#studioView.active .add-sheet.motion-add-sheet{border-radius:18px;max-height:72dvh}#studioView.active .geometry-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(max-height:640px){#studioView.active .preview-region{flex-basis:27%;height:27%;min-height:92px}#studioView.active .geometry-grid button{min-height:48px}#studioView.active .add-sheet.motion-add-sheet{max-height:88dvh}}
