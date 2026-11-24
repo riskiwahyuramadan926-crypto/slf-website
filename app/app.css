@@ -233,3 +233,51 @@
 #studioView.active #studioMediaFile,#studioView.active #studioAudioFile{display:none!important}
 @media(min-width:700px){#studioView.active .add-sheet.motion-add-sheet{border-radius:18px;max-height:72dvh}#studioView.active .geometry-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
 @media(max-height:640px){#studioView.active .preview-region{flex-basis:27%;height:27%;min-height:92px}#studioView.active .geometry-grid button{min-height:48px}#studioView.active .add-sheet.motion-add-sheet{max-height:88dvh}}
+
+/* Bottom sheet lives outside #studioView, so its layout rules are global. */
+.sheet-backdrop#addSheet{position:fixed!important;inset:0!important;z-index:100!important;display:flex;align-items:flex-end;justify-content:center;padding:0 8px env(safe-area-inset-bottom);background:#050a12c9;backdrop-filter:blur(5px)}
+.sheet-backdrop#addSheet[hidden]{display:none!important}
+#addSheet .add-sheet.motion-add-sheet{width:100%;max-width:760px;max-height:82dvh;height:auto;display:grid;grid-template-columns:minmax(0,1fr) 62px;gap:8px;padding:12px 10px calc(12px + env(safe-area-inset-bottom));overflow:hidden;border:1px solid #34455e;border-radius:20px 20px 0 0;background:#111b2a;box-shadow:0 -16px 45px #0009}
+#addSheet .add-sheet-main{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
+#addSheet .motion-add-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;flex:0 0 58px;height:58px;border:0;border-bottom:1px solid #2a3c53;border-radius:0;background:transparent;padding:0 0 8px}
+#addSheet .motion-add-tabs button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;border:1px solid #2c4058;border-radius:9px;background:#18273a;color:#aebfd3}
+#addSheet .motion-add-tabs button span{font-size:17px;line-height:1}#addSheet .motion-add-tabs button small{font-size:8px}
+#addSheet .motion-add-tabs button.active{border-color:#4dd0c8;background:#4dd0c814;color:#4dd0c8}
+#addSheet .motion-add-content{min-height:0;flex:1 1 auto;overflow:auto;overscroll-behavior:contain;padding:9px 2px 4px}
+#addSheet .geometry-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+#addSheet .geometry-grid button{min-height:57px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:1px solid #2d4059;border-radius:9px;background:#18263a;color:#d9e7f7;padding:4px}
+#addSheet .geometry-grid button span{font-size:21px;color:#4dd0c8;line-height:1}#addSheet .geometry-grid button b{font-size:8px;font-weight:650}
+#addSheet .add-sheet-side-tools{display:flex;flex-direction:column;align-items:center;justify-content:space-around;gap:6px;padding:3px 0}
+#addSheet .add-sheet-side-tools button{width:54px;min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:1px solid #2f435c;border-radius:10px;background:#19283b;color:#d8e6f7}
+#addSheet .add-sheet-side-tools button span{font-size:20px;color:#4dd0c8}#addSheet .add-sheet-side-tools button small{font-size:7px}
+#addSheet .add-sheet-side-tools #closeSheet{background:#39222c;border-color:#764253;color:#ffb3c0}#addSheet .add-sheet-side-tools #closeSheet span{color:#ffb3c0;font-size:24px}
+#addSheet .media-library-panel[hidden],#addSheet .object-grid[hidden],#addSheet .motion-template-grid[hidden]{display:none!important}
+#addSheet .pick-gallery-button{width:100%;display:flex;align-items:center;gap:11px;text-align:left;padding:12px;border:1px dashed #4dd0c8aa;border-radius:11px;background:#4dd0c80c;color:#e8f3ff}
+#addSheet .pick-gallery-button>span{font-size:22px;color:#4dd0c8}#addSheet .pick-gallery-button b{font-size:11px}#addSheet .pick-gallery-button small{display:block;font-size:9px;color:#91a4bb}
+#addSheet .media-library-heading{display:flex;justify-content:space-between;align-items:center;margin:14px 2px 8px;color:#e4efff}
+#addSheet .media-library-heading b{font-size:10px}#addSheet .media-library-heading small{font-size:8px;color:#91a4bb}
+#addSheet .media-library-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+#addSheet .media-library-item{min-width:0;display:grid;gap:4px;padding:4px;border:1px solid #2e4058;border-radius:8px;background:#17263a;color:#dce8f8}
+#addSheet .media-library-item img,#addSheet .media-library-item video{width:100%;height:55px;object-fit:cover;border-radius:5px;background:#08101b}
+#addSheet .media-library-item b{font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#addSheet .media-empty{grid-column:1/-1;font-size:9px;color:#8297b0;padding:12px;text-align:center}
+#addSheet .object-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#addSheet .object-grid button{min-height:64px;display:grid;place-items:center;gap:3px;border:1px solid #2e4058;border-radius:9px;background:#18273a;color:#dbe7f7}
+#addSheet .object-grid span{font-size:20px;color:#4dd0c8}#addSheet .object-grid b{font-size:9px}
+#addSheet .motion-template-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#addSheet .motion-template-grid button{min-height:62px;border:1px solid #32465f;border-radius:9px;background:#1b2a40;color:#e6f0ff}
+#addSheet #studioMediaFile,#addSheet #studioAudioFile{display:none!important}
+#studioView.active .preview-stage.desktop-mode{align-self:center;width:100%;height:auto;max-height:100%;aspect-ratio:16/9;position:relative;overflow:hidden}
+#studioView.active .preview-stage.desktop-mode:before{display:none}
+#studioView.active .subpanel-content{overflow:hidden!important}
+#studioView.active .drum-ruler .ruler-ticks{position:absolute;inset:0;display:flex;align-items:stretch;justify-content:space-around;pointer-events:none}
+#studioView.active .drum-ruler .ruler-ticks i{width:1px;height:8px;margin-top:0;background:#9eafc5aa}
+#studioView.active .drum-ruler .ruler-ticks i.major{height:15px;background:#d7e6f7}
+#studioView.active .subpanel-toggle{display:flex;align-items:center;justify-content:space-between;margin:5px 0 8px;color:#e1ebf8;font-size:10px}
+#studioView.active .subpanel-toggle button{min-width:54px;padding:7px 10px;border:1px solid #3b526d;border-radius:8px;background:#202d40;color:#aebfd1;font-weight:800}
+#studioView.active .subpanel-toggle button.on{background:#4dd0c81b;border-color:#4dd0c8;color:#4dd0c8}
+#studioView.active .timeline-row{grid-template-columns:76px minmax(150px,1fr)}
+#studioView.active .track-label .track-thumbnail{object-fit:cover}
+#studioView.active .timeline-row.selected .track-label{border-color:#4dd0c8;background:#1e3944}
+@media(min-width:700px){#addSheet .add-sheet.motion-add-sheet{border-radius:18px;max-height:72dvh}#addSheet .geometry-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(max-height:640px){#addSheet .geometry-grid button{min-height:48px}#addSheet .add-sheet.motion-add-sheet{max-height:88dvh}}
