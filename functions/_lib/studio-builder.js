@@ -98,7 +98,7 @@ function normalizeStudioVisual(input={}) {
 export function normalizeStudioLayers(input, tablePrefix=STUDIO_TABLE_PREFIX) {
   if(!Array.isArray(input)||input.length>100) throw new Error('Halaman hanya boleh memiliki maksimal 100 layer.');
   const prefix=tablePrefix===STUDIO_PREVIEW_TABLE_PREFIX?STUDIO_PREVIEW_TABLE_PREFIX:STUDIO_TABLE_PREFIX;
-  const backendTargetPattern=prefix===STUDIO_PREVIEW_TABLE_PREFIX?new RegExp('^'+prefix+'[a-z][a-z0-9_]{0,31}
+  const backendTargetPattern=prefix===STUDIO_PREVIEW_TABLE_PREFIX?new RegExp('^'+prefix+'[a-z][a-z0-9_]{0,31}$'):new RegExp('^'+prefix+'(?!preview_)[a-z][a-z0-9_]{0,31}$');
   const layerIds=new Set(),fieldNames=new Set();
   return input.map((item,index)=>{
     if(!item||typeof item!=='object') throw new Error('Layer '+(index+1)+' tidak valid.');
