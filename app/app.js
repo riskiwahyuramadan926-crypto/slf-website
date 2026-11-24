@@ -272,7 +272,6 @@ function start(){
  Promise.resolve().then(()=>initStudio()).catch(err=>{console.error('[SLF Studio] Inisialisasi gagal:',err);const status=$('connectionState');if(status&&status.textContent==='Memeriksa')status.textContent='Online · Studio bermasalah';});
 }
 document.addEventListener('DOMContentLoaded',start);
-})();
 function mobileEscape(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function mobileSelectedItem(){return selectedLayer()||selectedElement||null;}
 function mobileSelectedName(){const item=mobileSelectedItem();return item?.name||item?.label||item?.tag||item?.type||'Layer';}
@@ -495,3 +494,5 @@ function initMobileEditorUI(){
  $('exportProject').onclick=openExportSheet;
  renderLayers();renderMobileWorkbench();updateMobileHeader();
 }
+
+})();
