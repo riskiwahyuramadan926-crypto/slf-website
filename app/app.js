@@ -690,7 +690,7 @@ function renderMobileTimeline(){
  if(chosen)items=items.filter(item=>(item.id||item.selector)===chosen);
  if(!items.length){const empty=document.createElement('div');empty.className='timeline-empty';empty.textContent=project?.isDefault?'Mengambil daftar elemen halaman…':'Belum ada layer. Tekan + untuk menambahkan.';root.append(empty);return;}
  items.forEach(item=>{
-  const id=item.id||item.selector,isText=item.type==='text'||/^h[1-6]$/.test(item.tag||'')||item.tag==='p'||item.textEditable,media=['image','video'].includes(item.type);
+  const id=item.id||item.selector,isText=item.type==='text'||/^h[1-6]$/.test(item.tag||'')||item.tag==='p'||item.textEditable,media=['image','video'].includes(item.type)||item.tag==='img'||item.tag==='video';
   const row=document.createElement('div');row.className='timeline-row'+(id===chosen?' selected':'');row.dataset.id=id;
   const label=document.createElement('button');label.type='button';label.className='track-label';label.title='Tampilkan / sembunyikan';
   const eye=document.createElement('span');eye.className='track-eye';eye.textContent=item.visible===false?'◌':'◉';
@@ -758,7 +758,7 @@ function startLayerResizeGesture(event,node,layer,position){
 function startLayerDragGesture(event,node,layer){
  if(editorLocked||event.button>0||event.target.closest?.('.selection-handle'))return;
  event.preventDefault();event.stopPropagation();pushEditorHistory();node.setPointerCapture?.(event.pointerId);
- selectedLayerId=layer.id;selectedLayerIds.clear();selectedLayerIds.add(layer.id);renderLayers();renderMobileWorkbench();updateMobileHeader();
+ selectedLayerId=layer.id;selectedLayerIds.clear();selectedLayerIds.add(layer.id);if(!node.querySelector('.selection-handle'))['nw','n','ne','e','se','s','sw','w'].forEach(pos=>{const handle=document.createElement('span');handle.className='selection-handle '+pos;handle.addEventListener('pointerdown',e=>startLayerResizeGesture(e,node,layer,pos));node.append(handle);});node.classList.add('selected');renderLayers();renderMobileWorkbench();updateMobileHeader();
  const rect=$('previewPage').getBoundingClientRect(),sx=event.clientX,sy=event.clientY,ox=Number(layer.x||0),oy=Number(layer.y||0);
  let raf=0,px=sx,py=sy,moved=false;
  const move=e=>{px=e.clientX;py=e.clientY;if(!raf)raf=requestAnimationFrame(()=>{raf=0;const dx=(px-sx)/Math.max(1,rect.width)*100,dy=(py-sy)/Math.max(1,rect.height)*100;let x=Math.max(0,Math.min(100-(layer.width||0),ox+dx)),y=Math.max(0,Math.min(100-(layer.height||0),oy+dy));
