@@ -3,14 +3,23 @@ import { json, fail, readJson, sha256Hex, randomHex } from '../../_lib/common.js
 const emailOk = value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 254;
 const encoder = new TextEncoder();
 
-async function passwordHash(password, salt) {
-  const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
+const PASSWORD_HASH_ITERATIONS = 100000;
+const LEGACY_PASSWORD_HASH_ITERATIONS = 310000;
+
+async function passwordHash(password, salt, iterations = PASSWORD_HASH_ITERATIONS) {
+  const passwordBytes = new Uint8Array(encoder.encode(password));
+  const saltBytes = new Uint8Array(encoder.encode(salt));
+  const key = await crypto.subtle.importKey('raw', passwordBytes, { name: 'PBKDF2' }, false, ['deriveBits']);
   const bits = await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', salt: encoder.encode(salt), iterations: 310000, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt: saltBytes, iterations, hash: 'SHA-256' },
     key,
     256
   );
-  return [...new Uint8Array(bits)].map(value => value.toString(16).padStart(2, '0')).join('');
+  return Array.from(new Uint8Array(bits), value => value.toString(16).padStart(2, '0')).join('');
+}
+
+function cryptoErrorMessage(error) {
+  return String(error?.message || error || 'Kesalahan Web Crypto tidak diketahui').replace(/[\r\n]/g, ' ').slice(0, 220);
 }
 
 function equal(a, b) {
@@ -196,8 +205,9 @@ export async function onRequestPost({ request, env }) {
     try {
       hash = await passwordHash(password, salt);
     } catch (error) {
-      console.error('[SLF_ACCOUNT] password hashing failed:', error?.message || error);
-      return fail('Password tidak dapat diproses dengan aman. Coba lagi.', 500);
+      const detail = cryptoErrorMessage(error);
+      console.error('[SLF_ACCOUNT] password hashing failed:', detail);
+      return fail('Password gagal diproses: ' + detail, 500);
     }
     const sessionToken = randomHex(64);
     const tokenHash = await sha256Hex(sessionToken);
@@ -259,11 +269,22 @@ export async function onRequestPost({ request, env }) {
   if (!existing.active) return fail('Akun dinonaktifkan. Hubungi Owner.', 403);
 
   try {
-    const actual = await passwordHash(password, existing.password_salt);
-    if (!equal(actual, existing.password_hash)) return fail('Email atau password tidak cocok.', 401);
+    let actual = await passwordHash(password, existing.password_salt, PASSWORD_HASH_ITERATIONS);
+    if (!equal(actual, existing.password_hash)) {
+      // Backward compatibility: accounts created by the previous 310k setting
+      // are upgraded after a successful legacy verification, if the runtime permits it.
+      const legacyActual = await passwordHash(password, existing.password_salt, LEGACY_PASSWORD_HASH_ITERATIONS);
+      if (!equal(legacyActual, existing.password_hash)) return fail('Email atau password tidak cocok.', 401);
+
+      const migratedSalt = randomHex(32);
+      const migratedHash = await passwordHash(password, migratedSalt, PASSWORD_HASH_ITERATIONS);
+      await env.DB.prepare('UPDATE admin_accounts SET password_salt=?, password_hash=?, updated_at=? WHERE id=?')
+        .bind(migratedSalt, migratedHash, new Date().toISOString(), existing.id).run();
+    }
   } catch (error) {
-    console.error('[SLF_ACCOUNT] password verification failed:', error?.message || error);
-    return fail('Password tidak dapat diverifikasi. Periksa konfigurasi akun dan coba lagi.', 500);
+    const detail = cryptoErrorMessage(error);
+    console.error('[SLF_ACCOUNT] password verification failed:', detail);
+    return fail('Password gagal diverifikasi: ' + detail + '. Jika akun memakai hash lama, login ulang menggunakan Kode Owner/Admin untuk memperbarui password.', 500);
   }
 
   accountId = existing.id;
