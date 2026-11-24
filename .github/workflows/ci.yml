@@ -2,7 +2,7 @@ name: SLF website checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/slf-mobile-pwa]
   pull_request:
     branches: [main]
   workflow_dispatch:
