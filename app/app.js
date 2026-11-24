@@ -265,9 +265,7 @@ async function checkSession(){
  }finally{if(timer)clearTimeout(timer);try{renderHome();}catch(err){console.error('[SLF Mobile] Render menu gagal:',err);}}
 }
 function start(){
- window.__SLF_APP_READY=true;
- try{renderHome();}catch(err){console.error('[SLF Mobile] Render awal beranda gagal:',err);}
- try{bindHomeAuth();}catch(err){console.error('[SLF Mobile] Binding login gagal:',err);}
+ try{renderHome();bindHomeAuth();window.__SLF_APP_READY=true;}catch(err){console.error('[SLF Mobile] Bootstrap beranda/login gagal:',err);}
  window.addEventListener('online',()=>{const el=$('connectionState');if(el)el.textContent='Online';});
  window.addEventListener('offline',()=>{const el=$('connectionState');if(el)el.textContent='Offline';});
  void checkSession();
