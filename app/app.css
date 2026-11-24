@@ -89,3 +89,6 @@
 .add-sheet{max-height:80dvh;overflow-y:auto}
 .module-view #adminFrame{height:calc(100dvh - 52px);min-height:calc(100dvh - 52px)}
 @media(min-width:700px){.preview-region{height:55dvh;flex-basis:55dvh}.preview-page{max-width:none}}
+
+#inlineEditToggle{font-size:13px!important;font-weight:900;border:1px solid transparent}
+#inlineEditToggle.active{color:#19e6b0;background:#15352f;border-color:#19e6b066}
