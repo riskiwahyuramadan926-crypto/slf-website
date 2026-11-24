@@ -1,5 +1,5 @@
 'use strict';
-const VERSION='slf-app-v10-hotfix-20261124a';
+const VERSION='slf-app-v11-motion-editor-20261124c';
 const SHELL_CACHE=VERSION;
 const SHELL=['./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{event.waitUntil((async()=>{const cache=await caches.open(SHELL_CACHE);await cache.addAll(SHELL);await self.skipWaiting();})());});
