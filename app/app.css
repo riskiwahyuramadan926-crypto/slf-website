@@ -376,3 +376,7 @@ html:has(#studioView.active),body:has(#studioView.active){height:100dvh!importan
 #studioView.active .stroke-options,#studioView.active .stroke-range-buttons{display:flex!important;gap:5px!important}
 #studioView.active .stroke-options button,#studioView.active .stroke-range-buttons button{height:28px!important;min-width:30px!important;padding:3px 8px!important}
 @media(max-height:650px){#studioView.active .preview-region{flex-basis:55dvh!important;height:55dvh!important;min-height:55dvh!important}#studioView.active .mobile-editor-dock{flex-basis:36dvh!important;height:36dvh!important}#studioView.active .subpanel-layout,#studioView.active .subpanel-content{max-height:180px!important}}
+
+#studioView.active .center-snap-guide{position:absolute!important;z-index:1000!important;pointer-events:none!important;background:#ff3b4f!important;opacity:.9!important}
+#studioView.active .center-snap-guide.vertical{top:0!important;bottom:0!important;width:1px!important;left:50%!important}
+#studioView.active .center-snap-guide.horizontal{left:0!important;right:0!important;height:1px!important;top:50%!important}

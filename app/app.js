@@ -490,7 +490,7 @@ function renderMobileSubpanel(){
  root.querySelectorAll('[data-field]').forEach(el=>el.addEventListener('input',e=>{const key=e.target.dataset.field;let val=(e.target.type==='number'||e.target.type==='range')?Number(e.target.value):e.target.value;if(key==='opacity')val/=100;if(key.startsWith('visual.'))updateSelectedProperty(key.slice(7),val,true);else updateSelectedProperty(key,val);}));
  root.querySelectorAll('[data-visual-field]').forEach(el=>el.addEventListener('input',e=>updateSelectedProperty(e.target.dataset.visualField,e.target.type==='color'?e.target.value:(Number(e.target.value)||e.target.value),true)));
  root.querySelectorAll('[data-visual-toggle]').forEach(btn=>btn.addEventListener('click',()=>{const key=btn.dataset.visualToggle,val=!(selectedLayer()?.visual?.[key]??mobileValue('visual.'+key,false));updateSelectedProperty(key,val,true);renderMobileSubpanel();}));
- root.querySelectorAll('[data-border-add]').forEach(btn=>btn.addEventListener('click',()=>{const layer=selectedLayer();if(!layer)return;updateSelectedProperty('borderEnabled',true,true);if(!(Number(layer.visual?.borderWidth)>0))updateSelectedProperty('borderWidth',2,true);renderMobileSubpanel();}));
+ root.querySelectorAll('[data-border-add]').forEach(btn=>btn.addEventListener('click',()=>{const width=Number(mobileValue('visual.borderWidth',0));updateSelectedProperty('borderEnabled',true,true);if(!(width>0))updateSelectedProperty('borderWidth',2,true);renderMobileSubpanel();}));
  root.querySelectorAll('[data-border-position]').forEach(btn=>btn.addEventListener('click',()=>{updateSelectedProperty('borderPosition',btn.dataset.borderPosition,true);renderMobileSubpanel();}));
  root.querySelectorAll('[data-blend]').forEach(btn=>btn.addEventListener('click',()=>{updateSelectedProperty('blendMode',btn.dataset.blend);root.querySelectorAll('[data-blend]').forEach(x=>x.classList.toggle('active',x===btn));}));
  root.querySelectorAll('[data-speed]').forEach(btn=>btn.addEventListener('click',()=>{updateSelectedProperty('speed',Number(btn.dataset.speed));renderMobileSubpanel();}));
@@ -624,7 +624,7 @@ function renderPreviewLegacy(){
   if(layer.visual?.gradient?.stops?.length>=2){const st=layer.visual.gradient.stops;node.style.backgroundImage='linear-gradient('+(layer.visual.gradient.angle||135)+'deg,'+st[0].color+' 0%,'+st[1].color+' 100%)';}
   applyLayerVisualStyles(node,layer);
   if(layer.geometry){const clip=geometryClipPath(layer.geometry);if(clip!=='none')node.style.clipPath=clip;if(layer.geometry==='circle'||layer.geometry==='ellipse')node.style.borderRadius='50%';if(layer.geometry==='square')node.style.borderRadius='0';if(layer.geometry==='round-rect')node.style.borderRadius='16%';if(layer.geometry==='arc')node.style.border='8px solid '+(layer.color||'#4dd0c8');}else if(layer.type==='shape')node.style.borderRadius='50%';
-  (layer.visual?.effects||[]).forEach(effect=>node.classList.add('slf-effect-'+effect));applyPreviewKeyframes(node,layer);
+  (layer.visual?.effects||[]).forEach(effect=>node.classList.add('slf-effect-'+effect));node.style.setProperty('--slf-effect-intensity',String(Number(layer.visual?.effectIntensity??70)/100));applyPreviewKeyframes(node,layer);
   if(layer.type==='image'&&layer.src){const img=document.createElement('img');img.src=layer.previewSrc||layer.src;img.alt=layer.name;img.style.width='100%';img.style.height='100%';img.style.objectFit=layer.mediaFit||'contain';img.draggable=false;node.append(img);}
   else if(layer.type==='video'&&layer.src){const media=document.createElement('video');media.src=layer.previewSrc||layer.src;media.controls=true;media.muted=true;media.playsInline=true;media.style.width='100%';media.style.height='100%';media.style.objectFit='contain';node.append(media);}
   else if(layer.type==='audio'&&layer.src){const media=document.createElement('audio');media.src=layer.previewSrc||layer.src;media.controls=true;media.style.width='100%';node.append(media);}
@@ -743,7 +743,7 @@ function startMovePad(event){
  const r=pad.getBoundingClientRect(),sx=event.clientX,sy=event.clientY,styles=selectedDomStyles(),ox=layer?Number(layer.x||0):Number(styles.translateX||0),oy=layer?Number(layer.y||0):Number(styles.translateY||0);let raf=0,nx=ox,ny=oy,px=sx,py=sy;
  const calc=()=>{nx=Math.max(-100,Math.min(100,ox+(px-sx)/Math.max(1,r.width)*28));ny=Math.max(-100,Math.min(100,oy+(py-sy)/Math.max(1,r.height)*28));applyFastLayerField(layer,'x',nx);applyFastLayerField(layer,'y',ny);if(layer)showCenterSnapGuides(layer);else showDomCenterSnapGuides(dom);const xo=$('moveXValue'),yo=$('moveYValue');if(xo)xo.textContent=nx.toFixed(2);if(yo)yo.textContent=ny.toFixed(2);};
  const move=e=>{e.preventDefault?.();px=e.clientX;py=e.clientY;if(!raf)raf=requestAnimationFrame(()=>{raf=0;calc();});};
- const finish=e=>{if(e){px=e.clientX;py=e.clientY;}if(raf)cancelAnimationFrame(raf);calc();if(layer){layer.x=nx;layer.y=ny;setDirty();}else changeElement(edit=>{edit.styles={...(edit.styles||{}),translateX:nx,translateY:ny};});cleanup();renderTimeline();renderMobileSelectionBounds();};
+ const finish=e=>{if(e){px=e.clientX;py=e.clientY;}if(raf)cancelAnimationFrame(raf);calc();if(layer){layer.x=nx;layer.y=ny;setDirty();}else changeElement(edit=>{edit.styles={...(edit.styles||{}),translateX:nx,translateY:ny};});cleanup();hideCenterSnapGuides();renderTimeline();renderMobileSelectionBounds();};
  const cleanup=bindGestureMove(pad,move,finish,event.pointerId);
 }
 function applyLayerVisualStyles(node,layer){
@@ -817,13 +817,12 @@ function hslHex(h,s,l){
  return '#'+[r,g,b].map(v=>Math.round((v+m)*255).toString(16).padStart(2,'0')).join('');
 }
 function startColorWheel(event){
- const wheel=event.currentTarget,layer=selectedLayer();if(!layer)return;event.preventDefault();wheel.setPointerCapture?.(event.pointerId);
- const rect=wheel.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2,r=Math.min(rect.width,rect.height)/2;
- let raf=0,px=event.clientX,py=event.clientY,color=layer.color||'#4dd0c8';
- const paint=()=>{raf=0;const dx=px-cx,dy=py-cy,hue=(Math.atan2(dy,dx)*180/Math.PI+360)%360,sat=Math.max(10,Math.min(100,Math.hypot(dx,dy)/Math.max(1,r)*100));color=hslHex(hue,sat,52);layer.color=color;const node=document.querySelector('#previewOverlay .preview-layer[data-layer-id="'+layer.id+'"]');if(node)node.style.background=color;const input=$('toolColor');if(input)input.value=color;};
- const move=e=>{px=e.clientX;py=e.clientY;if(!raf)raf=requestAnimationFrame(paint);};
- const end=()=>{if(raf)cancelAnimationFrame(raf);paint();wheel.removeEventListener('pointermove',move);wheel.removeEventListener('pointerup',end);wheel.removeEventListener('pointercancel',end);setDirty();renderMobileTimeline();};
- move(event);wheel.addEventListener('pointermove',move);wheel.addEventListener('pointerup',end);wheel.addEventListener('pointercancel',end);
+ const wheel=event.currentTarget,layer=selectedLayer(),dom=layer?null:selectedDomTarget();if(!layer&&!dom)return;event.preventDefault();wheel.setPointerCapture?.(event.pointerId);
+ const r=wheel.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,rad=Math.min(r.width,r.height)/2;let raf=0,px=event.clientX,py=event.clientY,color=layer?(layer.color||'#4dd0c8'):(selectedDomStyles().backgroundColor||'#4dd0c8');
+ const paint=()=>{const dx=px-cx,dy=py-cy,hue=(Math.atan2(dy,dx)*180/Math.PI+360)%360,sat=Math.max(10,Math.min(100,Math.hypot(dx,dy)/Math.max(1,rad)*100));color=hslHex(hue,sat,52);if(layer){layer.color=color;const node=document.querySelector('#previewOverlay .preview-layer[data-layer-id="'+layer.id+'"]');if(node)node.style.background=color;}else{const target=selectedDomTarget();if(target)target.style.backgroundColor=color;}const input=$('toolColor');if(input)input.value=color;};
+ const move=e=>{e.preventDefault?.();px=e.clientX;py=e.clientY;if(!raf)raf=requestAnimationFrame(()=>{raf=0;paint();});};
+ const end=e=>{if(e){px=e.clientX;py=e.clientY;}if(raf)cancelAnimationFrame(raf);paint();if(layer){layer.color=color;setDirty();}else changeElement(edit=>{edit.styles={...(edit.styles||{}),backgroundColor:color};});cleanup();};
+ const cleanup=bindGestureMove(wheel,move,end,event.pointerId);paint();
 }
 
 })();
