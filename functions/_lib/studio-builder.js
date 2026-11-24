@@ -1,4 +1,5 @@
 export const STUDIO_TABLE_PREFIX = 'studio_';
+export const STUDIO_PREVIEW_TABLE_PREFIX = 'studio_preview_';
 const RESERVED_ROUTES = new Set(['admin','api','app','assets','bantuan','images','store','wiki','fonts','uploads','robots','favicon','sitemap']);
 const IDENTIFIER = /^[a-z][a-z0-9_]{0,31}$/;
 const FIELD_TYPES = new Set(['text','integer','real']);
@@ -9,6 +10,18 @@ const color = v => /^#[0-9a-f]{6}$/i.test(String(v ?? '')) ? String(v).toLowerCa
 const clamp = (v,min,max,fallback) => { const n=Number(v); return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback; };
 const plain = (v,max=5000) => String(v ?? '').replace(/[<>\u0000-\u001f]/g,' ').trim().slice(0,max);
 
+const SCOPES = {
+  production: { environment:'production', tablePrefix:STUDIO_TABLE_PREFIX, pagesTable:'studio_pages', backendTablesTable:'studio_backend_tables', rateLimitTable:'studio_data_rate_limits' },
+  preview: { environment:'preview', tablePrefix:STUDIO_PREVIEW_TABLE_PREFIX, pagesTable:'studio_preview_pages', backendTablesTable:'studio_preview_backend_tables', rateLimitTable:'studio_preview_data_rate_limits' }
+};
+
+export function getStudioScope(request) {
+  const hostname = new URL(request.url).hostname.toLowerCase();
+  if (hostname === 'legacy-frontier.web.id' || hostname === 'www.legacy-frontier.web.id') return SCOPES.production;
+  if (hostname === 'slf-website.pages.dev' || hostname.endsWith('.slf-website.pages.dev') || hostname === 'localhost' || hostname === '127.0.0.1') return SCOPES.preview;
+  return null;
+}
+
 export function normalizeStudioRoute(value) {
   const match=String(value ?? '').trim().match(/^\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/i);
   if(!match) throw new Error('Route harus satu segmen sederhana, contoh /event atau /event-musim.');
@@ -16,8 +29,11 @@ export function normalizeStudioRoute(value) {
   if(slug.length>48||RESERVED_ROUTES.has(slug)||slug.startsWith('slf-')) throw new Error('Nama route memakai jalur khusus website atau terlalu panjang.');
   return '/'+slug;
 }
-export function normalizeStudioTableDefinition(input={}) {
-  const source=input.slug??input.name??(String(input.tableName??'').startsWith(STUDIO_TABLE_PREFIX)?String(input.tableName).slice(STUDIO_TABLE_PREFIX.length):'');
+
+export function normalizeStudioTableDefinition(input={}, tablePrefix=STUDIO_TABLE_PREFIX) {
+  const prefix = tablePrefix === STUDIO_PREVIEW_TABLE_PREFIX ? STUDIO_PREVIEW_TABLE_PREFIX : STUDIO_TABLE_PREFIX;
+  const rawTableName=String(input.tableName??'');
+  const source=input.slug??input.name??(rawTableName.startsWith(prefix)?rawTableName.slice(prefix.length):rawTableName);
   const slug=String(source).trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
   if(!/^[a-z][a-z0-9_]{0,31}$/.test(slug)) throw new Error('Nama tabel harus diawali huruf dan hanya berisi huruf kecil, angka, atau underscore.');
   const columns=Array.isArray(input.columns)?input.columns:[];
@@ -30,17 +46,19 @@ export function normalizeStudioTableDefinition(input={}) {
     if(!FIELD_TYPES.has(type)) throw new Error('Tipe kolom tidak didukung: '+type+'.');
     seen.add(name);return {name,type,required:column.required===true,unique:column.unique===true};
   });
-  return {tableName:STUDIO_TABLE_PREFIX+slug,displayName:plain(input.displayName??slug,60)||slug,columns:normalized,allowPublicWrite:input.allowPublicWrite===true,allowPublicRead:input.allowPublicRead===true};
+  return {tableName:prefix+slug,tablePrefix:prefix,displayName:plain(input.displayName??slug,60)||slug,columns:normalized,allowPublicWrite:input.allowPublicWrite===true,allowPublicRead:input.allowPublicRead===true};
 }
+
 export function buildStudioCreateTableSql(definition) {
-  const safe=normalizeStudioTableDefinition(definition);
+  const safe=normalizeStudioTableDefinition(definition,definition?.tablePrefix);
   const columns=['"id" TEXT PRIMARY KEY NOT NULL','"created_at" TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP',...safe.columns.map(column=>{
     let sql='"'+column.name+'" '+column.type.toUpperCase();if(column.required)sql+=' NOT NULL';if(column.unique)sql+=' UNIQUE';return sql;
   })];
   return 'CREATE TABLE "'+safe.tableName+'" ('+columns.join(', ')+')';
 }
+
 export function normalizeStudioSubmission(definition,payload) {
-  const schema=normalizeStudioTableDefinition(definition);
+  const schema=normalizeStudioTableDefinition(definition,definition?.tablePrefix);
   if(!payload||typeof payload!=='object'||Array.isArray(payload)) throw new Error('Data formulir tidak valid.');
   const allowed=new Map(schema.columns.map(column=>[column.name,column]));
   if(Object.keys(payload).some(key=>!allowed.has(key))) throw new Error('Data berisi kolom yang tidak diizinkan.');
@@ -56,8 +74,11 @@ export function normalizeStudioSubmission(definition,payload) {
   }
   return {names,values};
 }
-export function normalizeStudioLayers(input) {
+
+export function normalizeStudioLayers(input, tablePrefix=STUDIO_TABLE_PREFIX) {
   if(!Array.isArray(input)||input.length>100) throw new Error('Halaman hanya boleh memiliki maksimal 100 layer.');
+  const prefix=tablePrefix===STUDIO_PREVIEW_TABLE_PREFIX?STUDIO_PREVIEW_TABLE_PREFIX:STUDIO_TABLE_PREFIX;
+  const backendTargetPattern=new RegExp('^'+prefix+'[a-z][a-z0-9_]{0,31}$');
   const layerIds=new Set(),fieldNames=new Set();
   return input.map((item,index)=>{
     if(!item||typeof item!=='object') throw new Error('Layer '+(index+1)+' tidak valid.');
@@ -74,7 +95,7 @@ export function normalizeStudioLayers(input) {
     if(actionType==='navigate'&&actionTarget&&!/^\/(?!\/)[A-Za-z0-9/_?&=.%#-]*$/.test(actionTarget))throw new Error('Tujuan navigasi tidak valid.');
     if(actionType==='external'&&actionTarget&&!/^https:\/\/[^\s"'<>]+$/i.test(actionTarget))throw new Error('Tujuan eksternal harus HTTPS.');
     if(actionType==='scroll'&&actionTarget&&!/^[A-Za-z0-9_.#-]{1,100}$/.test(actionTarget))throw new Error('Target scroll tidak valid.');
-    if(actionType.startsWith('backend-')&&(type!=='button'||!/^studio_[a-z][a-z0-9_]{0,31}$/.test(actionTarget)))throw new Error('Action backend harus memakai tombol dan target tabel berawalan studio_.');
+    if(actionType.startsWith('backend-')&&(type!=='button'||!backendTargetPattern.test(actionTarget)))throw new Error('Action backend harus memakai tombol dan target tabel berawalan '+prefix+'.');
     const rows=Array.isArray(item.rows)?item.rows.slice(0,20).map(row=>Array.isArray(row)?row.slice(0,8).map(cell=>plain(cell,300)):[]):[];
     const styles=item.styles&&typeof item.styles==='object'?item.styles:{},safeStyles={};
     for(const key of ['color','backgroundColor','borderColor'])if(color(styles[key]))safeStyles[key]=color(styles[key]);
@@ -86,8 +107,12 @@ export function normalizeStudioLayers(input) {
     return {id,type,name:plain(item.name,80)||'Layer '+(index+1),content:plain(item.content,5000),src,href,fieldName,rows,action:{type:actionType,target:actionTarget},animation:ANIMATIONS.has(item.animation)?item.animation:'none',clickAnimation:ANIMATIONS.has(item.clickAnimation)?item.clickAnimation:'none',loop:item.loop===true,duration:clamp(item.duration,200,10000,900),styles:safeStyles};
   });
 }
-export async function ensureStudioMetaSchema(db) {
-  await db.prepare('CREATE TABLE IF NOT EXISTS studio_pages (id TEXT PRIMARY KEY NOT NULL,route_path TEXT NOT NULL UNIQUE,page_name TEXT NOT NULL,layers_json TEXT NOT NULL,is_published INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)').run();
-  await db.prepare('CREATE TABLE IF NOT EXISTS studio_backend_tables (table_name TEXT PRIMARY KEY NOT NULL,display_name TEXT NOT NULL,schema_json TEXT NOT NULL,allow_public_write INTEGER NOT NULL DEFAULT 1,allow_public_read INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL)').run();
-  await db.prepare('CREATE TABLE IF NOT EXISTS studio_data_rate_limits (ip_hash TEXT PRIMARY KEY NOT NULL,attempts INTEGER NOT NULL DEFAULT 0,window_started INTEGER NOT NULL)').run();
+
+export async function ensureStudioMetaSchema(db, scope='production') {
+  const selected=typeof scope==='string'?(scope==='preview'?SCOPES.preview:SCOPES.production):scope;
+  const safe=selected?.environment==='preview'?SCOPES.preview:SCOPES.production;
+  await db.prepare('CREATE TABLE IF NOT EXISTS "'+safe.pagesTable+'" (id TEXT PRIMARY KEY NOT NULL,route_path TEXT NOT NULL UNIQUE,page_name TEXT NOT NULL,layers_json TEXT NOT NULL,is_published INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)').run();
+  await db.prepare('CREATE TABLE IF NOT EXISTS "'+safe.backendTablesTable+'" (table_name TEXT PRIMARY KEY NOT NULL,display_name TEXT NOT NULL,schema_json TEXT NOT NULL,allow_public_write INTEGER NOT NULL DEFAULT 1,allow_public_read INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL)').run();
+  await db.prepare('CREATE TABLE IF NOT EXISTS "'+safe.rateLimitTable+'" (ip_hash TEXT PRIMARY KEY NOT NULL,attempts INTEGER NOT NULL DEFAULT 0,window_started INTEGER NOT NULL)').run();
+  return safe;
 }
