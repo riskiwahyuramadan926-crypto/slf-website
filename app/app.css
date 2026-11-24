@@ -281,3 +281,29 @@
 #studioView.active .timeline-row.selected .track-label{border-color:#4dd0c8;background:#1e3944}
 @media(min-width:700px){#addSheet .add-sheet.motion-add-sheet{border-radius:18px;max-height:72dvh}#addSheet .geometry-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
 @media(max-height:640px){#addSheet .geometry-grid button{min-height:48px}#addSheet .add-sheet.motion-add-sheet{max-height:88dvh}}
+
+/* Prevent document-level scrolling while the editor is active. */
+html:has(#studioView.active),body:has(#studioView.active){height:100dvh!important;max-height:100dvh!important;overflow:hidden!important;overscroll-behavior:none!important}
+#studioView.active{height:100dvh!important;max-height:100dvh!important;overflow:hidden!important;overscroll-behavior:none!important}
+#studioView.active:has(.mobile-editor-dock.has-selected-layer) .preview-region{flex-basis:27%!important;height:27%!important;max-height:30%!important}
+#studioView.active .mobile-editor-dock.has-selected-layer .timeline-track-viewport{flex-basis:38px!important;height:38px!important;min-height:38px!important;max-height:38px!important}
+#studioView.active .mobile-editor-dock.has-selected-layer .timeline-tracks{height:34px!important;min-height:34px!important;max-height:34px!important;overflow:hidden!important;padding:2px 8px!important}
+#studioView.active .mobile-editor-dock.is-subpanel .selection-tools{min-height:0!important;overflow:hidden!important}
+#studioView.active .mobile-editor-dock.is-subpanel .subpanel-content{overflow:hidden!important;overscroll-behavior:none!important}
+#studioView.active .mobile-editor-dock.is-subpanel .subpanel-layout{min-height:0!important;height:100%!important}
+#studioView.active .preview-page.desktop-preview{aspect-ratio:16/9!important}
+#studioView.active .preview-stage.desktop-mode{align-self:center!important;flex:none!important}
+#studioView.active .track-thumbnail{background:#1e3045;object-fit:cover}
+#studioView.active .track-clip.media-clip{background-repeat:repeat-x;background-size:auto 100%}
+#studioView.active .timeline-row.selected .track-clip{border-color:#f0fbff}
+#studioView.active .shadow-position-pad{touch-action:none;user-select:none}
+#studioView.active .drum-ruler{touch-action:none;cursor:ew-resize}
+#studioView.active .degree-wheel{touch-action:none}
+#studioView.active .move-pad{touch-action:none}
+@media(max-height:650px){
+ #studioView.active:has(.mobile-editor-dock.has-selected-layer) .preview-region{flex-basis:24%!important;height:24%!important}
+ #studioView.active .mobile-editor-dock.is-subpanel .subpanel-content{padding:5px 8px 6px}
+ #studioView.active .drum-control{margin:4px 0}
+ #studioView.active .drum-ruler{height:30px}
+ #studioView.active .degree-wheel{width:72px;height:72px}
+}
