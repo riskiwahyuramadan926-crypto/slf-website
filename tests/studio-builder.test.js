@@ -46,7 +46,7 @@ test('page renderer shares the same route renderer for root and catch-all routes
 });
 test('account login binds role once and uses secure password/session primitives',async()=>{
  const account=await readFile(new URL('../functions/api/admin/account.js',import.meta.url),'utf8');
- assert.match(account,/resolveAdminSecrets/);assert.match(account,/role==='owner'/);assert.match(account,/iterations:310000/);
+ assert.match(account,/resolveAccessRole/);assert.match(account,/role === 'owner'/);assert.match(account,/PASSWORD_HASH_ITERATIONS = 100000/);assert.match(account,/LEGACY_PASSWORD_HASH_ITERATIONS = 310000/);
  assert.match(account,/HttpOnly; Secure; SameSite=Lax/);assert.match(account,/emailOk/);
 });
 test('soft-deleted transactions are Owner guarded and omitted from reports',async()=>{
