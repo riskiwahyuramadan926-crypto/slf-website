@@ -56,6 +56,7 @@ export async function onRequestPost({ request, env }) {
     const token = randomHex(40) + randomHex(24);
     const hash = await sha256Hex(token);
     const encryptedAccessKey = await encryptOrderAccessKey(token, env);
+    if (!encryptedAccessKey) return fail('Checkout sementara tidak tersedia: OWNER_SECRET atau ORDER_LINK_SECRET harus dikonfigurasi dengan minimal 32 karakter agar tautan pesanan dan ulasan aman.', 503);
     const details = ['CUSTOM_RANK','VIP_PLUS'].includes(data.productId)
       ? {rankName:safeText(data.details?.rankName,16),rankColor:String(data.details?.rankColor||'').toUpperCase(),rankStyle:safeText(data.details?.rankStyle,20),buyerNote:data.productId==='VIP_PLUS'?safeText(data.details?.buyerNote,400):''}
       : {buyerNote:safeText(data.details?.buyerNote,400)};
