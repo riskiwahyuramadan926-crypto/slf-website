@@ -5,3 +5,19 @@
 .hero-grid{grid-template-columns:minmax(0,1fr)}
 .hero-art{display:none!important}
 .hero-grid>div:first-child{max-width:820px}
+
+/* SLF Store catalogue refresh */
+.product-clean{min-height:0;gap:18px;padding:22px;background:linear-gradient(145deg,#21182e,#17111f)}
+.product-clean h3{font-size:1.08rem;line-height:1.35}
+.product-price-row{display:flex;align-items:center;gap:10px}
+.product-price-row .price{font-size:1.3rem}
+.product-clean>.btn{width:100%;margin-top:2px}
+.info-button{width:30px;height:30px;border:1px solid #70568b;border-radius:50%;background:#2b2038;color:#f4e6ff;font-weight:900;cursor:pointer}
+.product-info-modal{width:min(520px,calc(100% - 28px));border:1px solid #624a78;border-radius:20px;background:#191322;color:var(--text);padding:0;box-shadow:0 24px 90px #0009}
+.product-info-modal::backdrop{background:#08050dcc;backdrop-filter:blur(4px)}
+.product-info-card{position:relative;padding:28px}
+.product-info-card h2{margin:8px 36px 4px 0}
+.product-info-card p{color:var(--muted)}
+.product-info-card .price{color:var(--gold)}
+.modal-close{position:absolute;right:15px;top:12px;border:0;background:transparent;color:var(--text);font-size:1.8rem;cursor:pointer}
+@media(max-width:600px){.product-clean{padding:18px}.product-info-card{padding:22px}}
