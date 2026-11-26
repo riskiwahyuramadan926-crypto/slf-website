@@ -3,7 +3,8 @@ const initialized = new WeakMap();
 const statements = [
   `CREATE TABLE IF NOT EXISTS orders (
     id TEXT PRIMARY KEY,
-    access_key_hash TEXT NOT NULL,\n    access_key_encrypted TEXT,
+    access_key_hash TEXT NOT NULL,
+    access_key_encrypted TEXT,
     minecraft_name TEXT NOT NULL,
     platform TEXT NOT NULL CHECK (platform IN ('Java','Bedrock')),
     whatsapp TEXT NOT NULL,
