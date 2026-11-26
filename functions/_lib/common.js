@@ -201,6 +201,34 @@ export async function requireOwner(request, env) {
     return false;
   }
 }
+
+export function resolveOrderLinkSecret(env = {}) {
+  const configured = typeof env.ORDER_LINK_SECRET === 'string' ? env.ORDER_LINK_SECRET.trim() : '';
+  if (configured.length >= 32) return configured;
+  const admin = resolveAdminSecrets(env);
+  return admin.ownerSecret.length >= 32 ? admin.ownerSecret : '';
+}
+export async function encryptOrderAccessKey(value, env = {}) {
+  const secret = resolveOrderLinkSecret(env); if (!secret || !value) return null;
+  const rawKey = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(secret));
+  const key = await crypto.subtle.importKey('raw', rawKey, { name: 'AES-GCM' }, false, ['encrypt']);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(value)));
+  const bytes = new Uint8Array(iv.length + encrypted.length); bytes.set(iv); bytes.set(encrypted, iv.length);
+  let binary = ''; for (const byte of bytes) binary += String.fromCharCode(byte);
+  return 'v1.' + btoa(binary);
+}
+export async function decryptOrderAccessKey(value, env = {}) {
+  if (typeof value !== 'string' || !value.startsWith('v1.')) return '';
+  const secret = resolveOrderLinkSecret(env); if (!secret) return '';
+  try {
+    const bytes = Uint8Array.from(atob(value.slice(3)), c => c.charCodeAt(0)), iv = bytes.slice(0,12), ciphertext = bytes.slice(12);
+    const rawKey = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(secret));
+    const key = await crypto.subtle.importKey('raw', rawKey, { name: 'AES-GCM' }, false, ['decrypt']);
+    return new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext));
+  } catch { return ''; }
+}
+
 export async function notifyAdmin(env, order, orderUrl) {
   if (!env.WA_ACCESS_TOKEN || !env.WA_PHONE_NUMBER_ID || !env.WA_ADMIN_TO) return;
   const apiVersion = env.WHATSAPP_API_VERSION || 'v23.0';
