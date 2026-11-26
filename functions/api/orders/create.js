@@ -54,7 +54,8 @@ export async function onRequestPost({ request, env }) {
     const id = 'SLF-' + date + '-' + randomHex(6).toUpperCase();
     const ref = ('SLF' + date + randomHex(10).toUpperCase()).slice(0,25);
     const token = randomHex(40) + randomHex(24);
-    const hash = await sha256Hex(token);\n    const encryptedAccessKey = await encryptOrderAccessKey(token, env);
+    const hash = await sha256Hex(token);
+    const encryptedAccessKey = await encryptOrderAccessKey(token, env);
     const details = ['CUSTOM_RANK','VIP_PLUS'].includes(data.productId)
       ? {rankName:safeText(data.details?.rankName,16),rankColor:String(data.details?.rankColor||'').toUpperCase(),rankStyle:safeText(data.details?.rankStyle,20),buyerNote:data.productId==='VIP_PLUS'?safeText(data.details?.buyerNote,400):''}
       : {buyerNote:safeText(data.details?.buyerNote,400)};
