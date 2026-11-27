@@ -7,7 +7,7 @@ export async function onRequestGet({ request, env, params }) {
   if (!row || await sha256Hex(key) !== row.access_key_hash) return fail('Pesanan tidak ditemukan atau tautan akses tidak valid.', 404);
   let details = {}; try { details = JSON.parse(row.details_json || '{}'); } catch {}
   const order = {id:row.id,minecraftName:row.minecraft_name,platform:row.platform,productId:row.product_id,productName:row.product_name,details,subtotal:row.subtotal,discount:row.discount,total:row.total,status:row.status,expiresAt:row.expires_at,createdAt:row.created_at,paidAt:row.paid_at,completedAt:row.completed_at,rated:Boolean(row.rated_at)};
-  if (String(row.product_id || '').startsWith('REENTRY_')) {
+  if (String(row.product_id || '').startsWith('REENTRY_') && ['PAID','PROCESSING','COMPLETED'].includes(row.status)) {
     const { results: ticketRows = [] } = await env.DB.prepare(
       'SELECT id, access_key_hash, status, created_at, updated_at, submitted_at, completed_at FROM reentry_tickets WHERE order_id = ? ORDER BY created_at, id'
     ).bind(id).all();
@@ -35,9 +35,16 @@ export async function onRequestGet({ request, env, params }) {
     }));
   }
   if (row.status === 'COMPLETED' && !row.rated_at) {
+    let reviewReady = true;
+    if (String(row.product_id || '').startsWith('REENTRY_')) {
+      const completedTicket = await env.DB.prepare("SELECT COUNT(*) AS total FROM reentry_tickets WHERE order_id = ? AND status = 'COMPLETED'").bind(id).first();
+      reviewReady = Number(completedTicket?.total || 0) > 0;
+    }
+    if (reviewReady) {
     const reviewUrl = new URL('/store/review.html', url.origin);
     reviewUrl.searchParams.set('id', id); reviewUrl.searchParams.set('key', key);
     order.reviewUrl = reviewUrl.toString();
+    }
   }
   return json({order});
 }

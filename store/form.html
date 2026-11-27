@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#100c18"><meta name="description" content="Formulir donasi Store Survival Legacy Frontier."><meta name="robots" content="noindex,nofollow"><title>Formulir Donasi | SLF Store</title><link rel="stylesheet" href="/assets/css/store.css?v=20261127-catalog-rebuild"><link rel="stylesheet" href="/assets/css/frontier-theme.css"><script src="/assets/js/store-config.js" defer></script><script src="/assets/js/checkout.js?v=20261127-checkout-rebuild" defer></script></head>
+<body><div class="topline"><b>SURVIVAL LEGACY FRONTIER</b> · FORMULIR DONASI</div><header><div class="wrap nav"><a class="brand" href="/store/"><span class="mark">✦</span><span><strong>SURVIVAL LEGACY FRONTIER</strong><small>FORMULIR DONASI RESMI</small></span></a><a class="btn btn-quiet" href="/store/">← Kembali ke katalog</a></div></header><main><section class="section" id="formulir"><div class="wrap">
+      <div class="section-head"><div class="eyebrow">Alur pembelian</div><h2>Dari pesanan sampai selesai.</h2><p>Status pesanan dan rating tersambung ke nomor pesanan. Simpan tautan status setelah checkout.</p></div>
+      <div class="steps">
+        <div class="step"><span class="step-num">1</span><b>Isi formulir</b><p>WhatsApp, nama Minecraft, dan detail produk wajib sesuai.</p></div>
+        <div class="step"><span class="step-num">2</span><b>Bayar QRIS</b><p>Admin mengirim QRIS DANA secara manual; cek nama merchant dan nominal sebelum membayar.</p></div>
+        <div class="step"><span class="step-num">3</span><b>Admin memproses</b><p>Admin memeriksa transaksi DANA dan memverifikasi pembayaran secara manual.</p></div>
+        <div class="step"><span class="step-num">4</span><b>Nilai toko</b><p>Form rating baru terbuka setelah admin menyelesaikan pesanan.</p></div>
+      </div>
+      <div class="checkout">
+        <aside class="panel"><h3>Ringkasan pesanan</h3><p class="panel-lede">Produk yang dipilih dari katalog.</p>
+          <div class="summary-row"><span>Produk</span><strong id="summary-product">Belum dipilih</strong></div>
+          <div class="summary-row"><span>Harga produk</span><strong id="summary-price">Rp0</strong></div>
+          <div class="summary-row"><span>Kode promo</span><strong id="summary-promo">—</strong></div>
+          <div class="summary-row total"><span>Estimasi total</span><strong id="summary-total">Rp0</strong></div>
+          <p class="payment-note">Kode promo diverifikasi server saat checkout. Sebelum membayar, cocokkan total pesanan dengan nominal QRIS resmi yang dikirim Admin SLF melalui WhatsApp. Jangan membayar nominal berbeda atau QRIS dari pihak lain.</p>
+          <div class="divider"></div><p class="subtle">Donasi sukarela terpisah dari pembelian produk. <a href="https://saweria.co/LegacyFrontier" target="_blank" rel="noopener noreferrer">Dukung SLF di Saweria ↗</a></p>
+        </aside>
+        <form class="panel" id="order-form">
+          <h3>Data pembeli</h3><p class="panel-lede">Isi data yang bisa dihubungi admin jika ada kendala. Jangan masukkan password atau OTP.</p>
+          <div class="form-grid">
+            <div class="field full"><label for="minecraft-name">Nama Minecraft *</label><input id="minecraft-name" name="minecraftName" required minlength="2" maxlength="32" autocomplete="off" placeholder="Contoh: .NamaBedrock"><small>Bedrock: gunakan awalan titik (.) bila memang format akunmu di SLF memakai titik.</small></div>
+            <div class="field"><label for="platform">Platform *</label><select id="platform" name="platform" required><option value="">Pilih platform</option><option value="Java">Java Edition</option><option value="Bedrock">Bedrock Edition</option></select></div>
+            <div class="field"><label for="whatsapp">Nomor WhatsApp *</label><input id="whatsapp" name="whatsapp" required inputmode="tel" autocomplete="tel" minlength="8" maxlength="20" placeholder="Contoh: 62812xxxxxxx"><small>Gunakan kode negara, contoh Indonesia 62.</small></div>
+            <div class="field full"><label for="email">Email (opsional)</label><input id="email" name="email" type="email" autocomplete="email" placeholder="nama@email.com"><small>Opsional, dipakai hanya untuk komunikasi pesanan.</small></div>
+            <div class="field full"><label for="promo">Kode promo (opsional)</label><input id="promo" name="promoCode" maxlength="32" autocomplete="off" placeholder="Masukkan kode jika punya"></div>
+          </div>
+          <div class="detail-fields" id="custom-rank-fields" hidden>
+            <h3>Pengaturan Custom Rank</h3><p class="panel-lede">Wajib diisi untuk Custom Rank maupun VIP+. Paket VIP+ Rp55.000 mencakup Custom Rank permanen dan fitur tambahan berlangganan 60 hari. Rank tetap ada saat langganan berakhir, tetapi fitur tambahan berhenti hingga langganan aktif kembali. Admin memasang nama, warna, dan gaya pilihan setelah pembayaran terverifikasi.</p>
+            <div class="form-grid">
+              <div class="field full"><label for="rank-name">Nama rank yang diinginkan *</label><input id="rank-name" name="rankName" minlength="2" maxlength="16" placeholder="Contoh: STARLIGHT"><small>2–16 karakter. Hindari simbol yang bisa rusak di chat atau tablist.</small></div>
+              <div class="field"><label for="rank-color">Warna *</label><select id="rank-color" name="rankColor"></select></div>
+              <div class="field"><label for="rank-style">Gaya tulisan *</label><select id="rank-style" name="rankStyle"></select></div>
+              <div class="field full"><label>Pratinjau rank</label><div style="border:1px solid var(--line);border-radius:10px;background:#100c17;padding:14px"><span id="rank-preview" style="font-weight:800;color:#B98CF4">[STARLIGHT] NamaPemain</span></div><small>Pratinjau tidak menjamin efek yang sama di semua plugin atau tampilan Bedrock.</small></div>
+            </div>
+          </div>
+          <div class="detail-fields" id="vip-fields" hidden><h3>Informasi VIP+</h3><p class="panel-lede">VIP+ mencakup Custom Rank permanen dan fitur tambahan berlangganan 60 hari. Jika langganan habis, rank tetap tetapi fitur berakhir.</p></div>
+          <div class="detail-fields" id="ticket-fields" hidden><h3>Ketentuan tiket</h3><p class="panel-lede" id="ticket-note">Maksimal 3 tiket per pemain per season. Paket 1/2/3 dihitung berdasarkan jumlah tiket, bukan jumlah pesanan. Setiap tiket memberi 3 nyawa untuk Member/VIP biasa atau 5 nyawa jika langganan VIP+ aktif. Pengajuan diproses manual oleh admin.</p></div>
+          <div class="detail-fields"><h3>Catatan Pesanan</h3><div class="field"><label for="buyer-note">Catatan (opsional)</label><textarea id="buyer-note" name="buyerNote" maxlength="400" placeholder="Tulis catatan untuk Admin SLF"></textarea></div></div><input type="hidden" id="product-id" name="productId" value="">
+          <label class="checkboxline"><input id="agree" type="checkbox" required><span>Saya sudah memeriksa nama Minecraft, produk, harga, dan ketentuan. Saya paham rank/tiket diberikan manual oleh admin setelah pembayaran terverifikasi.</span></label>
+          <div class="form-error" id="form-error" role="alert"></div>
+          <button class="btn btn-primary btnwide" id="submit-order" type="submit" disabled>Lanjutkan checkout ↗</button>
+          <p class="payment-note">Jangan membayar sebelum menerima QRIS resmi dari Admin SLF melalui WhatsApp. Pastikan nama merchant dan nominal sesuai dengan pesanan. Jika checkout gagal atau QRIS belum diterima, jangan membayar ulang; hubungi CS resmi SLF.</p>
+        </form>
+      </div>
+    </div></section>
+    </main><footer><div class="wrap footer-inner"><span>© <span id="year"></span> Survival Legacy Frontier · Store resmi.</span><div class="footer-links"><a href="/store/">Katalog</a><a href="/">Beranda</a><a href="/bantuan/">Pusat Bantuan</a></div></div></footer><div class="toast" id="toast" role="status" aria-live="polite"></div><script src="/assets/js/site-design.js?v=20261123-freelayers2" defer></script></body></html>

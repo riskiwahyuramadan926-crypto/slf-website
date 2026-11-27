@@ -1,4 +1,4 @@
-import { json, fail, readJson, sha256Hex, hmacSha256Hex, randomHex, safeText, notifyAdmin, resolveTicketLinkSecret } from '../../_lib/common.js';
+import { json, fail, readJson, sha256Hex, hmacSha256Hex, randomHex, safeText, notifyAdmin, resolveTicketLinkSecret, encryptOrderAccessKey } from '../../_lib/common.js';
 import { calculatePrice, RANK_COLORS, RANK_STYLES } from '../../_lib/catalog.js';
 import { ensureStoreSchema } from '../../_lib/store-schema.js';
 
@@ -55,12 +55,14 @@ export async function onRequestPost({ request, env }) {
     const ref = ('SLF' + date + randomHex(10).toUpperCase()).slice(0,25);
     const token = randomHex(40) + randomHex(24);
     const hash = await sha256Hex(token);
+    const encryptedAccessKey = await encryptOrderAccessKey(token, env);
+    if (!encryptedAccessKey) return fail('Checkout sementara tidak tersedia: OWNER_SECRET atau ORDER_LINK_SECRET harus dikonfigurasi dengan minimal 32 karakter agar tautan pesanan dan ulasan aman.', 503);
     const details = ['CUSTOM_RANK','VIP_PLUS'].includes(data.productId)
-      ? {rankName:safeText(data.details?.rankName,16),rankColor:String(data.details?.rankColor||'').toUpperCase(),rankStyle:safeText(data.details?.rankStyle,20),buyerNote:data.productId==='VIP_PLUS'?safeText(data.details?.buyerNote,400):''}
+      ? {rankName:safeText(data.details?.rankName,16),rankColor:String(data.details?.rankColor||'').toUpperCase(),rankStyle:safeText(data.details?.rankStyle,20),buyerNote:safeText(data.details?.buyerNote,400)}
       : {buyerNote:safeText(data.details?.buyerNote,400)};
-    const sql = "INSERT INTO orders (id,access_key_hash,minecraft_name,platform,whatsapp,email,product_id,product_name,details_json,promo_code,subtotal,discount,total,status,partner_reference_no,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'PENDING_PAYMENT',?,?,?)";
+    const sql = "INSERT INTO orders (id,access_key_hash,access_key_encrypted,minecraft_name,platform,whatsapp,email,product_id,product_name,details_json,promo_code,subtotal,discount,total,status,partner_reference_no,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'PENDING_PAYMENT',?,?,?)";
     const statements = [
-      env.DB.prepare(sql).bind(id,hash,minecraftName,platform,whatsapp,email||null,data.productId,price.product.name,JSON.stringify(details),promoCode||null,price.subtotal,price.discount,price.total,ref,now,now)
+      env.DB.prepare(sql).bind(id,hash,encryptedAccessKey,minecraftName,platform,whatsapp,email||null,data.productId,price.product.name,JSON.stringify(details),promoCode||null,price.subtotal,price.discount,price.total,ref,now,now)
     ];
 
     // Prepare every re-entry row before writing. D1 batch makes the order and all

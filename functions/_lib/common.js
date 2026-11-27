@@ -201,6 +201,56 @@ export async function requireOwner(request, env) {
     return false;
   }
 }
+
+export function resolveOrderLinkSecret(env = {}) {
+  const configured = typeof env.ORDER_LINK_SECRET === 'string' ? env.ORDER_LINK_SECRET.trim() : '';
+  if (configured.length >= 32) return configured;
+  const admin = resolveAdminSecrets(env);
+  return admin.ownerSecret.length >= 32 ? admin.ownerSecret : '';
+}
+export async function encryptOrderAccessKey(value, env = {}) {
+  const secret = resolveOrderLinkSecret(env); if (!secret || !value) return null;
+  const rawKey = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(secret));
+  const key = await crypto.subtle.importKey('raw', rawKey, { name: 'AES-GCM' }, false, ['encrypt']);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(value)));
+  const bytes = new Uint8Array(iv.length + encrypted.length); bytes.set(iv); bytes.set(encrypted, iv.length);
+  let binary = ''; for (const byte of bytes) binary += String.fromCharCode(byte);
+  return 'v1.' + btoa(binary);
+}
+export async function decryptOrderAccessKey(value, env = {}) {
+  if (typeof value !== 'string' || !value.startsWith('v1.')) return '';
+  const secret = resolveOrderLinkSecret(env); if (!secret) return '';
+  try {
+    const bytes = Uint8Array.from(atob(value.slice(3)), c => c.charCodeAt(0)), iv = bytes.slice(0,12), ciphertext = bytes.slice(12);
+    const rawKey = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(secret));
+    const key = await crypto.subtle.importKey('raw', rawKey, { name: 'AES-GCM' }, false, ['decrypt']);
+    return new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext));
+  } catch { return ''; }
+}
+export async function ensureOrderAccessKey(db, order, env = {}) {
+  let key = await decryptOrderAccessKey(order.access_key_encrypted, env);
+  if (key && await sha256Hex(key) === order.access_key_hash) return key;
+  key = randomHex(64);
+  const encrypted = await encryptOrderAccessKey(key, env);
+  if (!encrypted) throw new Error('ORDER_LINK_SECRET atau OWNER_SECRET harus tersedia (minimal 32 karakter) agar tautan pesanan dan ulasan dapat dibuat.');
+  if (String(order.product_id || '').startsWith('REENTRY_')) {
+    const ticketSecret = resolveTicketLinkSecret(env);
+    if (!ticketSecret.ready) throw new Error('TICKET_LINK_SECRET belum valid; tautan tiket tidak dapat dibuat.');
+    const { results = [] } = await db.prepare('SELECT id FROM reentry_tickets WHERE order_id = ? ORDER BY created_at, id').bind(order.id).all();
+    if (!results.length) throw new Error('Data tiket re-entry tidak ditemukan untuk pesanan ini.');
+    for (const ticket of results) {
+      const ticketKey = await hmacSha256Hex(ticketSecret.secret, order.id + ':' + ticket.id + ':' + key);
+      await db.prepare('UPDATE reentry_tickets SET access_key_hash = ?, updated_at = ? WHERE id = ? AND order_id = ?')
+        .bind(await sha256Hex(ticketKey), new Date().toISOString(), ticket.id, order.id).run();
+    }
+  }
+  await db.prepare('UPDATE orders SET access_key_hash = ?, access_key_encrypted = ?, updated_at = ? WHERE id = ?')
+    .bind(await sha256Hex(key), encrypted, new Date().toISOString(), order.id).run();
+  return key;
+}
+
+
 export async function notifyAdmin(env, order, orderUrl) {
   if (!env.WA_ACCESS_TOKEN || !env.WA_PHONE_NUMBER_ID || !env.WA_ADMIN_TO) return;
   const apiVersion = env.WHATSAPP_API_VERSION || 'v23.0';

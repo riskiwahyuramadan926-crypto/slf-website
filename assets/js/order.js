@@ -41,9 +41,10 @@
     const ticketSection = $('tickets-section'), ticketRoot = $('order-tickets');
     const tickets = Array.isArray(o.tickets) ? o.tickets : [];
     ticketRoot.replaceChildren();
-    ticketSection.hidden = tickets.length === 0;
+    const ticketVisible = ['PAID','PROCESSING','COMPLETED'].includes(o.status) && tickets.length > 0;
+    ticketSection.hidden = !ticketVisible;
     const ticketLabels = {WAITING_PAYMENT:'Menunggu transaksi selesai',ACTIVE:'Aktif · siap diajukan',PENDING:'Pending · menunggu admin',COMPLETED:'Selesai · terpakai',CANCELLED:'Dibatalkan'};
-    tickets.forEach(ticket => {
+    if (ticketVisible) tickets.forEach(ticket => {
       const card = document.createElement('article'); card.className = 'ticket-card';
       const heading = document.createElement('h3'); heading.textContent = 'Tiket ' + ticket.id;
       const status = document.createElement('p'); status.textContent = 'Status: ' + (ticketLabels[ticket.status] || ticket.status);

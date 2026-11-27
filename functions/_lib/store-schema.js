@@ -4,6 +4,7 @@ const statements = [
   `CREATE TABLE IF NOT EXISTS orders (
     id TEXT PRIMARY KEY,
     access_key_hash TEXT NOT NULL,
+    access_key_encrypted TEXT,
     minecraft_name TEXT NOT NULL,
     platform TEXT NOT NULL CHECK (platform IN ('Java','Bedrock')),
     whatsapp TEXT NOT NULL,
@@ -132,7 +133,7 @@ const statements = [
 // Add missing non-key columns before building indexes or using the Admin APIs.
 const legacyColumnDefinitions = {
   orders: {
-    access_key_hash: 'TEXT', minecraft_name: 'TEXT', platform: "TEXT DEFAULT 'Java'",
+    access_key_hash: 'TEXT', access_key_encrypted: 'TEXT', minecraft_name: 'TEXT', platform: "TEXT DEFAULT 'Java'",
     whatsapp: "TEXT DEFAULT ''", email: 'TEXT', product_id: "TEXT DEFAULT ''",
     product_name: "TEXT DEFAULT ''", details_json: "TEXT DEFAULT '{}'", promo_code: 'TEXT',
     subtotal: 'INTEGER DEFAULT 0', discount: 'INTEGER DEFAULT 0', total: 'INTEGER DEFAULT 0',
