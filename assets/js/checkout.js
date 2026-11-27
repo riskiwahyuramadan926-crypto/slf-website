@@ -110,7 +110,13 @@
         ].join('\n');
         const whatsappUrl='https://wa.me/'+adminPhone+'?text='+encodeURIComponent(message);
         if(popup&&!popup.closed)popup.location.href=whatsappUrl;
-        else window.location.assign(whatsappUrl);
+        else {
+          let opened=null;
+          try{opened=window.open(whatsappUrl,'_blank');}catch(_){}
+          if(!opened){
+            try{sessionStorage.setItem('slf-checkout-whatsapp:'+data.orderId,whatsappUrl);}catch(_){}
+          }
+        }
       }
       window.location.href=data.orderUrl;
     }catch(error){

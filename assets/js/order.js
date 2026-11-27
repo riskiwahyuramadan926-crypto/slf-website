@@ -6,7 +6,14 @@
   $('year').textContent=new Date().getFullYear();
   if(!id||!key){fail('Tautan status tidak lengkap. Buka tautan pesanan yang diberikan setelah checkout.');return;}
   const cfg=window.SLF_STORE_CONFIG||{}, phone=String(cfg.adminWhatsApp||'').replace(/\D/g,'');
-  if(phone){$('contact-admin').hidden=false;const contactMessage = [
+  let checkoutWhatsapp='';
+  try{checkoutWhatsapp=sessionStorage.getItem('slf-checkout-whatsapp:'+id)||'';if(checkoutWhatsapp)sessionStorage.removeItem('slf-checkout-whatsapp:'+id);}catch(_){}
+  if(phone){$('contact-admin').hidden=false;
+    if(checkoutWhatsapp){
+      $('contact-admin').href=checkoutWhatsapp;
+      $('contact-admin').textContent='Kirim pesan checkout ke Admin via WhatsApp ↗';
+    }else{
+    const contactMessage = [
       '✦ *SLF STORE — BANTUAN TRANSAKSI*',
       '',
       'Halo Admin SLF, saya ingin meminta bantuan terkait pesanan saya.',
@@ -17,7 +24,11 @@
       'Mohon bantu periksa status atau kendala pada pesanan ini.',
       'Terima kasih.'
     ].join('\n');
-    $('contact-admin').href='https://wa.me/'+phone+'?text='+encodeURIComponent(contactMessage);$('admin-missing').hidden=true;}
+    $('contact-admin').href='https://wa.me/'+phone+'?text='+encodeURIComponent(contactMessage);
+    $('contact-admin').textContent='Hubungi admin via WhatsApp';
+    }
+    $('admin-missing').hidden=true;
+  }
   async function refresh(){
     try{
       const r=await fetch('/api/orders/'+encodeURIComponent(id)+'?key='+encodeURIComponent(key),{cache:'no-store'}),d=await r.json().catch(()=>({}));
