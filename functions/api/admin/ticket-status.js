@@ -1,7 +1,7 @@
 import { json, fail, readJson, requireAdmin, logAdminActivity, buildOrderLinks, buildWhatsAppUrl } from '../../_lib/common.js';
 
 function safeLinkError(error) {
-  return String(error?.message || error || 'Link belum dapat dibuat.').replace(/[\\r\\n]/g, ' ').slice(0, 240);
+  return String(error?.message || error || 'Link belum dapat dibuat.').replace(/[\r\n]/g, ' ').slice(0, 240);
 }
 
 export async function onRequestPost({ request, env }) {
@@ -44,7 +44,7 @@ export async function onRequestPost({ request, env }) {
       Object.assign(links, generated);
       const ticketLink = links.ticket_links.find(ticket => ticket.id === String(row.id))?.url || '';
       if (!ticketLink) throw new Error('Link tiket pribadi belum tersedia.');
-      const message = 'Halo ' + row.minecraft_name + ', pengajuan tiket ' + row.id + ' kamu sudah kami terima!\\nHarap segera login sekarang dan tunggu di lobby, lalu nantikan instruksi selanjutnya dari Admin.\\nLink tiket pribadi:\\n' + ticketLink;
+      const message = 'Halo ' + row.minecraft_name + ', pengajuan tiket ' + row.id + ' kamu sudah kami terima!\nHarap segera login sekarang dan tunggu di lobby, lalu nantikan instruksi selanjutnya dari Admin.\nLink tiket pribadi:\n' + ticketLink;
       whatsappUrl = buildWhatsAppUrl(row.whatsapp, message);
       if (!whatsappUrl) throw new Error('Nomor WhatsApp member tidak valid.');
       links.ticket_link = ticketLink;
@@ -70,7 +70,7 @@ export async function onRequestPost({ request, env }) {
       const generated = await buildOrderLinks(env.DB, orderForLinks, new URL(request.url).origin, env);
       Object.assign(links, generated);
       if (!links.review_link) throw new Error('Link ulasan belum tersedia.');
-      const message = 'Halo ' + row.minecraft_name + ', penggunaan tiket ' + row.id + ' telah selesai diproses. Selamat bermain kembali!\\nJangan lupa berikan ulasan layanan kami di sini:\\n' + links.review_link;
+      const message = 'Halo ' + row.minecraft_name + ', penggunaan tiket ' + row.id + ' telah selesai diproses. Selamat bermain kembali!\nJangan lupa berikan ulasan layanan kami di sini:\n' + links.review_link;
       whatsappUrl = buildWhatsAppUrl(row.whatsapp, message);
       if (!whatsappUrl) throw new Error('Nomor WhatsApp member tidak valid.');
     } catch (error) {
