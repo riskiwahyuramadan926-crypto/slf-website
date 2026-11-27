@@ -333,7 +333,8 @@ export async function buildOrderLinks(db, order, origin, env = {}) {
 
 export function buildWhatsAppUrl(phoneValue, message) {
   const phone = String(phoneValue || '').replace(/\D/g, '');
-  return phone ? 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message) : '';
+  const normalizedMessage = String(message ?? '').replace(/\\n/g, '\n');
+  return phone ? 'https://wa.me/' + phone + '?text=' + encodeURIComponent(normalizedMessage) : '';
 }
 
 
