@@ -17,7 +17,10 @@ export async function onRequestGet({ request, env }) {
           product_id: order.product_id,
           access_key_hash: order.access_key_hash,
           access_key_encrypted: order.access_key_encrypted
-        }, new URL(request.url).origin, env));
+        }, new URL(request.url).origin, env).catch(error => {
+          console.error('Admin ticket link generation failed for order ' + order.order_id + ':', error?.message || error);
+          return { ticket_link: '', ticket_links: [], review_link: '', link_error: String(error?.message || error).slice(0, 240) };
+        }));
       }
       return linksByOrder.get(order.order_id);
     };
@@ -44,8 +47,9 @@ export async function onRequestGet({ request, env }) {
         total: ticket.total,
         ticket_link: ticketLink,
         review_link: links.review_link,
-        accept_whatsapp_url: needsAcceptanceFallback ? buildWhatsAppUrl(ticket.whatsapp, acceptanceMessage) : '',
-        review_whatsapp_url: ticket.status === 'COMPLETED' ? buildWhatsAppUrl(ticket.whatsapp, reviewMessage) : ''
+        accept_whatsapp_url: needsAcceptanceFallback && ticketLink ? buildWhatsAppUrl(ticket.whatsapp, acceptanceMessage) : '',
+        review_whatsapp_url: ticket.status === 'COMPLETED' && links.review_link ? buildWhatsAppUrl(ticket.whatsapp, reviewMessage) : '',
+        link_error: links.link_error || ''
       };
     }));
 

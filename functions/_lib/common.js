@@ -52,6 +52,10 @@ export function resolveTicketLinkSecret(env = {}) {
   const adminSecrets = resolveAdminSecrets(env);
   const candidates = [
     ['TICKET_LINK_SECRET', typeof env.TICKET_LINK_SECRET === 'string' ? env.TICKET_LINK_SECRET.trim() : ''],
+    // Backward-compatible aliases used by an earlier Cloudflare Pages configuration.
+    ['TIKET_LINK_SRCRET', typeof env.TIKET_LINK_SRCRET === 'string' ? env.TIKET_LINK_SRCRET.trim() : ''],
+    ['TIKET_LINK_SECRET', typeof env.TIKET_LINK_SECRET === 'string' ? env.TIKET_LINK_SECRET.trim() : ''],
+    ['TIKET_SECRET', typeof env.TIKET_SECRET === 'string' ? env.TIKET_SECRET.trim() : ''],
     ['TICKET_SECRET', typeof env.TICKET_SECRET === 'string' ? env.TICKET_SECRET.trim() : ''],
     ['TICKET_CODE', typeof env.TICKET_CODE === 'string' ? env.TICKET_CODE.trim() : ''],
     ['REENTRY_TICKET_SECRET', typeof env.REENTRY_TICKET_SECRET === 'string' ? env.REENTRY_TICKET_SECRET.trim() : '']
