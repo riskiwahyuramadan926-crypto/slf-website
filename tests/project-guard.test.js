@@ -211,4 +211,4 @@ test('Admin mobile payment flow persists PAID before optional links and opens Wh
   assert.match(admin, /HTTP '\+res\.status/);
   assert.match(admin, /Konfirmasi pembayaran gagal:/);
   assert.match(adminHtml, /admin\.js\?v=20261127-mobile-payment-fix2/);
-});;
+});
