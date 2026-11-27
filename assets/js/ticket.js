@@ -87,7 +87,7 @@
           '• Paket: ' + current.productName,
           'Mohon diproses, terima kasih!'
         ].join('\n');
-        const target = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
+        const target = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(String(message ?? '').replace(/\\n/g, '\n'));
         if (waWindow && !waWindow.closed) waWindow.location.href = target;
         else window.location.href = target;
       } else {

@@ -8,12 +8,15 @@
   const statusLabels = {PENDING_PAYMENT:'Menunggu pembayaran',PAID:'Pembayaran berhasil',PROCESSING:'Sedang diproses',COMPLETED:'Selesai',EXPIRED:'Kedaluwarsa',CANCELLED:'Dibatalkan'};
   const idr = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function encodeWhatsAppText(text) {
+    return encodeURIComponent(String(text ?? '').replace(/\\n/g, '\n'));
+  }
   function appendWhatsAppFallback(actions, phone, label, message) {
     const digits=String(phone||'').replace(/\D/g,'');
     if(!digits||!message)return;
     const link=document.createElement('a');
     link.className='btn btn-quiet';
-    link.href='https://wa.me/'+digits+'?text='+encodeURIComponent(message);
+    link.href='https://wa.me/'+digits+'?text='+encodeWhatsAppText(message);
     link.target='_blank';
     link.rel='noopener noreferrer';
     link.textContent=label;
@@ -249,7 +252,7 @@
       const dl=document.createElement('dl');entries.forEach(([k,v])=>{const dt=document.createElement('dt');dt.textContent=k;const dd=document.createElement('dd');dd.textContent=String(v);dl.append(dt,dd);});card.append(dl);
       const actions=document.createElement('div');actions.className='admin-inline-actions';
       const phone=String(o.whatsapp||'').replace(/\D/g,'');
-      if(phone){const chat=document.createElement('a');chat.className='btn btn-quiet';chat.href='https://wa.me/'+phone+'?text='+encodeURIComponent(messageFor(o));chat.target='_blank';chat.rel='noopener noreferrer';chat.textContent='Chat pembeli';actions.append(chat);}
+      if(phone){const chat=document.createElement('a');chat.className='btn btn-quiet';chat.href='https://wa.me/'+phone+'?text='+encodeWhatsAppText(messageFor(o));chat.target='_blank';chat.rel='noopener noreferrer';chat.textContent='Chat pembeli';actions.append(chat);}
       const copy=document.createElement('button');copy.type='button';copy.className='btn btn-quiet';copy.textContent='Salin nomor';copy.addEventListener('click',()=>copyText(o.id,'Nomor pesanan tersalin.'));actions.append(copy);
       const copySummary=document.createElement('button');copySummary.type='button';copySummary.className='btn btn-quiet';copySummary.textContent='Salin ringkasan';copySummary.addEventListener('click',()=>copyText(orderSummary(o),'Ringkasan pesanan tersalin.'));actions.append(copySummary);
       if(phone&&String(o.product_id||'').startsWith('REENTRY_')&&['PAID','PROCESSING'].includes(o.status)&&o.ticket_link){
@@ -594,7 +597,7 @@
       const contactActions=document.createElement('div');contactActions.className='admin-inline-actions';
       const replyText=t.admin_reply||('Halo '+t.player_name+', kami menindaklanjuti tiket bantuan '+t.id+' dari tim SLF. Pesan kamu: '+t.subject+'.');
       if (/^\+?[0-9\s()\-]{8,20}$/.test(t.contact)) {
-        const a=document.createElement('a');a.className='btn btn-quiet';a.target='_blank';a.rel='noopener noreferrer';a.href='https://wa.me/'+t.contact.replace(/\D/g,'')+'?text='+encodeURIComponent(replyText);a.textContent='Hubungi via WhatsApp';contactActions.append(a);
+        const a=document.createElement('a');a.className='btn btn-quiet';a.target='_blank';a.rel='noopener noreferrer';a.href='https://wa.me/'+t.contact.replace(/\D/g,'')+'?text='+encodeWhatsAppText(replyText);a.textContent='Hubungi via WhatsApp';contactActions.append(a);
       } else if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(t.contact)) {
         const a=document.createElement('a');a.className='btn btn-quiet';a.href='mailto:'+encodeURIComponent(t.contact)+'?subject='+encodeURIComponent('Tindak lanjut tiket SLF '+t.id)+'&body='+encodeURIComponent(replyText);a.textContent='Hubungi via email';contactActions.append(a);
       }
