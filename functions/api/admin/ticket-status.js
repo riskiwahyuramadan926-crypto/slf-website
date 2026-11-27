@@ -25,7 +25,7 @@ export async function onRequestPost({ request, env }) {
     let whatsappUrl;
     try {
       whatsappUrl = whatsappLink(row.whatsapp,
-        '🎟️ Halo ' + row.minecraft_name + ', pengajuan tiket ' + row.id + ' kamu sudah kami terima!\nHarap segera login sekarang dan tunggu di lobby, lalu nantikan instruksi selanjutnya dari Admin.');
+        'Halo ' + row.minecraft_name + ', pengajuan tiket ' + row.id + ' kamu sudah kami terima!\nHarap segera login sekarang dan tunggu di lobby, lalu nantikan instruksi selanjutnya dari Admin.');
     } catch (error) { return fail(error.message,422); }
     if (row.status === 'PENDING') {
       await env.DB.prepare("UPDATE reentry_tickets SET status='ACTIVE',updated_at=?,completed_at=NULL WHERE id=? AND status='PENDING'").bind(now,id).run();
@@ -43,7 +43,7 @@ export async function onRequestPost({ request, env }) {
       const reviewUrl = new URL('/store/review.html',request.url);
       reviewUrl.searchParams.set('id',row.order_id);
       reviewUrl.searchParams.set('key',orderKey);
-      const message = '🎉 Halo ' + row.minecraft_name + ', penggunaan tiket ' + row.id + ' telah selesai diproses. Selamat bermain kembali!\nJangan lupa berikan ulasan layanan kami di sini:\n' + reviewUrl.toString();
+      const message = 'Halo ' + row.minecraft_name + ', penggunaan tiket ' + row.id + ' telah selesai diproses. Selamat bermain kembali!\nJangan lupa berikan ulasan layanan kami di sini:\n' + reviewUrl.toString();
       whatsappUrl = whatsappLink(row.whatsapp,message);
     } catch (error) { return fail(error.message,422); }
     if (row.status === 'ACTIVE') {
