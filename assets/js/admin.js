@@ -203,7 +203,7 @@
       if(phone){const chat=document.createElement('a');chat.className='btn btn-quiet';chat.href='https://wa.me/'+phone+'?text='+encodeURIComponent(messageFor(o));chat.target='_blank';chat.rel='noopener noreferrer';chat.textContent='Chat pembeli';actions.append(chat);}
       const copy=document.createElement('button');copy.type='button';copy.className='btn btn-quiet';copy.textContent='Salin nomor';copy.addEventListener('click',()=>copyText(o.id,'Nomor pesanan tersalin.'));actions.append(copy);
       const copySummary=document.createElement('button');copySummary.type='button';copySummary.className='btn btn-quiet';copySummary.textContent='Salin ringkasan';copySummary.addEventListener('click',()=>copyText(orderSummary(o),'Ringkasan pesanan tersalin.'));actions.append(copySummary);
-      if(phone&&String(o.product_id||'').startsWith('REENTRY_')&&['PAID','PROCESSING','COMPLETED'].includes(o.status)&&o.ticket_link){
+      if(phone&&String(o.product_id||'').startsWith('REENTRY_')&&['PAID','PROCESSING'].includes(o.status)&&o.ticket_link){
         const ticketMessage='Halo '+o.minecraft_name+', pembayaran untuk pesanan '+o.id+' ('+o.product_name+') telah berhasil!\nGunakan link tiket pribadi di bawah ini saat kamu ingin mengajukan pemakaian tiket:\n'+o.ticket_link;
         appendWhatsAppFallback(actions,phone,'Kirim WA Link Tiket',ticketMessage);
       }
@@ -253,7 +253,7 @@
       card.append(h,state,details,dates,contact);
       const actions=document.createElement('div');actions.className='admin-inline-actions';
       const copy=document.createElement('button');copy.type='button';copy.className='btn btn-quiet';copy.textContent='Salin ID tiket';copy.addEventListener('click',()=>copyText(t.id,'Nomor tiket tersalin.'));actions.append(copy);
-      if(t.ticket_link&&t.order_status!=='PENDING_PAYMENT'){
+      if(t.ticket_link&&t.order_status!=='PENDING_PAYMENT'&&t.status!=='COMPLETED'){
         appendWhatsAppFallback(actions,t.whatsapp,'Kirim WA Link Tiket','Halo '+t.minecraft_name+', berikut link tiket pribadi kamu:\n'+t.ticket_link);
       }
       if(t.status==='ACTIVE'&&t.submitted_at&&t.accept_whatsapp_url){
