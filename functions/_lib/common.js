@@ -250,6 +250,56 @@ export async function ensureOrderAccessKey(db, order, env = {}) {
   return key;
 }
 
+export async function buildOrderLinks(db, order, origin, env = {}) {
+  const orderKey = await ensureOrderAccessKey(db, order, env);
+  const reviewUrl = new URL('/store/review.html', origin);
+  reviewUrl.searchParams.set('id', order.id);
+  reviewUrl.searchParams.set('key', orderKey);
+
+  const ticketLinks = [];
+  if (String(order.product_id || '').startsWith('REENTRY_')) {
+    const ticketSecret = resolveTicketLinkSecret(env);
+    if (!ticketSecret.ready) throw new Error('TICKET_LINK_SECRET belum valid; tautan tiket tidak dapat dibuat.');
+    const { results = [] } = await db.prepare(
+      'SELECT id, access_key_hash FROM reentry_tickets WHERE order_id = ? ORDER BY created_at, id'
+    ).bind(order.id).all();
+    if (!results.length) throw new Error('Data tiket re-entry tidak ditemukan untuk pesanan ini.');
+
+    for (const ticket of results) {
+      const ticketId = String(ticket.id);
+      let ticketKey = '';
+      for (const secret of ticketSecret.secrets) {
+        const candidate = await hmacSha256Hex(secret, order.id + ':' + ticketId + ':' + orderKey);
+        if (ticket.access_key_hash && await sha256Hex(candidate) === ticket.access_key_hash) {
+          ticketKey = candidate;
+          break;
+        }
+      }
+      if (!ticketKey) {
+        ticketKey = await hmacSha256Hex(ticketSecret.secret, order.id + ':' + ticketId + ':' + orderKey);
+        await db.prepare('UPDATE reentry_tickets SET access_key_hash = ?, updated_at = ? WHERE id = ? AND order_id = ?')
+          .bind(await sha256Hex(ticketKey), new Date().toISOString(), ticketId, order.id).run();
+      }
+      const ticketUrl = new URL('/store/ticket.html', origin);
+      ticketUrl.searchParams.set('id', ticketId);
+      ticketUrl.searchParams.set('key', ticketKey);
+      ticketLinks.push({ id: ticketId, url: ticketUrl.toString() });
+    }
+  }
+
+  return {
+    ticket_link: ticketLinks.map(ticket => ticket.url).join('\n'),
+    ticket_links: ticketLinks,
+    review_link: reviewUrl.toString()
+  };
+}
+
+export function buildWhatsAppUrl(phoneValue, message) {
+  const phone = String(phoneValue || '').replace(/\D/g, '');
+  return phone ? 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message) : '';
+}
+
+
 
 export async function notifyAdmin(env, order, orderUrl) {
   if (!env.WA_ACCESS_TOKEN || !env.WA_PHONE_NUMBER_ID || !env.WA_ADMIN_TO) return;
