@@ -3,7 +3,7 @@ import { json, fail, readJson, requireAdmin, notifyAdmin, logAdminActivity, buil
 const TICKET_PRODUCTS = new Set(['REENTRY_1','REENTRY_2','REENTRY_3']);
 
 function safeLinkError(error) {
-  return String(error?.message || error || 'Link belum dapat dibuat.').replace(/[\\r\\n]/g, ' ').slice(0, 240);
+  return String(error?.message || error || 'Link belum dapat dibuat.').replace(/[\r\n]/g, ' ').slice(0, 240);
 }
 
 export async function onRequestPost({ request, env }) {
@@ -66,14 +66,14 @@ export async function onRequestPost({ request, env }) {
   try {
     const generated = await buildOrderLinks(env.DB, order, new URL(request.url).origin, env);
     Object.assign(links, generated);
-    const phone = String(order.whatsapp || '').replace(/\\D/g, '');
+    const phone = String(order.whatsapp || '').replace(/\D/g, '');
     if (!phone) throw new Error('Nomor WhatsApp pembeli tidak valid.');
     let message;
     if (TICKET_PRODUCTS.has(order.product_id)) {
       if (!links.ticket_link) throw new Error('Link tiket pribadi belum tersedia.');
-      message = 'Halo ' + order.minecraft_name + ', pembayaran untuk pesanan ' + order.id + ' (' + order.product_name + ') telah berhasil!\\nGunakan link tiket pribadi di bawah ini saat kamu ingin mengajukan pemakaian tiket:\\n' + links.ticket_link;
+      message = 'Halo ' + order.minecraft_name + ', pembayaran untuk pesanan ' + order.id + ' (' + order.product_name + ') telah berhasil!\nGunakan link tiket pribadi di bawah ini saat kamu ingin mengajukan pemakaian tiket:\n' + links.ticket_link;
     } else {
-      message = 'Halo ' + order.minecraft_name + ', pembayaran untuk pesanan ' + order.id + ' (' + order.product_name + ') telah berhasil kami terima!\\nProduk kamu saat ini sedang diproses. Harap segera login ke dalam server sekarang untuk proses penyerahan produk.';
+      message = 'Halo ' + order.minecraft_name + ', pembayaran untuk pesanan ' + order.id + ' (' + order.product_name + ') telah berhasil kami terima!\nProduk kamu saat ini sedang diproses. Harap segera login ke dalam server sekarang untuk proses penyerahan produk.';
     }
     whatsappUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
   } catch (error) {
