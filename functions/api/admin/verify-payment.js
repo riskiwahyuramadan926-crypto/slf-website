@@ -17,7 +17,7 @@ export function buildPaidTicketWhatsAppMessage(order, ticketLinks) {
     '',
     'Berikut adalah link tiket pribadi kamu (1 link berlaku untuk 1 kali pemakaian tiket):',
     '',
-    ...ticketSections,
+    ticketSections.join('\n\n'),
     '',
     'Gunakan salah satu link di atas saat kamu ingin mengajukan pemakaian tiket.'
   ].join('\n');
