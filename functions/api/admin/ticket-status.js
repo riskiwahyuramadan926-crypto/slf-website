@@ -28,7 +28,7 @@ export async function onRequestPost({ request, env }) {
   if (!id || !['ACTIVE', 'COMPLETED'].includes(status)) return fail('Data status tiket tidak valid.');
 
   const row = await env.DB.prepare(
-    'SELECT t.id, t.order_id, t.status, t.submitted_at, t.minecraft_name, t.product_name, t.review_key_hash, t.review_key_encrypted, o.status AS order_status, o.whatsapp FROM reentry_tickets t JOIN orders o ON o.id=t.order_id WHERE t.id=?'
+    'SELECT t.id, t.order_id, t.status, t.submitted_at, t.minecraft_name, t.product_name, t.review_key_hash, t.review_key_encrypted, o.status AS order_status, o.whatsapp, o.product_id, o.access_key_hash, o.access_key_encrypted FROM reentry_tickets t JOIN orders o ON o.id=t.order_id WHERE t.id=?'
   ).bind(id).first();
   if (!row) return fail('Tiket tidak ditemukan.', 404);
   if (row.order_status !== 'COMPLETED') {
