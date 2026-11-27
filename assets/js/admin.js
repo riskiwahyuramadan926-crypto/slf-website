@@ -49,7 +49,7 @@
     if(!ticket)return;
     ticket.status=result.status||fallbackStatus;
     if(result.ticket_link)ticket.ticket_link=result.ticket_link;
-    if(result.review_link)ticket.review_link=result.review_link;
+    if(result.ticket_review_link)ticket.ticket_review_link=result.ticket_review_link;
     if(ticket.status==='ACTIVE'&&result.whatsappUrl)ticket.accept_whatsapp_url=result.whatsappUrl;
     if(ticket.status==='COMPLETED'&&result.whatsappUrl)ticket.review_whatsapp_url=result.whatsappUrl;
     if(ticket.status==='COMPLETED'&&!ticket.completed_at)ticket.completed_at=new Date().toISOString();
@@ -406,18 +406,29 @@
     if(!allReviews.length){root.innerHTML='<div class="empty">Belum ada ulasan yang masuk.</div>';return;}
     allReviews.forEach(r=>{
       const card=document.createElement('article');card.className='review-card';
+      const isTicket=r.review_type==='ticket_service';
       const title=document.createElement('h3');title.textContent='★'.repeat(Number(r.rating)||0)+'☆'.repeat(5-(Number(r.rating)||0))+' · '+r.player_name;
-      const meta=document.createElement('div');meta.className='admin-muted';meta.textContent='Pesanan '+r.order_id+' · '+new Date(r.created_at).toLocaleString('id-ID');
+      const meta=document.createElement('div');meta.className='admin-muted';
+      meta.textContent=(isTicket?'Layanan Tiket '+r.ticket_id:'Pembelian '+r.order_id)+' · '+(r.product_name||'Produk SLF')+' · '+new Date(r.created_at).toLocaleString('id-ID');
       const comment=document.createElement('p');comment.textContent=r.comment||'(Tanpa komentar)';
-      const form=document.createElement('form');form.className='admin-reply';
-      const label=document.createElement('label');label.textContent='Balasan publik admin';
-      const area=document.createElement('textarea');area.maxLength=1000;area.required=true;area.placeholder='Tulis balasan yang akan tampil di halaman Store…';area.value=r.reply||'';
-      const row=document.createElement('div');row.className='admin-inline-actions';
-      const submit=document.createElement('button');submit.type='submit';submit.className='btn btn-gold';submit.textContent=r.reply?'Perbarui balasan':'Kirim balasan';
-      const copy=document.createElement('button');copy.type='button';copy.className='btn btn-quiet';copy.textContent='Salin ulasan';copy.addEventListener('click',()=>copyText('Ulasan '+r.player_name+' ('+r.rating+'/5): '+(r.comment||''),'Ulasan tersalin.'));
-      row.append(submit,copy);form.append(label,area,row);
-      form.addEventListener('submit',async e=>{e.preventDefault();submit.disabled=true;try{await api('/api/admin/reviews',{method:'POST',body:JSON.stringify({orderId:r.order_id,reply:area.value,adminName:'Tim SLF'})});await loadReviews();showToast('Balasan ulasan tersimpan dan tampil di Store.');}catch(err){$('reviews-error').textContent=err.message;$('reviews-error').classList.add('show');submit.disabled=false;}});
-      card.append(title,meta,comment,form);root.append(card);
+      card.append(title,meta,comment);
+      if(!isTicket){
+        const form=document.createElement('form');form.className='admin-reply';
+        const label=document.createElement('label');label.textContent='Balasan publik admin';
+        const area=document.createElement('textarea');area.maxLength=1000;area.required=true;area.placeholder='Tulis balasan yang akan tampil di halaman Store…';area.value=r.reply||'';
+        const row=document.createElement('div');row.className='admin-inline-actions';
+        const submit=document.createElement('button');submit.type='submit';submit.className='btn btn-gold';submit.textContent=r.reply?'Perbarui balasan':'Kirim balasan';
+        const copy=document.createElement('button');copy.type='button';copy.className='btn btn-quiet';copy.textContent='Salin ulasan';copy.addEventListener('click',()=>copyText('Ulasan '+r.player_name+' ('+r.rating+'/5): '+(r.comment||''),'Ulasan tersalin.'));
+        row.append(submit,copy);form.append(label,area,row);
+        form.addEventListener('submit',async e=>{e.preventDefault();submit.disabled=true;try{await api('/api/admin/reviews',{method:'POST',body:JSON.stringify({orderId:r.order_id,reply:area.value,adminName:'Tim SLF'})});await loadReviews();showToast('Balasan ulasan pembelian tersimpan dan tampil di Store.');}catch(err){$('reviews-error').textContent=err.message;$('reviews-error').classList.add('show');submit.disabled=false;}});
+        card.append(form);
+      }else{
+        const label=document.createElement('div');label.className='admin-muted';label.textContent='Ulasan layanan tiket — slot terpisah dari ulasan pembelian.';
+        card.append(label);
+        const copy=document.createElement('button');copy.type='button';copy.className='btn btn-quiet';copy.textContent='Salin ulasan';copy.addEventListener('click',()=>copyText('Ulasan layanan tiket '+r.ticket_id+' dari '+r.player_name+' ('+r.rating+'/5): '+(r.comment||''),'Ulasan tersalin.'));
+        card.append(copy);
+      }
+      root.append(card);
     });
   }
   function exportCsv(){
