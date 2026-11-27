@@ -256,7 +256,7 @@ test('Purchase and ticket-service reviews use independent one-time D1 slots', as
   assert.match(reviews, /INSERT INTO ticket_reviews/);
   assert.match(reviews, /INSERT INTO reviews/);
   assert.match(reviews, /Boolean\(orderId\) === Boolean\(ticketId\)/);
-  assert.match(reviews, /comment = safeText\(data\.comment, 10000\)/);
+  assert.match(reviews, /typeof data\.comment === 'string' \? data\.comment\.trim\(\)/);
   assert.match(reviews, /UNION ALL/);
   assert.match(reviews, /hasMore:/);
   assert.match(adminReviews, /ticket_reviews/);
