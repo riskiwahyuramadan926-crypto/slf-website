@@ -184,7 +184,9 @@ test('Admin mobile payment flow persists PAID before optional links and opens Wh
   const paymentWrite = payment.indexOf("UPDATE orders SET status='PAID'");
   const paymentLinkBuild = payment.indexOf('await buildOrderLinks');
   assert.ok(paymentWrite >= 0 && paymentLinkBuild > paymentWrite, 'PAID must be persisted before creating secure links');
-  assert.doesNotMatch(payment, /season_id|reentry_tickets/, 'legacy/missing ticket records must not veto PAID');
+  const ticketLimitCheck = payment.indexOf("SELECT season_id, COUNT(*) AS total FROM reentry_tickets");
+  assert.ok(ticketLimitCheck > paymentWrite, 'ticket cap validation must run only after PAID is persisted');
+  assert.doesNotMatch(payment.slice(0, paymentWrite), /season_id|reentry_tickets/, 'ticket data must not veto the PAID update');
   assert.match(payment, /status:\s*order\.status/);
   assert.match(payment, /link_error:\s*linkError/);
   assert.match(payment, /whatsapp_url:\s*whatsappUrl/);
