@@ -52,7 +52,7 @@ export function resolveTicketLinkSecret(env = {}) {
   const adminSecrets = resolveAdminSecrets(env);
   const candidates = [
     ['TICKET_LINK_SECRET', typeof env.TICKET_LINK_SECRET === 'string' ? env.TICKET_LINK_SECRET.trim() : ''],
-    // Backward-compatible aliases used by an earlier Cloudflare Pages configuration.
+    // Backward-compatible aliases used by earlier Cloudflare Pages configurations.
     ['TIKET_LINK_SRCRET', typeof env.TIKET_LINK_SRCRET === 'string' ? env.TIKET_LINK_SRCRET.trim() : ''],
     ['TIKET_LINK_SECRET', typeof env.TIKET_LINK_SECRET === 'string' ? env.TIKET_LINK_SECRET.trim() : ''],
     ['TIKET_SECRET', typeof env.TIKET_SECRET === 'string' ? env.TIKET_SECRET.trim() : ''],
@@ -66,15 +66,51 @@ export function resolveTicketLinkSecret(env = {}) {
   const selected = validCandidates[0];
   const configured = candidates.some(([, value]) => value.length > 0);
   const diagnosticValue = candidates.find(([, value]) => value.length > 0)?.[1] || '';
+  // When a dedicated ticket secret is unavailable, a strong Owner/Admin master
+  // secret can be used only through a domain-separated SHA-256 subkey below.
+  const master = adminSecrets.ownerSecret.length >= 32
+    ? { value: adminSecrets.ownerSecret, source: adminSecrets.ownerSource }
+    : adminSecrets.adminSecret.length >= 32
+      ? { value: adminSecrets.adminSecret, source: adminSecrets.adminSource }
+      : null;
   return {
     secret: selected ? selected[1] : '',
-    // Keep valid candidates available for server-side lookup of existing ticket links during migration.
+    // Preserve valid dedicated keys so existing ticket hashes can still be checked.
     secrets: validCandidates.map(([, value]) => value),
-    source: selected ? selected[0] : (configured ? candidates.find(([, value]) => value.length > 0)[0] : 'missing'),
+    source: selected ? selected[0] : (master ? 'derived:' + master.source : (configured ? candidates.find(([, value]) => value.length > 0)[0] : 'missing')),
     configured,
-    formatValid: selected ? true : diagnosticValue.length >= 32,
-    distinct: selected ? true : diagnosticValue.length >= 32 && diagnosticValue !== adminSecrets.ownerSecret && diagnosticValue !== adminSecrets.adminSecret,
-    ready: Boolean(selected)
+    formatValid: selected ? true : Boolean(master) || diagnosticValue.length >= 32,
+    distinct: selected ? true : Boolean(master),
+    derivationAvailable: Boolean(master),
+    ready: Boolean(selected || master)
+  };
+}
+
+export async function getTicketLinkSecret(env = {}) {
+  const resolved = resolveTicketLinkSecret(env);
+  if (resolved.secret) return resolved;
+
+  const adminSecrets = resolveAdminSecrets(env);
+  const master = adminSecrets.ownerSecret.length >= 32
+    ? { value: adminSecrets.ownerSecret, source: adminSecrets.ownerSource }
+    : adminSecrets.adminSecret.length >= 32
+      ? { value: adminSecrets.adminSecret, source: adminSecrets.adminSource }
+      : null;
+  if (!master) return resolved;
+
+  // Domain separation yields a stable ticket-only 256-bit subkey without storing
+  // or reusing the raw Owner/Admin credential as an HMAC key.
+  const derivedSecret = await sha256Hex('slf-ticket-subkey-v1:' + master.value);
+  return {
+    ...resolved,
+    secret: derivedSecret,
+    secrets: [...resolved.secrets, derivedSecret],
+    source: 'sha256:' + master.source,
+    formatValid: true,
+    distinct: true,
+    derivationAvailable: true,
+    ready: true,
+    derived: true
   };
 }
 
@@ -239,7 +275,7 @@ export async function ensureOrderAccessKey(db, order, env = {}) {
   const encrypted = await encryptOrderAccessKey(key, env);
   if (!encrypted) throw new Error('ORDER_LINK_SECRET atau OWNER_SECRET harus tersedia (minimal 32 karakter) agar tautan pesanan dan ulasan dapat dibuat.');
   if (String(order.product_id || '').startsWith('REENTRY_')) {
-    const ticketSecret = resolveTicketLinkSecret(env);
+    const ticketSecret = await getTicketLinkSecret(env);
     if (!ticketSecret.ready) throw new Error('TICKET_LINK_SECRET belum valid; tautan tiket tidak dapat dibuat.');
     const { results = [] } = await db.prepare('SELECT id FROM reentry_tickets WHERE order_id = ? ORDER BY created_at, id').bind(order.id).all();
     if (!results.length) throw new Error('Data tiket re-entry tidak ditemukan untuk pesanan ini.');
