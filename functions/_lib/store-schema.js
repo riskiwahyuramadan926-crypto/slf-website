@@ -41,15 +41,6 @@ const statements = [
     created_at TEXT NOT NULL
   )`,
   'CREATE INDEX IF NOT EXISTS idx_reviews_created_at ON reviews(created_at DESC)',
-  `CREATE TABLE IF NOT EXISTS ticket_reviews (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    ticket_id TEXT NOT NULL UNIQUE REFERENCES reentry_tickets(id),
-    player_name TEXT NOT NULL,
-    rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
-    comment TEXT,
-    created_at TEXT NOT NULL
-  )`,
-  'CREATE INDEX IF NOT EXISTS idx_ticket_reviews_created_at ON ticket_reviews(created_at DESC)',
   `CREATE TABLE IF NOT EXISTS review_replies (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     review_order_id TEXT NOT NULL UNIQUE REFERENCES reviews(order_id),
@@ -101,6 +92,15 @@ const statements = [
   ),
   'CREATE INDEX IF NOT EXISTS idx_reentry_tickets_order ON reentry_tickets(order_id, created_at)',
   'CREATE INDEX IF NOT EXISTS idx_reentry_tickets_status ON reentry_tickets(status, created_at DESC)',
+  `CREATE TABLE IF NOT EXISTS ticket_reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ticket_id TEXT NOT NULL UNIQUE REFERENCES reentry_tickets(id),
+    player_name TEXT NOT NULL,
+    rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+    created_at TEXT NOT NULL
+  )`,
+  'CREATE INDEX IF NOT EXISTS idx_ticket_reviews_created_at ON ticket_reviews(created_at DESC)',
   `CREATE TABLE IF NOT EXISTS support_tickets (
     id TEXT PRIMARY KEY, player_name TEXT NOT NULL, contact TEXT NOT NULL, category TEXT NOT NULL,
     subject TEXT NOT NULL, message TEXT NOT NULL, request_hash TEXT, status TEXT NOT NULL DEFAULT 'OPEN' CHECK(status IN ('OPEN','IN_PROGRESS','WAITING_PLAYER','RESOLVED','CLOSED')),
