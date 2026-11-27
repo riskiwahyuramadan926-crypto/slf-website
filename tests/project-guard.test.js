@@ -153,13 +153,14 @@ test('Obsolete Android Admin source and APK workflow are removed without removin
 });
 
 
-test('Admin payment and ticket status updates survive optional link-generation failures', async () => {
+test('Admin mobile payment flow persists PAID before optional links and opens WhatsApp without blank popups', async () => {
   const common = await read('functions/_lib/common.js');
   const orders = await read('functions/api/admin/orders.js');
   const payment = await read('functions/api/admin/verify-payment.js');
   const complete = await read('functions/api/admin/complete.js');
   const ticketStatus = await read('functions/api/admin/ticket-status.js');
   const admin = await read('assets/js/admin.js');
+  const adminHtml = await read('admin/index.html');
   const schema = await read('functions/_lib/store-schema.js');
 
   const ticketSecretResolver = common.slice(
@@ -167,8 +168,10 @@ test('Admin payment and ticket status updates survive optional link-generation f
     common.indexOf('export function randomHex')
   );
   assert.match(ticketSecretResolver, /TIKET_LINK_SRCRET/);
-  assert.doesNotMatch(ticketSecretResolver, /slf-default-fallback-ticket-secret-key/);
-  assert.doesNotMatch(ticketSecretResolver, /env\.ADMIN_SECRET/);
+  assert.match(ticketSecretResolver, /derivationAvailable/);
+  assert.match(common, /sha256Hex\('slf-ticket-subkey-v1:' \+ master\.value\)/);
+  assert.match(common, /export async function getTicketLinkSecret/);
+  assert.doesNotMatch(common, /slf-default-fallback-ticket-secret-key/);
 
   assert.match(schema, /access_key_encrypted:\s*'TEXT'/);
   assert.match(schema, /reentry_tickets:\s*\{[\s\S]*?submitted_at:\s*'TEXT'/);
@@ -181,8 +184,11 @@ test('Admin payment and ticket status updates survive optional link-generation f
   const paymentWrite = payment.indexOf("UPDATE orders SET status='PAID'");
   const paymentLinkBuild = payment.indexOf('await buildOrderLinks');
   assert.ok(paymentWrite >= 0 && paymentLinkBuild > paymentWrite, 'PAID must be persisted before creating secure links');
+  assert.doesNotMatch(payment, /season_id|reentry_tickets/, 'legacy/missing ticket records must not veto PAID');
   assert.match(payment, /status:\s*order\.status/);
   assert.match(payment, /link_error:\s*linkError/);
+  assert.match(payment, /whatsapp_url:\s*whatsappUrl/);
+  assert.match(payment, /https:\/\/wa\.me\/\?text=/, 'missing phone must still return a WhatsApp recipient-picker URL');
   assert.match(payment, /return json\(/);
 
   const completionWrite = complete.indexOf("UPDATE orders SET status='COMPLETED'");
@@ -198,10 +204,11 @@ test('Admin payment and ticket status updates survive optional link-generation f
   assert.ok(completeWrite > acceptLinkBuild, 'ticket completion state update must remain present');
   assert.match(ticketStatus, /link_error:\s*linkError/);
 
-  assert.match(admin, /function openWhatsAppTab\(\)/);
-  assert.match(admin, /try \{ return window\.open\('about:blank','_blank'\); \}/);
-  assert.match(admin, /function closeWhatsAppTab/);
+  assert.doesNotMatch(admin, /about:blank|openWhatsAppTab|closeWhatsAppTab/);
+  assert.match(admin, /window\.location\.href=url/);
+  assert.match(admin, /window\.alert\('Detail error: '\+detail\)/);
   assert.match(admin, /function applyOrderActionResult/);
   assert.match(admin, /HTTP '\+res\.status/);
   assert.match(admin, /Konfirmasi pembayaran gagal:/);
+  assert.match(adminHtml, /admin\.js\?v=20261127-mobile-payment-fix2/);
 });

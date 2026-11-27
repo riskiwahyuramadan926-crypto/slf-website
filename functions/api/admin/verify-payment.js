@@ -1,12 +1,12 @@
 import { json, fail, readJson, requireAdmin, notifyAdmin, logAdminActivity, buildOrderLinks } from '../../_lib/common.js';
 
-const TICKET_PRODUCTS = new Set(['REENTRY_1','REENTRY_2','REENTRY_3']);
-
 function safeLinkError(error) {
   return String(error?.message || error || 'Link belum dapat dibuat.').replace(/[\r\n]/g, ' ').slice(0, 240);
 }
 
 export async function onRequestPost({ request, env }) {
+  // Admin authentication remains mandatory. Ticket/product/link validation is
+  // intentionally not allowed to block the payment-state write.
   if (!(await requireAdmin(request, env))) return fail('Akses admin ditolak. Periksa ADMIN_SECRET.', 401);
   if (!env.DB) return fail('Database belum tersambung.', 503);
 
@@ -20,31 +20,15 @@ export async function onRequestPost({ request, env }) {
   if (!order) return fail('Pesanan tidak ditemukan.', 404);
 
   if (order.status === 'PENDING_PAYMENT') {
-    if (TICKET_PRODUCTS.has(order.product_id)) {
-      const { results: groups = [] } = await env.DB.prepare(
-        'SELECT season_id, COUNT(*) AS total FROM reentry_tickets WHERE order_id = ? GROUP BY season_id'
-      ).bind(id).all();
-      if (!groups.length) return fail('Data tiket re-entry tidak ditemukan. Jangan verifikasi sebelum diperiksa.', 409);
-      for (const group of groups) {
-        const existing = await env.DB.prepare(
-          `SELECT COUNT(*) AS total FROM reentry_tickets t JOIN orders o ON o.id=t.order_id
-           WHERE LOWER(TRIM(t.minecraft_name))=LOWER(TRIM(?)) AND t.season_id=? AND o.id<>?
-           AND o.status NOT IN ('CANCELLED','EXPIRED')`
-        ).bind(order.minecraft_name, group.season_id, id).first();
-        if (Number(existing?.total || 0) + Number(group.total || 0) > 3) {
-          return fail('Verifikasi ditolak: batas 3 tiket re-entry per pemain per season akan terlampaui.', 409);
-        }
-      }
-    }
-
-    // Persist PAID first. Link signing/encryption and WhatsApp URL construction
-    // are optional follow-up work and cannot roll this update back.
+    // The only required business operation for confirmation is persisting PAID.
+    // Legacy/missing ticket rows, season counts, product metadata, and secrets
+    // are handled after this write and cannot veto an already-received payment.
     const now = new Date().toISOString();
     const result = await env.DB.prepare(
       "UPDATE orders SET status='PAID',paid_at=?,updated_at=? WHERE id=? AND status='PENDING_PAYMENT'"
     ).bind(now, now, id).run();
 
-    if (result.meta?.changes) {
+    if (Number(result.meta?.changes || 0) > 0) {
       order = { ...order, status: 'PAID', paid_at: now };
       await logAdminActivity(env.DB, 'payment_verified', 'order', id, { status: 'PAID' });
     } else {
@@ -59,27 +43,37 @@ export async function onRequestPost({ request, env }) {
     return fail('Pesanan tidak menunggu pembayaran atau sudah tidak dapat diverifikasi.', 409);
   }
 
+  // Secure ticket/review links are best-effort. Their errors are reported but
+  // must never change a successfully persisted PAID status into an API failure.
   const links = { ticket_link: '', ticket_links: [], review_link: '' };
-  let whatsappUrl = '';
   let linkError = '';
-
   try {
     const generated = await buildOrderLinks(env.DB, order, new URL(request.url).origin, env);
     Object.assign(links, generated);
-    const phone = String(order.whatsapp || '').replace(/\D/g, '');
-    if (!phone) throw new Error('Nomor WhatsApp pembeli tidak valid.');
-    let message;
-    if (TICKET_PRODUCTS.has(order.product_id)) {
-      if (!links.ticket_link) throw new Error('Link tiket pribadi belum tersedia.');
-      message = 'Halo ' + order.minecraft_name + ', pembayaran untuk pesanan ' + order.id + ' (' + order.product_name + ') telah berhasil!\nGunakan link tiket pribadi di bawah ini saat kamu ingin mengajukan pemakaian tiket:\n' + links.ticket_link;
-    } else {
-      message = 'Halo ' + order.minecraft_name + ', pembayaran untuk pesanan ' + order.id + ' (' + order.product_name + ') telah berhasil kami terima!\nProduk kamu saat ini sedang diproses. Harap segera login ke dalam server sekarang untuk proses penyerahan produk.';
-    }
-    whatsappUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
   } catch (error) {
     linkError = safeLinkError(error);
     console.error('Payment link preparation failed after status update:', linkError);
   }
+
+  // WhatsApp confirmation does not depend on an access key or the ticket table.
+  // A blank/legacy phone uses wa.me/?text= so the admin can choose the recipient
+  // in WhatsApp instead of losing the confirmation flow entirely.
+  const playerName = String(order.minecraft_name || 'pemain');
+  const productName = String(order.product_name || order.product_id || 'pesanan SLF');
+  const isTicketProduct = String(order.product_id || '').startsWith('REENTRY_');
+  let message;
+  if (isTicketProduct && links.ticket_link) {
+    message = 'Halo ' + playerName + ', pembayaran untuk pesanan ' + order.id + ' (' + productName + ') telah berhasil!\nGunakan link tiket pribadi di bawah ini saat kamu ingin mengajukan pemakaian tiket:\n' + links.ticket_link;
+  } else if (isTicketProduct) {
+    message = 'Halo ' + playerName + ', pembayaran untuk pesanan ' + order.id + ' (' + productName + ') telah berhasil kami terima. Status pesanan sudah tercatat. Link tiket pribadi akan dikirimkan secara terpisah setelah data tiket selesai diperiksa Admin SLF.';
+  } else {
+    message = 'Halo ' + playerName + ', pembayaran untuk pesanan ' + order.id + ' (' + productName + ') telah berhasil kami terima!\nProduk kamu saat ini sedang diproses. Harap segera login ke dalam server sekarang untuk proses penyerahan produk.';
+  }
+  const phone = String(order.whatsapp || '').replace(/\D/g, '');
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappUrl = phone
+    ? 'https://wa.me/' + phone + '?text=' + encodedMessage
+    : 'https://wa.me/?text=' + encodedMessage;
 
   await notifyAdmin(env, order, new URL('/admin/?order=' + encodeURIComponent(id), request.url).toString())
     .catch(error => console.error('Admin notification failed:', error?.message || error));
@@ -89,6 +83,7 @@ export async function onRequestPost({ request, env }) {
     status: order.status,
     paid_at: order.paid_at || null,
     ...links,
+    whatsapp_url: whatsappUrl,
     whatsappUrl,
     link_error: linkError
   });
