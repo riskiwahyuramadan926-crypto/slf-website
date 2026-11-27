@@ -26,7 +26,8 @@ export async function onRequestPost({ request, env }) {
   if (!(await requireAdmin(request, env))) return fail('Akses admin ditolak.', 401);
   if (!env.DB) return fail('Database belum tersambung.', 503);
   const data = await readJson(request);
-  if (data.reviewType === 'ticket_service') return fail('Balasan publik untuk ulasan layanan tiket belum tersedia.');\n  const orderId = safeText(data.orderId, 40);
+  if (data.reviewType === 'ticket_service') return fail('Balasan publik untuk ulasan layanan tiket belum tersedia.');
+  const orderId = safeText(data.orderId, 40);
   const reply = safeText(data.reply, 1000);
   const adminName = safeText(data.adminName, 40) || 'Tim SLF';
   if (!orderId || !reply) return fail('Pilih ulasan dan isi balasan.');
