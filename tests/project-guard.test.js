@@ -277,3 +277,14 @@ test('Purchase and ticket-service reviews use independent one-time D1 slots', as
   assert.match(adminJs, /ticket_review_link/);
 });
 ;
+
+test('PAID WhatsApp message labels every ticket and separates ticket links with blank lines', async () => {
+  const payment = await read('functions/api/admin/verify-payment.js');
+  assert.match(payment, /links\\.ticket_links\\.map\\(\\(ticket, index\\)/);
+  assert.match(payment, /ticketSections\\.join\\('\\\\n\\\\n'\\)/);
+  assert.match(payment, /1 link berlaku untuk 1 kali pemakaian tiket/);
+  assert.match(payment, /Gunakan salah satu link di atas saat kamu ingin mengajukan pemakaian tiket/);
+  assert.match(payment, /🎫 Tiket/);
+  assert.match(payment, /ticket\\.id/);
+  assert.match(payment, /ticket\\.url/);
+});
