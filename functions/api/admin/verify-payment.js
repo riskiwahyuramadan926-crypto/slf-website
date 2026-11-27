@@ -60,9 +60,9 @@ export async function onRequestPost({ request, env }) {
     let message = '';
     if (TICKET_PRODUCTS.has(paidOrder.product_id)) {
       const ticketLinks = await buildTicketLinks(env.DB,paidOrder,orderKey,new URL(request.url).origin,env);
-      message = '🎟️ Halo ' + paidOrder.minecraft_name + ', pembayaran untuk pesanan ' + paidOrder.id + ' (' + paidOrder.product_name + ') telah berhasil!\nGunakan link tiket pribadi di bawah ini saat kamu ingin mengajukan pemakaian tiket:\n' + ticketLinks.join('\n');
+      message = 'Halo ' + paidOrder.minecraft_name + ', pembayaran untuk pesanan ' + paidOrder.id + ' (' + paidOrder.product_name + ') telah berhasil!\nGunakan link tiket pribadi di bawah ini saat kamu ingin mengajukan pemakaian tiket:\n' + ticketLinks.join('\n');
     } else {
-      message = '✅ Halo ' + paidOrder.minecraft_name + ', pembayaran untuk pesanan ' + paidOrder.id + ' (' + paidOrder.product_name + ') telah berhasil kami terima!\nProduk kamu saat ini sedang diproses. Harap segera login ke dalam server sekarang untuk proses penyerahan produk.';
+      message = 'Halo ' + paidOrder.minecraft_name + ', pembayaran untuk pesanan ' + paidOrder.id + ' (' + paidOrder.product_name + ') telah berhasil kami terima!\nProduk kamu saat ini sedang diproses. Harap segera login ke dalam server sekarang untuk proses penyerahan produk.';
     }
     await notifyAdmin(env,paidOrder,new URL('/admin/?order='+encodeURIComponent(id),request.url).toString()).catch(error=>console.error('Admin notification failed:',error?.message||error));
     const whatsappUrl='https://wa.me/'+phone+'?text='+encodeURIComponent(message);
