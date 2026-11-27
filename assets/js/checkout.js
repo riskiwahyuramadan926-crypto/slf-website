@@ -8,7 +8,24 @@
   ['rank-name','rank-color','rank-style'].forEach(id=>$(id).addEventListener('input',preview));$('promo').addEventListener('input',()=>$('summary-promo').textContent=$('promo').value.trim()?'Dicek saat checkout':'—');
   $('order-form').addEventListener('submit',async e=>{e.preventDefault();$('form-error').textContent='';$('form-error').classList.remove('show');if(!selected){showError('Produk tidak tersedia.');return;}const b=$('submit-order');b.disabled=true;b.textContent='Membuat pesanan…';const phone=String(cfg.adminWhatsApp||'').replace(/\D/g,'');const popup=phone?window.open('about:blank','_blank'):null;const body={minecraftName:$('minecraft-name').value.trim(),platform:$('platform').value,whatsapp:$('whatsapp').value.trim(),email:$('email').value.trim(),promoCode:$('promo').value.trim().toUpperCase(),productId:selected.id,agree:$('agree').checked,details:['CUSTOM_RANK','VIP_PLUS'].includes(selected.id)?{rankName:$('rank-name').value.trim(),rankColor:$('rank-color').value,rankStyle:$('rank-style').value,buyerNote:selected.id==='VIP_PLUS'?$('vip-note').value.trim():''}:{buyerNote:$('ticket-note-input').value.trim()}};
     try{const r=await fetch('/api/orders/create',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Pesanan belum bisa dibuat. Coba kembali.');if(!d.orderUrl)throw new Error('Tautan informasi pesanan tidak diterima dari server.');
-      if(phone){const lines=['Halo Admin SLF, saya ingin checkout.','','*ID Pesanan:* '+d.orderId,'*Nama:* '+body.minecraftName,'*Produk:* '+selected.name,'*Total:* '+rp(d.total),'','Detail pesanan: '+d.orderUrl].join('\n');const target='https://wa.me/'+phone+'?text='+encodeURIComponent(lines);if(popup&&!popup.closed)popup.location.href=target;else window.open(target,'_blank','noopener,noreferrer');}
+      if(phone){
+        const notes = body.details?.buyerNote || (['CUSTOM_RANK','VIP_PLUS'].includes(selected.id)
+          ? 'Custom Rank: ' + (body.details.rankName || '—') + ' · Warna: ' + (body.details.rankColor || '—') + ' · Gaya: ' + (body.details.rankStyle || '—')
+          : '—');
+        const lines = [
+          'Halo Admin SLF, saya ingin melanjutkan pembayaran pesanan berikut:',
+          '• Nomor pesanan: ' + d.orderId,
+          '• Nama Minecraft: ' + body.minecraftName + ' (' + body.platform + ')',
+          '• Produk: ' + selected.name,
+          '• Total pembayaran: ' + rp(d.total),
+          '• Catatan: ' + notes,
+          'Status Pesanan:',
+          d.orderUrl,
+          'Mohon kirimkan QRIS pembayarannya. Terima kasih!'
+        ].join('\n');
+        const target='https://wa.me/'+phone+'?text='+encodeURIComponent(lines);
+        if(popup&&!popup.closed)popup.location.href=target;else window.open(target,'_blank','noopener,noreferrer');
+      }
       location.href=d.orderUrl;
     }catch(err){if(popup&&!popup.closed)popup.close();showError(err.message||'Koneksi gagal.');b.disabled=false;b.textContent='Lanjutkan checkout ↗';}});
   function showError(m){const e=$('form-error');e.textContent=m;e.classList.add('show');e.scrollIntoView({behavior:'smooth',block:'center'});}init();
