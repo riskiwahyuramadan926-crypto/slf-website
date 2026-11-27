@@ -41,6 +41,15 @@ const statements = [
     created_at TEXT NOT NULL
   )`,
   'CREATE INDEX IF NOT EXISTS idx_reviews_created_at ON reviews(created_at DESC)',
+  `CREATE TABLE IF NOT EXISTS ticket_reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ticket_id TEXT NOT NULL UNIQUE REFERENCES reentry_tickets(id),
+    player_name TEXT NOT NULL,
+    rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+    created_at TEXT NOT NULL
+  )`,
+  'CREATE INDEX IF NOT EXISTS idx_ticket_reviews_created_at ON ticket_reviews(created_at DESC)',
   `CREATE TABLE IF NOT EXISTS review_replies (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     review_order_id TEXT NOT NULL UNIQUE REFERENCES reviews(order_id),
@@ -85,8 +94,11 @@ const statements = [
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     submitted_at TEXT,
-    completed_at TEXT
-  )`,
+    completed_at TEXT,
+    review_key_hash TEXT,
+    review_key_encrypted TEXT,
+    reviewed_at TEXT
+  ),
   'CREATE INDEX IF NOT EXISTS idx_reentry_tickets_order ON reentry_tickets(order_id, created_at)',
   'CREATE INDEX IF NOT EXISTS idx_reentry_tickets_status ON reentry_tickets(status, created_at DESC)',
   `CREATE TABLE IF NOT EXISTS support_tickets (
@@ -142,6 +154,7 @@ const legacyColumnDefinitions = {
     created_at: 'TEXT', updated_at: 'TEXT', paid_at: 'TEXT', completed_at: 'TEXT', rated_at: 'TEXT'
   },
   reviews: { order_id: 'TEXT', player_name: "TEXT DEFAULT ''", rating: 'INTEGER', comment: 'TEXT', created_at: 'TEXT' },
+  ticket_reviews: { ticket_id: 'TEXT', player_name: "TEXT DEFAULT ''", rating: 'INTEGER', comment: 'TEXT', created_at: 'TEXT' },
   review_replies: { review_order_id: 'TEXT', admin_name: "TEXT DEFAULT 'Tim SLF'", reply: "TEXT DEFAULT ''", created_at: 'TEXT', updated_at: 'TEXT' },
   store_products: {
     name: "TEXT DEFAULT ''", price: 'INTEGER DEFAULT 0', description: "TEXT DEFAULT ''",
@@ -155,7 +168,7 @@ const legacyColumnDefinitions = {
     order_id: 'TEXT', access_key_hash: "TEXT DEFAULT ''", minecraft_name: "TEXT DEFAULT ''",
     product_name: "TEXT DEFAULT ''", season_id: "TEXT DEFAULT 'season-1'",
     status: "TEXT DEFAULT 'WAITING_PAYMENT'", created_at: 'TEXT', updated_at: 'TEXT',
-    submitted_at: 'TEXT', completed_at: 'TEXT'
+    submitted_at: 'TEXT', completed_at: 'TEXT', review_key_hash: 'TEXT', review_key_encrypted: 'TEXT', reviewed_at: 'TEXT'
   },
   support_tickets: {
     player_name: "TEXT DEFAULT ''", contact: "TEXT DEFAULT ''", category: "TEXT DEFAULT 'other'",
