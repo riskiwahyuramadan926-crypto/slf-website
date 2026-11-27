@@ -1,32 +1,124 @@
 (() => {
   'use strict';
-  const cfg=window.SLF_STORE_CONFIG||{},$=id=>document.getElementById(id),rp=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n||0);
-  let selected=null;$('year').textContent=new Date().getFullYear();const productId=new URLSearchParams(location.search).get('product')||'';
-  async function init(){try{const r=await fetch('/api/store-products',{cache:'no-store'});if(r.ok){const d=await r.json();if(Array.isArray(d.products))cfg.products=d.products;}}catch(_){}selected=(cfg.products||[]).find(p=>p.id===productId)||null;if(!selected){showError('Produk tidak ditemukan atau sudah tidak tersedia. Silakan pilih ulang dari katalog.');$('submit-order').disabled=true;return;}
-    $('product-id').value=selected.id;$('summary-product').textContent=selected.name;$('summary-price').textContent=rp(selected.price);$('summary-total').textContent=rp(selected.price);const rank=['CUSTOM_RANK','VIP_PLUS'].includes(selected.id);$('custom-rank-fields').hidden=!rank;$('vip-fields').hidden=selected.id!=='VIP_PLUS';$('ticket-fields').hidden=!selected.id.startsWith('REENTRY_');$('rank-name').required=rank;$('rank-color').required=rank;$('rank-style').required=rank;(cfg.rankColors||[]).forEach(c=>$('rank-color').add(new Option(c.label,c.value)));(cfg.rankStyles||[]).forEach(s=>$('rank-style').add(new Option(s.label,s.value)));$('submit-order').disabled=false;}
-  function preview(){const n=$('rank-name').value.trim()||'STARLIGHT',c=$('rank-color').value||'#B98CF4',s=$('rank-style').value;$('rank-preview').textContent='['+n+'] NamaPemain';$('rank-preview').style.color=c;$('rank-preview').style.fontWeight=s.includes('bold')?'800':'500';$('rank-preview').style.fontStyle=s.includes('italic')?'italic':'normal';}
-  ['rank-name','rank-color','rank-style'].forEach(id=>$(id).addEventListener('input',preview));$('promo').addEventListener('input',()=>$('summary-promo').textContent=$('promo').value.trim()?'Dicek saat checkout':'—');
-  $('order-form').addEventListener('submit',async e=>{e.preventDefault();$('form-error').textContent='';$('form-error').classList.remove('show');if(!selected){showError('Produk tidak tersedia.');return;}const b=$('submit-order');b.disabled=true;b.textContent='Membuat pesanan…';const phone=String(cfg.adminWhatsApp||'').replace(/\D/g,'');const popup=phone?window.open('about:blank','_blank'):null;const body={minecraftName:$('minecraft-name').value.trim(),platform:$('platform').value,whatsapp:$('whatsapp').value.trim(),email:$('email').value.trim(),promoCode:$('promo').value.trim().toUpperCase(),productId:selected.id,agree:$('agree').checked,details:['CUSTOM_RANK','VIP_PLUS'].includes(selected.id)?{rankName:$('rank-name').value.trim(),rankColor:$('rank-color').value,rankStyle:$('rank-style').value,buyerNote:selected.id==='VIP_PLUS'?$('vip-note').value.trim():''}:{buyerNote:$('ticket-note-input').value.trim()}};
-    try{const r=await fetch('/api/orders/create',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Pesanan belum bisa dibuat. Coba kembali.');if(!d.orderUrl)throw new Error('Tautan informasi pesanan tidak diterima dari server.');
-      if(phone){
-        const notes = body.details?.buyerNote || (['CUSTOM_RANK','VIP_PLUS'].includes(selected.id)
-          ? 'Custom Rank: ' + (body.details.rankName || '—') + ' · Warna: ' + (body.details.rankColor || '—') + ' · Gaya: ' + (body.details.rankStyle || '—')
-          : '—');
-        const lines = [
+  const cfg=window.SLF_STORE_CONFIG||{};
+  const $=id=>document.getElementById(id);
+  const rupiah=value=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(value)||0);
+  let selected=null;
+  $('year').textContent=new Date().getFullYear();
+  const productId=new URLSearchParams(location.search).get('product')||'';
+
+  async function init(){
+    try{
+      const response=await fetch('/api/store-products',{cache:'no-store'});
+      if(response.ok){
+        const data=await response.json();
+        if(Array.isArray(data.products))cfg.products=data.products;
+      }
+    }catch(_){}
+    selected=(cfg.products||[]).find(product=>product.id===productId)||null;
+    if(!selected){
+      showError('Produk tidak ditemukan atau sudah tidak tersedia. Silakan pilih ulang dari katalog.');
+      $('submit-order').disabled=true;
+      return;
+    }
+    $('product-id').value=selected.id;
+    $('summary-product').textContent=selected.name;
+    $('summary-price').textContent=rupiah(selected.price);
+    $('summary-total').textContent=rupiah(selected.price);
+    const needsRank=['CUSTOM_RANK','VIP_PLUS'].includes(selected.id);
+    $('custom-rank-fields').hidden=!needsRank;
+    $('vip-fields').hidden=selected.id!=='VIP_PLUS';
+    $('ticket-fields').hidden=!selected.id.startsWith('REENTRY_');
+    $('rank-name').required=needsRank;
+    $('rank-color').required=needsRank;
+    $('rank-style').required=needsRank;
+    (cfg.rankColors||[]).forEach(color=>$('rank-color').add(new Option(color.label,color.value)));
+    (cfg.rankStyles||[]).forEach(style=>$('rank-style').add(new Option(style.label,style.value)));
+    $('submit-order').disabled=false;
+  }
+
+  function preview(){
+    const name=$('rank-name').value.trim()||'STARLIGHT';
+    const color=$('rank-color').value||'#B98CF4';
+    const style=$('rank-style').value;
+    $('rank-preview').textContent='['+name+'] NamaPemain';
+    $('rank-preview').style.color=color;
+    $('rank-preview').style.fontWeight=style.includes('bold')?'800':'500';
+    $('rank-preview').style.fontStyle=style.includes('italic')?'italic':'normal';
+  }
+
+  function showError(message){
+    const error=$('form-error');
+    error.textContent=message;
+    error.classList.add('show');
+    error.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+
+  ['rank-name','rank-color','rank-style'].forEach(id=>$(id).addEventListener('input',preview));
+  $('promo').addEventListener('input',()=>$('summary-promo').textContent=$('promo').value.trim()?'Dicek saat checkout':'—');
+
+  $('order-form').addEventListener('submit',async event=>{
+    event.preventDefault();
+    $('form-error').textContent='';
+    $('form-error').classList.remove('show');
+    if(!selected){showError('Produk tidak tersedia.');return;}
+    const button=$('submit-order');
+    button.disabled=true;
+    button.textContent='Membuat pesanan…';
+    const adminPhone=String(cfg.adminWhatsApp||'').replace(/\D/g,'');
+    const popup=adminPhone?window.open('about:blank','_blank'):null;
+    const details={
+      buyerNote:$('buyer-note').value.trim()
+    };
+    if(['CUSTOM_RANK','VIP_PLUS'].includes(selected.id)){
+      details.rankName=$('rank-name').value.trim();
+      details.rankColor=$('rank-color').value;
+      details.rankStyle=$('rank-style').value;
+    }
+    const body={
+      minecraftName:$('minecraft-name').value.trim(),
+      platform:$('platform').value,
+      whatsapp:$('whatsapp').value.trim(),
+      email:$('email').value.trim(),
+      promoCode:$('promo').value.trim().toUpperCase(),
+      productId:selected.id,
+      agree:$('agree').checked,
+      details
+    };
+
+    try{
+      const response=await fetch('/api/orders/create',{
+        method:'POST',
+        headers:{'content-type':'application/json'},
+        body:JSON.stringify(body)
+      });
+      const data=await response.json().catch(()=>({}));
+      if(!response.ok)throw new Error(data.error||'Pesanan belum bisa dibuat. Coba kembali.');
+      if(!data.orderUrl)throw new Error('Tautan informasi pesanan tidak diterima dari server.');
+
+      if(adminPhone){
+        const message=[
           'Halo Admin SLF, saya ingin melanjutkan pembayaran pesanan berikut:',
-          '• Nomor pesanan: ' + d.orderId,
-          '• Nama Minecraft: ' + body.minecraftName + ' (' + body.platform + ')',
-          '• Produk: ' + selected.name,
-          '• Total pembayaran: ' + rp(d.total),
-          '• Catatan: ' + notes,
+          '• Nomor pesanan: '+data.orderId,
+          '• Nama Minecraft: '+body.minecraftName+' ('+body.platform+')',
+          '• Produk: '+selected.name,
+          '• Total pembayaran: '+rupiah(data.total),
+          '• Catatan: '+(details.buyerNote||'—'),
           'Status Pesanan:',
-          d.orderUrl,
+          data.orderUrl,
           'Mohon kirimkan QRIS pembayarannya. Terima kasih!'
         ].join('\n');
-        const target='https://wa.me/'+phone+'?text='+encodeURIComponent(lines);
-        if(popup&&!popup.closed)popup.location.href=target;else window.open(target,'_blank','noopener,noreferrer');
+        const whatsappUrl='https://wa.me/'+adminPhone+'?text='+encodeURIComponent(message);
+        if(popup&&!popup.closed)popup.location.href=whatsappUrl;
+        else window.location.assign(whatsappUrl);
       }
-      location.href=d.orderUrl;
-    }catch(err){if(popup&&!popup.closed)popup.close();showError(err.message||'Koneksi gagal.');b.disabled=false;b.textContent='Lanjutkan checkout ↗';}});
-  function showError(m){const e=$('form-error');e.textContent=m;e.classList.add('show');e.scrollIntoView({behavior:'smooth',block:'center'});}init();
+      window.location.href=data.orderUrl;
+    }catch(error){
+      if(popup&&!popup.closed)popup.close();
+      showError(error.message||'Koneksi gagal.');
+      button.disabled=false;
+      button.textContent='Lanjutkan Pembayaran / Checkout';
+    }
+  });
+  init();
 })();
