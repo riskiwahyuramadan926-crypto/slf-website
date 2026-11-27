@@ -30,7 +30,7 @@ export async function onRequestPost({ request, env }) {
     if (!phone) return fail('Pesanan selesai, tetapi nomor WhatsApp pembeli tidak valid.',422);
     const reviewUrl=new URL('/store/review.html',request.url);
     reviewUrl.searchParams.set('id',id);reviewUrl.searchParams.set('key',orderKey);
-    const message='🎉 Halo '+completed.minecraft_name+', pesanan '+completed.product_name+' kamu sudah selesai diserahkan. Terima kasih telah berdonasi di SLF!\nMohon berikan ulasan layanan kami melalui link berikut:\n'+reviewUrl.toString();
+    const message='Halo '+completed.minecraft_name+', pesanan '+completed.product_name+' kamu sudah selesai diserahkan. Terima kasih telah berdonasi di SLF!\nMohon berikan ulasan layanan kami melalui link berikut:\n'+reviewUrl.toString();
     const whatsappUrl='https://wa.me/'+phone+'?text='+encodeURIComponent(message);
     return json({ok:true,status:'COMPLETED',whatsappUrl});
   } catch(error) {
