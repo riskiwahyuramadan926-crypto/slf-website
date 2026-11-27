@@ -21,18 +21,20 @@ export async function onRequestPost({ request, env }) {
   if (row.order_status !== 'COMPLETED') return fail('Pesanan tiket belum selesai diproses. Selesaikan pesanan di panel Admin terlebih dahulu.',409);
 
   const now = new Date().toISOString();
-  if (status === 'ACTIVE' && row.status === 'PENDING') {
+  if (status === 'ACTIVE' && (row.status === 'PENDING' || (row.status === 'ACTIVE' && row.submitted_at))) {
     let whatsappUrl;
     try {
       whatsappUrl = whatsappLink(row.whatsapp,
         '🎟️ Halo ' + row.minecraft_name + ', pengajuan tiket ' + row.id + ' kamu sudah kami terima!\nHarap segera login sekarang dan tunggu di lobby, lalu nantikan instruksi selanjutnya dari Admin.');
     } catch (error) { return fail(error.message,422); }
-    await env.DB.prepare("UPDATE reentry_tickets SET status='ACTIVE',updated_at=?,completed_at=NULL WHERE id=? AND status='PENDING'").bind(now,id).run();
-    await logAdminActivity(env.DB,'reentry_ticket_accepted','reentry_ticket',id,{status:'ACTIVE'});
+    if (row.status === 'PENDING') {
+      await env.DB.prepare("UPDATE reentry_tickets SET status='ACTIVE',updated_at=?,completed_at=NULL WHERE id=? AND status='PENDING'").bind(now,id).run();
+      await logAdminActivity(env.DB,'reentry_ticket_accepted','reentry_ticket',id,{status:'ACTIVE'});
+    }
     return json({ok:true,status:'ACTIVE',whatsappUrl});
   }
 
-  if (status === 'COMPLETED' && row.status === 'ACTIVE' && row.submitted_at) {
+  if (status === 'COMPLETED' && ((row.status === 'ACTIVE' && row.submitted_at) || row.status === 'COMPLETED')) {
     let orderKey;
     try { orderKey = await ensureOrderAccessKey(env.DB,{id:row.order_id,product_id:row.product_id,access_key_hash:row.access_key_hash,access_key_encrypted:row.access_key_encrypted},env); }
     catch (error) { return fail('Tiket selesai, tetapi link ulasan belum dapat dibuat: '+String(error?.message||error),503); }
@@ -44,8 +46,10 @@ export async function onRequestPost({ request, env }) {
       const message = '🎉 Halo ' + row.minecraft_name + ', penggunaan tiket ' + row.id + ' telah selesai diproses. Selamat bermain kembali!\nJangan lupa berikan ulasan layanan kami di sini:\n' + reviewUrl.toString();
       whatsappUrl = whatsappLink(row.whatsapp,message);
     } catch (error) { return fail(error.message,422); }
-    await env.DB.prepare("UPDATE reentry_tickets SET status='COMPLETED',updated_at=?,completed_at=? WHERE id=? AND status='ACTIVE' AND submitted_at IS NOT NULL").bind(now,now,id).run();
-    await logAdminActivity(env.DB,'reentry_ticket_completed','reentry_ticket',id,{status:'COMPLETED'});
+    if (row.status === 'ACTIVE') {
+      await env.DB.prepare("UPDATE reentry_tickets SET status='COMPLETED',updated_at=?,completed_at=? WHERE id=? AND status='ACTIVE' AND submitted_at IS NOT NULL").bind(now,now,id).run();
+      await logAdminActivity(env.DB,'reentry_ticket_completed','reentry_ticket',id,{status:'COMPLETED'});
+    }
     return json({ok:true,status:'COMPLETED',whatsappUrl});
   }
 
