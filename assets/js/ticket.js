@@ -6,7 +6,7 @@
   const key = params.get('key') || '';
   const cfg = window.SLF_STORE_CONFIG || {};
   const labels = {
-    WAITING_PAYMENT: ['Menunggu transaksi selesai', 'Tiket sudah dibuat, tetapi belum aktif. Selesaikan pembayaran dan tunggu admin menandai transaksi selesai.', ''],
+    WAITING_PAYMENT: ['Menunggu aktivasi Admin', 'Pembayaran sudah berhasil. Tiket akan aktif setelah Admin menyelesaikan proses penyerahan produk.', ''],
     ACTIVE: ['Tiket aktif', 'Tiket siap diajukan. Tekan tombol di bawah jika kamu benar-benar ingin meminta re-entry.', 'paid'],
     PENDING: ['Pending · menunggu admin', 'Pengajuan sudah tersimpan dan masuk ke antrean Admin SLF. Simpan nomor tiket ini untuk tindak lanjut; admin akan memperbarui statusnya setelah diproses.', ''],
     COMPLETED: ['Selesai · tiket terpakai', 'Admin sudah menandai proses re-entry selesai. Tiket ini tidak dapat diajukan lagi.', 'completed'],
