@@ -8,6 +8,21 @@
   const statusLabels = {PENDING_PAYMENT:'Menunggu pembayaran',PAID:'Pembayaran berhasil',PROCESSING:'Sedang diproses',COMPLETED:'Selesai',EXPIRED:'Kedaluwarsa',CANCELLED:'Dibatalkan'};
   const idr = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function appendWhatsAppFallback(actions, phone, label, message) {
+    const digits=String(phone||'').replace(/\D/g,'');
+    if(!digits||!message)return;
+    const link=document.createElement('a');
+    link.className='btn btn-quiet';
+    link.href='https://wa.me/'+digits+'?text='+encodeURIComponent(message);
+    link.target='_blank';
+    link.rel='noopener noreferrer';
+    link.textContent=label;
+    actions.append(link);
+  }
+  function redirectWhatsApp(waWindow, whatsappUrl) {
+    if(waWindow&&!waWindow.closed)waWindow.location.href=whatsappUrl;
+    else window.location.href=whatsappUrl;
+  }
   $('logout').addEventListener('click',()=>{sessionStorage.removeItem(secretKey);location.href='/admin/';});
   $('check-db-health').addEventListener('click',async()=>{
     const button=$('check-db-health'),status=$('db-health-status');
@@ -188,10 +203,21 @@
       if(phone){const chat=document.createElement('a');chat.className='btn btn-quiet';chat.href='https://wa.me/'+phone+'?text='+encodeURIComponent(messageFor(o));chat.target='_blank';chat.rel='noopener noreferrer';chat.textContent='Chat pembeli';actions.append(chat);}
       const copy=document.createElement('button');copy.type='button';copy.className='btn btn-quiet';copy.textContent='Salin nomor';copy.addEventListener('click',()=>copyText(o.id,'Nomor pesanan tersalin.'));actions.append(copy);
       const copySummary=document.createElement('button');copySummary.type='button';copySummary.className='btn btn-quiet';copySummary.textContent='Salin ringkasan';copySummary.addEventListener('click',()=>copyText(orderSummary(o),'Ringkasan pesanan tersalin.'));actions.append(copySummary);
-      if(o.status==='PENDING_PAYMENT'){const b=document.createElement('button');b.type='button';b.className='btn btn-gold';b.textContent='Konfirmasi pembayaran';b.addEventListener('click',async()=>{const waWindow=window.open('about:blank','_blank');if(!confirm('Cocokkan nominal dan transaksi masuk di DANA terlebih dahulu. Screenshot saja tidak cukup. Konfirmasi '+o.id+'?')){if(waWindow&&!waWindow.closed)waWindow.close();return;}b.disabled=true;try{const result=await api('/api/admin/verify-payment',{method:'POST',body:JSON.stringify({orderId:o.id})});if(result.whatsappUrl){if(waWindow&&!waWindow.closed)waWindow.location.href=result.whatsappUrl;else window.location.assign(result.whatsappUrl);}else{if(waWindow&&!waWindow.closed)waWindow.close();throw new Error('Status tersimpan, tetapi server tidak mengembalikan tautan WhatsApp.');}await loadOrders();showToast('Pembayaran terverifikasi. WhatsApp pembeli dibuka.');}catch(e){if(waWindow&&!waWindow.closed)waWindow.close();showAdminError(e.message);b.disabled=false;}});actions.append(b);}
+      if(phone&&String(o.product_id||'').startsWith('REENTRY_')&&['PAID','PROCESSING'].includes(o.status)&&o.ticket_link){
+        const ticketMessage='Halo '+o.minecraft_name+', pembayaran untuk pesanan '+o.id+' ('+o.product_name+') telah berhasil!\nGunakan link tiket pribadi di bawah ini saat kamu ingin mengajukan pemakaian tiket:\n'+o.ticket_link;
+        appendWhatsAppFallback(actions,phone,'Kirim WA Link Tiket',ticketMessage);
+      }
+      if(phone&&o.status==='COMPLETED'&&o.review_link){
+        const detail=String(o.product_id||'').startsWith('REENTRY_')
+          ? 'pesanan tiket re-entry kamu sudah selesai diproses dan tiket siap diajukan.'
+          : 'pesanan '+o.product_name+' kamu sudah selesai diserahkan. Terima kasih telah berdonasi di SLF!';
+        const reviewMessage='Halo '+o.minecraft_name+', '+detail+'\nMohon berikan ulasan layanan kami melalui link berikut:\n'+o.review_link;
+        appendWhatsAppFallback(actions,phone,'Kirim WA Link Ulasan',reviewMessage);
+      }
+      if(o.status==='PENDING_PAYMENT'){const b=document.createElement('button');b.type='button';b.className='btn btn-gold';b.textContent='Konfirmasi pembayaran';b.addEventListener('click',async()=>{const waWindow=window.open('about:blank','_blank');if(!confirm('Cocokkan nominal dan transaksi masuk di DANA terlebih dahulu. Screenshot saja tidak cukup. Konfirmasi '+o.id+'?')){if(waWindow&&!waWindow.closed)waWindow.close();return;}b.disabled=true;try{const result=await api('/api/admin/verify-payment',{method:'POST',body:JSON.stringify({orderId:o.id})});if(result.whatsappUrl){redirectWhatsApp(waWindow,result.whatsappUrl);}else{if(waWindow&&!waWindow.closed)waWindow.close();throw new Error('Status tersimpan, tetapi server tidak mengembalikan tautan WhatsApp.');}await loadOrders();showToast('Pembayaran terverifikasi. WhatsApp pembeli dibuka.');}catch(e){if(waWindow&&!waWindow.closed)waWindow.close();showAdminError(e.message);b.disabled=false;}});actions.append(b);}
       if(o.status==='PENDING_PAYMENT'){const cancel=document.createElement('button');cancel.type='button';cancel.className='btn btn-quiet';cancel.textContent='Batalkan transaksi';cancel.addEventListener('click',async()=>{if(!confirm('Batalkan transaksi '+o.id+'? Pastikan pembeli belum membayar. Tiket re-entry yang terkait juga akan dibatalkan.'))return;cancel.disabled=true;try{await api('/api/admin/cancel',{method:'POST',body:JSON.stringify({orderId:o.id})});await loadOrders();showToast('Transaksi dibatalkan.');}catch(e){showAdminError(e.message);cancel.disabled=false;}});actions.append(cancel);}
       if(o.status==='PAID'){const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='Mulai proses';b.addEventListener('click',async()=>{b.disabled=true;try{await api('/api/admin/process',{method:'POST',body:JSON.stringify({orderId:o.id})});await loadOrders();}catch(e){showAdminError(e.message);b.disabled=false;}});actions.append(b);}
-      if(['PAID','PROCESSING'].includes(o.status)){const b=document.createElement('button');b.type='button';b.className='btn btn-gold';b.textContent='Tandai selesai';b.addEventListener('click',async()=>{const ticketOrder=String(o.product_id||'').startsWith('REENTRY_');const waWindow=ticketOrder?null:window.open('about:blank','_blank');if(!confirm('Produk sudah benar-benar diberikan ke '+o.minecraft_name+'?')){if(waWindow&&!waWindow.closed)waWindow.close();return;}b.disabled=true;try{const result=await api('/api/admin/complete',{method:'POST',body:JSON.stringify({orderId:o.id})});if(result.whatsappUrl){if(waWindow&&!waWindow.closed)waWindow.location.href=result.whatsappUrl;else window.location.assign(result.whatsappUrl);}else if(!ticketOrder){if(waWindow&&!waWindow.closed)waWindow.close();throw new Error('Status tersimpan, tetapi server tidak mengembalikan tautan WhatsApp.');}else if(waWindow&&!waWindow.closed)waWindow.close();await loadOrders();showToast(ticketOrder?'Pesanan tiket selesai. Tiket siap diajukan.':'Pesanan selesai. WhatsApp ulasan dibuka.');}catch(e){if(waWindow&&!waWindow.closed)waWindow.close();showAdminError(e.message);b.disabled=false;}});actions.append(b);}
+      if(['PAID','PROCESSING'].includes(o.status)){const b=document.createElement('button');b.type='button';b.className='btn btn-gold';b.textContent='Tandai selesai';b.addEventListener('click',async()=>{const waWindow=window.open('about:blank','_blank');if(!confirm('Produk atau tiket sudah benar-benar selesai diproses untuk '+o.minecraft_name+'?')){if(waWindow&&!waWindow.closed)waWindow.close();return;}b.disabled=true;try{const result=await api('/api/admin/complete',{method:'POST',body:JSON.stringify({orderId:o.id})});if(result.whatsappUrl)redirectWhatsApp(waWindow,result.whatsappUrl);else{if(waWindow&&!waWindow.closed)waWindow.close();throw new Error('Status tersimpan, tetapi server tidak mengembalikan tautan WhatsApp ulasan.');}await loadOrders();showToast('Pesanan selesai. WhatsApp dengan link ulasan dibuka.');}catch(e){if(waWindow&&!waWindow.closed)waWindow.close();showAdminError(e.message);b.disabled=false;}});actions.append(b);}
       if(['PENDING_PAYMENT','PAID','PROCESSING'].includes(o.status)){const b=document.createElement('button');b.type='button';b.className='btn btn-quiet';b.textContent='Salin pesan status';b.addEventListener('click',()=>copyText(messageFor(o),'Pesan status tersalin.'));actions.append(b);}
       card.append(actions);root.append(card);
     });
@@ -227,6 +253,15 @@
       card.append(h,state,details,dates,contact);
       const actions=document.createElement('div');actions.className='admin-inline-actions';
       const copy=document.createElement('button');copy.type='button';copy.className='btn btn-quiet';copy.textContent='Salin ID tiket';copy.addEventListener('click',()=>copyText(t.id,'Nomor tiket tersalin.'));actions.append(copy);
+      if(t.ticket_link&&t.order_status!=='PENDING_PAYMENT'&&t.status!=='COMPLETED'){
+        appendWhatsAppFallback(actions,t.whatsapp,'Kirim WA Link Tiket','Halo '+t.minecraft_name+', berikut link tiket pribadi kamu:\n'+t.ticket_link);
+      }
+      if(t.status==='ACTIVE'&&t.submitted_at&&t.accept_whatsapp_url){
+        const accepted=document.createElement('a');accepted.className='btn btn-quiet';accepted.href=t.accept_whatsapp_url;accepted.target='_blank';accepted.rel='noopener noreferrer';accepted.textContent='Kirim WA Konfirmasi Ajuan';actions.append(accepted);
+      }
+      if(t.status==='COMPLETED'&&t.review_whatsapp_url){
+        const review=document.createElement('a');review.className='btn btn-quiet';review.href=t.review_whatsapp_url;review.target='_blank';review.rel='noopener noreferrer';review.textContent='Kirim WA Link Ulasan';actions.append(review);
+      }
       if(t.status==='PENDING'){
         const accept=document.createElement('button');accept.type='button';accept.className='btn btn-gold';accept.textContent='Terima Ajuan';accept.addEventListener('click',async()=>{
           const waWindow=window.open('about:blank','_blank');
@@ -234,7 +269,7 @@
           accept.disabled=true;
           try{
             const result=await api('/api/admin/ticket-status',{method:'POST',body:JSON.stringify({ticketId:t.id,status:'ACTIVE'})});
-            if(result.whatsappUrl){if(waWindow&&!waWindow.closed)waWindow.location.href=result.whatsappUrl;else window.location.assign(result.whatsappUrl);}
+            if(result.whatsappUrl){redirectWhatsApp(waWindow,result.whatsappUrl);}
             else{if(waWindow&&!waWindow.closed)waWindow.close();throw new Error('Ajuan diterima, tetapi tautan WhatsApp member tidak tersedia.');}
             await loadTickets();showToast('Ajuan diterima. WhatsApp member dibuka.');
           }catch(e){if(waWindow&&!waWindow.closed)waWindow.close();showAdminError(e.message);accept.disabled=false;}
@@ -246,7 +281,7 @@
           done.disabled=true;
           try{
             const result=await api('/api/admin/ticket-status',{method:'POST',body:JSON.stringify({ticketId:t.id,status:'COMPLETED'})});
-            if(result.whatsappUrl){if(waWindow&&!waWindow.closed)waWindow.location.href=result.whatsappUrl;else window.location.assign(result.whatsappUrl);}
+            if(result.whatsappUrl){redirectWhatsApp(waWindow,result.whatsappUrl);}
             else{if(waWindow&&!waWindow.closed)waWindow.close();throw new Error('Tiket selesai, tetapi tautan ulasan WhatsApp tidak tersedia.');}
             await loadTickets();showToast('Tiket selesai. WhatsApp ulasan dibuka.');
           }catch(e){if(waWindow&&!waWindow.closed)waWindow.close();showAdminError(e.message);done.disabled=false;}
