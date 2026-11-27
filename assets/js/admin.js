@@ -307,6 +307,7 @@
       const dates=document.createElement('p');dates.className='admin-muted';dates.textContent='Dibeli: '+new Date(t.created_at).toLocaleString('id-ID')+' · Diajukan: '+(t.submitted_at?new Date(t.submitted_at).toLocaleString('id-ID'):'—')+' · Selesai: '+(t.completed_at?new Date(t.completed_at).toLocaleString('id-ID'):'—');
       const contact=document.createElement('p');contact.textContent='WhatsApp: '+(t.whatsapp||'—')+' · Status transaksi: '+(statusLabels[t.order_status]||t.order_status);
       card.append(h,state,details,dates,contact);
+      if(t.link_error){const warning=document.createElement('p');warning.className='admin-muted';warning.textContent='Link pribadi belum tersedia: '+t.link_error;card.append(warning);}
       const actions=document.createElement('div');actions.className='admin-inline-actions';
       const copy=document.createElement('button');copy.type='button';copy.className='btn btn-quiet';copy.textContent='Salin ID tiket';copy.addEventListener('click',()=>copyText(t.id,'Nomor tiket tersalin.'));actions.append(copy);
       if(t.ticket_link&&t.order_status!=='PENDING_PAYMENT'&&t.status!=='COMPLETED'){
