@@ -48,12 +48,17 @@
       item.append(small, strong); meta.append(item);
     });
     const button = $('apply-ticket');
-    button.disabled = current.status !== 'ACTIVE' || current.orderStatus !== 'COMPLETED';
-    button.textContent = current.status === 'ACTIVE' ? 'Ajukan tiket ↗' : current.status === 'PENDING' ? 'Pengajuan sudah dikirim' : 'Ajukan tiket tidak tersedia';
+    const accepted = current.status === 'ACTIVE' && Boolean(current.submittedAt);
+    if (accepted) {
+      $('ticket-title').textContent = 'Pengajuan tiket diterima';
+      $('ticket-copy').textContent = 'Pengajuanmu sudah diterima Admin. Harap segera login dan tunggu di lobby, lalu nantikan instruksi selanjutnya.';
+    }
+    button.disabled = current.status !== 'ACTIVE' || current.orderStatus !== 'COMPLETED' || accepted;
+    button.textContent = accepted ? 'Pengajuan diterima ✓' : current.status === 'ACTIVE' ? 'Ajukan tiket ↗' : current.status === 'PENDING' ? 'Pengajuan sudah dikirim' : 'Ajukan tiket tidak tersedia';
   }
   $('apply-ticket').addEventListener('click', async () => {
     if (!current || current.status !== 'ACTIVE') return;
-    const phone = String(cfg.adminWhatsApp || '').replace(/\\D/g, '');
+    const phone = String(cfg.adminWhatsApp || '').replace(/\D/g, '');
     const button = $('apply-ticket');
     const waWindow = phone ? window.open('about:blank', '_blank') : null;
     button.disabled = true;
@@ -73,15 +78,13 @@
 
       if (phone) {
         const message = [
-          'Halo Admin SLF, saya sudah mengajukan tiket re-entry melalui website.',
-          'Nomor tiket: ' + current.id,
-          'Nomor pesanan: ' + current.orderId,
-          'Nama Minecraft: ' + current.minecraftName,
-          'Paket: ' + current.productName,
-          'Jumlah nyawa mengikuti status rank/langganan yang berlaku saat diproses.',
-          'Tautan tiket pribadi: ' + location.href,
-          'Mohon periksa pengajuan pada panel Admin SLF.'
-        ].join('\\n');
+          '🎟️ Halo Admin SLF, saya ingin mengajukan penggunaan tiket:',
+          '• Nomor Tiket: ' + current.id,
+          '• ID Pesanan: ' + current.orderId,
+          '• Nama Minecraft: ' + current.minecraftName,
+          '• Paket: ' + current.productName,
+          'Mohon diproses, terima kasih!'
+        ].join('\n');
         const target = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
         if (waWindow && !waWindow.closed) waWindow.location.href = target;
         else window.location.href = target;
