@@ -80,7 +80,7 @@
 
       if (phone) {
         const message = [
-          '🎟️ Halo Admin SLF, saya ingin mengajukan penggunaan tiket:',
+          'Halo Admin SLF, saya ingin mengajukan penggunaan tiket:',
           '• Nomor Tiket: ' + current.id,
           '• ID Pesanan: ' + current.orderId,
           '• Nama Minecraft: ' + current.minecraftName,
