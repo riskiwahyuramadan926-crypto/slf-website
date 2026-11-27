@@ -298,7 +298,7 @@ export async function buildOrderLinks(db, order, origin, env = {}) {
 
   const ticketLinks = [];
   if (String(order.product_id || '').startsWith('REENTRY_')) {
-    const ticketSecret = resolveTicketLinkSecret(env);
+    const ticketSecret = await getTicketLinkSecret(env);
     if (!ticketSecret.ready) throw new Error('TICKET_LINK_SECRET belum valid; tautan tiket tidak dapat dibuat.');
     const { results = [] } = await db.prepare(
       'SELECT id, access_key_hash FROM reentry_tickets WHERE order_id = ? ORDER BY created_at, id'
