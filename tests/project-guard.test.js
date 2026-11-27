@@ -214,7 +214,7 @@ test('Admin mobile payment flow persists PAID before optional links and opens Wh
   assert.match(admin, /function applyOrderActionResult/);
   assert.match(admin, /HTTP '\+res\.status/);
   assert.match(admin, /Konfirmasi pembayaran gagal:/);
-  assert.match(adminHtml, /admin\.js\?v=20261128-review-split1/);
+  assert.match(adminHtml, /admin\.js\?v=20261128-wa-newline1/);
 })
 
 test('Purchase and ticket-service reviews use independent one-time D1 slots', async () => {
