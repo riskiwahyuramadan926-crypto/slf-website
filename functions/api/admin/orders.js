@@ -1,7 +1,7 @@
 import { json, fail, requireAdmin, buildOrderLinks } from '../../_lib/common.js';
 
 function safeLinkError(error) {
-  return String(error?.message || error || 'Link belum dapat dibuat.').replace(/[\\r\\n]/g, ' ').slice(0, 240);
+  return String(error?.message || error || 'Link belum dapat dibuat.').replace(/[\r\n]/g, ' ').slice(0, 240);
 }
 
 export async function onRequestGet({ request, env }) {
