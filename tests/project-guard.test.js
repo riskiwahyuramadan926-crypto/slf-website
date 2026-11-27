@@ -168,28 +168,28 @@ test('Admin payment and ticket status updates survive optional link-generation f
   );
   assert.match(ticketSecretResolver, /TIKET_LINK_SRCRET/);
   assert.doesNotMatch(ticketSecretResolver, /slf-default-fallback-ticket-secret-key/);
-  assert.doesNotMatch(ticketSecretResolver, /env\\.ADMIN_SECRET/);
+  assert.doesNotMatch(ticketSecretResolver, /env\.ADMIN_SECRET/);
 
   assert.match(schema, /access_key_encrypted:\s*'TEXT'/);
-  assert.match(schema, /reentry_tickets:\s*\\{[\\s\\S]*?submitted_at:\s*'TEXT'/);
+  assert.match(schema, /reentry_tickets:\s*\{[\s\S]*?submitted_at:\s*'TEXT'/);
 
   assert.match(orders, /ticket_link:\s*''/);
   assert.match(orders, /review_link:\s*''/);
   assert.match(orders, /link_error:/);
-  assert.match(orders, /return json\\(\\{ orders, stats/);
+  assert.match(orders, /return json\(\{ orders, stats/);
 
   const paymentWrite = payment.indexOf("UPDATE orders SET status='PAID'");
   const paymentLinkBuild = payment.indexOf('buildOrderLinks');
   assert.ok(paymentWrite >= 0 && paymentLinkBuild > paymentWrite, 'PAID must be persisted before creating secure links');
-  assert.match(payment, /status:\s*order\\.status/);
+  assert.match(payment, /status:\s*order\.status/);
   assert.match(payment, /link_error:\s*linkError/);
-  assert.match(payment, /return json\\(/);
+  assert.match(payment, /return json\(/);
 
   const completionWrite = complete.indexOf("UPDATE orders SET status='COMPLETED'");
   const completionLinkBuild = complete.indexOf('buildOrderLinks');
   assert.ok(completionWrite >= 0 && completionLinkBuild > completionWrite, 'COMPLETED must be persisted before creating review links');
   assert.match(complete, /link_error:\s*linkError/);
-  assert.match(complete, /return json\\(/);
+  assert.match(complete, /return json\(/);
 
   const acceptWrite = ticketStatus.indexOf("UPDATE reentry_tickets SET status='ACTIVE'");
   const acceptLinkBuild = ticketStatus.indexOf('buildOrderLinks');
@@ -198,10 +198,10 @@ test('Admin payment and ticket status updates survive optional link-generation f
   assert.ok(completeWrite > acceptLinkBuild, 'ticket completion state update must remain present');
   assert.match(ticketStatus, /link_error:\s*linkError/);
 
-  assert.match(admin, /function openWhatsAppTab\\(\\)/);
-  assert.match(admin, /try \\{ return window\\.open\\('about:blank','_blank'\\); \\}/);
+  assert.match(admin, /function openWhatsAppTab\(\)/);
+  assert.match(admin, /try \{ return window\.open\('about:blank','_blank'\); \}/);
   assert.match(admin, /function closeWhatsAppTab/);
   assert.match(admin, /function applyOrderActionResult/);
-  assert.match(admin, /HTTP '\\+res\\.status/);
+  assert.match(admin, /HTTP '\+res\.status/);
   assert.match(admin, /Konfirmasi pembayaran gagal:/);
 });
