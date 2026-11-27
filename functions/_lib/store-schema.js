@@ -89,7 +89,7 @@ const statements = [
     review_key_hash TEXT,
     review_key_encrypted TEXT,
     reviewed_at TEXT
-  ),
+  )`,
   'CREATE INDEX IF NOT EXISTS idx_reentry_tickets_order ON reentry_tickets(order_id, created_at)',
   'CREATE INDEX IF NOT EXISTS idx_reentry_tickets_status ON reentry_tickets(status, created_at DESC)',
   `CREATE TABLE IF NOT EXISTS ticket_reviews (
