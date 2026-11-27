@@ -1,4 +1,4 @@
-import { json, fail, readJson, requireAdmin, notifyAdmin, logAdminActivity, ensureOrderAccessKey, hmacSha256Hex, sha256Hex, resolveTicketLinkSecret, currency } from '../../_lib/common.js';
+import { json, fail, readJson, requireAdmin, notifyAdmin, logAdminActivity, ensureOrderAccessKey, hmacSha256Hex, sha256Hex, resolveTicketLinkSecret } from '../../_lib/common.js';
 
 const TICKET_PRODUCTS = new Set(['REENTRY_1','REENTRY_2','REENTRY_3']);
 
@@ -57,15 +57,15 @@ export async function onRequestPost({ request, env }) {
     const orderKey = await ensureOrderAccessKey(env.DB,paidOrder,env);
     const phone = String(paidOrder.whatsapp||'').replace(/\D/g,'');
     if (!phone) return fail('Pembayaran sudah tercatat, tetapi nomor WhatsApp pembeli tidak valid.',422);
-    const ticketLinks = await buildTicketLinks(env.DB,paidOrder,orderKey,new URL(request.url).origin,env);
-    let lines;
+    let message = '';
     if (TICKET_PRODUCTS.has(paidOrder.product_id)) {
-      lines = ['*SLF STORE · PEMBAYARAN BERHASIL*','Halo '+paidOrder.minecraft_name+', pembayaranmu sudah diterima.','', '*ID:* '+paidOrder.id,'*Produk:* '+paidOrder.product_name,'*Total:* '+currency(paidOrder.total),'*Status:* PAID','', '*Link tiket:*',...ticketLinks.map((link,i)=>(ticketLinks.length>1?'Tiket '+(i+1)+': ':'')+link),'','Simpan tautan pribadi ini.'];
+      const ticketLinks = await buildTicketLinks(env.DB,paidOrder,orderKey,new URL(request.url).origin,env);
+      message = '🎟️ Halo ' + paidOrder.minecraft_name + ', pembayaran untuk pesanan ' + paidOrder.id + ' (' + paidOrder.product_name + ') telah berhasil!\nGunakan link tiket pribadi di bawah ini saat kamu ingin mengajukan pemakaian tiket:\n' + ticketLinks.join('\n');
     } else {
-      lines = ['*SLF STORE · PEMBAYARAN BERHASIL*','Halo '+paidOrder.minecraft_name+', pembayaranmu sudah diterima. Rank/VIP sedang diproses atau telah diberikan ke akunmu.','', '*ID:* '+paidOrder.id,'*Produk:* '+paidOrder.product_name,'*Total:* '+currency(paidOrder.total),'*Status:* PAID','', 'Terima kasih telah mendukung Survival Legacy Frontier.'];
+      message = '✅ Halo ' + paidOrder.minecraft_name + ', pembayaran untuk pesanan ' + paidOrder.id + ' (' + paidOrder.product_name + ') telah berhasil kami terima!\nProduk kamu saat ini sedang diproses. Harap segera login ke dalam server sekarang untuk proses penyerahan produk.';
     }
     await notifyAdmin(env,paidOrder,new URL('/admin/?order='+encodeURIComponent(id),request.url).toString()).catch(error=>console.error('Admin notification failed:',error?.message||error));
-    const whatsappUrl='https://wa.me/'+phone+'?text='+encodeURIComponent(lines.join('\n'));
+    const whatsappUrl='https://wa.me/'+phone+'?text='+encodeURIComponent(message);
     return json({ok:true,status:paidOrder.status,whatsappUrl});
   } catch (error) {
     console.error('Payment WhatsApp preparation failed:',error?.message||error);
