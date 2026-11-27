@@ -4,6 +4,8 @@ import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { buildPaidTicketWhatsAppMessage } from '../functions/api/admin/verify-payment.js';
+import { buildWhatsAppUrl } from '../functions/_lib/common.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = relative => readFile(path.join(root, relative), 'utf8');
@@ -278,13 +280,56 @@ test('Purchase and ticket-service reviews use independent one-time D1 slots', as
 });
 ;
 
-test('PAID WhatsApp message labels every ticket and separates ticket links with blank lines', async () => {
-  const payment = await read('functions/api/admin/verify-payment.js');
-  assert.ok(payment.includes('links.ticket_links.map((ticket, index)'));
-  assert.ok(payment.includes('🎫 Tiket '));
-  assert.ok(payment.includes('ticket.id'));
-  assert.ok(payment.includes('ticket.url'));
-  assert.ok(payment.includes('ticketSections.join('));
-  assert.ok(payment.includes('1 link berlaku untuk 1 kali pemakaian tiket'));
-  assert.ok(payment.includes('Gunakan salah satu link di atas saat kamu ingin mengajukan pemakaian tiket'));
+test('PAID WhatsApp messages keep ticket links on separate real lines for 1–3 tickets', () => {
+  const order = {
+    minecraft_name: 'ryuk',
+    id: 'SLF-261127-037D6A',
+    product_name: 'Tiket Masuk Kembali'
+  };
+
+  for (const count of [1, 2, 3]) {
+    const tickets = Array.from({ length: count }, (_, index) => ({
+      id: 'SLF-TICKET-' + (index + 1),
+      url: 'https://legacy-frontier.web.id/store/ticket.html?id=SLF-TICKET-' + (index + 1) + '&key=private-key-' + (index + 1)
+    }));
+    const message = buildPaidTicketWhatsAppMessage(order, tickets);
+
+    assert.equal(message.includes('\\n'), false, 'message must not contain a literal backslash-n sequence');
+    assert.ok(message.includes('\n'), 'message must contain actual newline characters');
+    assert.ok(message.includes('\n\n'), 'message must use blank lines between sections');
+    assert.ok(message.startsWith('Halo ryuk, pembayaran untuk pesanan SLF-261127-037D6A (Tiket Masuk Kembali) telah berhasil!\n\n'));
+    assert.ok(message.endsWith('\n\nGunakan salah satu link di atas saat kamu ingin mengajukan pemakaian tiket.'));
+    assert.equal((message.match(/🎫 Tiket \d+/g) || []).length, count, 'ticket labels must match the order quantity');
+
+    tickets.forEach((ticket, index) => {
+      const section = '🎫 Tiket ' + (index + 1) + ' (' + ticket.id + '):\n' + ticket.url;
+      assert.ok(message.includes(section), 'each ticket label must be followed by its own URL');
+      if (index < count - 1) {
+        assert.ok(message.includes(section + '\n\n🎫 Tiket ' + (index + 2)), 'ticket sections must be separated by a blank line');
+      }
+    });
+  }
+});
+
+test('all wa.me URL generators normalize escaped newlines before encodeURIComponent', async () => {
+  const generatorFiles = [
+    'functions/api/admin/verify-payment.js',
+    'functions/_lib/common.js',
+    'assets/js/admin.js',
+    'assets/js/checkout.js',
+    'assets/js/ticket.js',
+    'assets/js/order.js'
+  ];
+  const normalizer = /replace\(\/\\\\n\/g,\s*'\\n'\)/;
+  for (const file of generatorFiles) {
+    const source = await read(file);
+    assert.match(source, normalizer, file + ' must normalize literal backslash-n before encoding');
+  }
+
+  const brokenLegacyText = 'Halo ryuk\\nhttps://legacy-frontier.web.id/store/ticket.html?id=T-1&key=private-key';
+  const whatsappUrl = buildWhatsAppUrl('+62 812-3456-7890', brokenLegacyText);
+  assert.ok(whatsappUrl.startsWith('https://wa.me/6281234567890?text='));
+  const decodedText = new URL(whatsappUrl).searchParams.get('text');
+  assert.equal(decodedText, 'Halo ryuk\nhttps://legacy-frontier.web.id/store/ticket.html?id=T-1&key=private-key');
+  assert.equal(decodedText.includes('\\n'), false, 'the encoded URL must not retain a literal backslash-n');
 });
