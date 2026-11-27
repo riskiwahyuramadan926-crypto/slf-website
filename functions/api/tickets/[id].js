@@ -9,6 +9,7 @@ export async function onRequestGet({ request, env, params }) {
     'SELECT t.id, t.order_id, t.access_key_hash, t.minecraft_name, t.product_name, t.status, t.created_at, t.updated_at, t.submitted_at, t.completed_at, o.status AS order_status FROM reentry_tickets t JOIN orders o ON o.id = t.order_id WHERE t.id = ?'
   ).bind(params.id).first();
   if (!row || await sha256Hex(key) !== row.access_key_hash) return fail('Tiket tidak ditemukan atau tautan akses tidak valid.', 404);
+  if (!['PAID','PROCESSING','COMPLETED'].includes(row.order_status)) return fail('Tiket pribadi baru dapat dibuka setelah pembayaran berhasil dikonfirmasi Admin.',403);
   return json({ ticket: {
     id: row.id, orderId: row.order_id, minecraftName: row.minecraft_name, productName: row.product_name,
     status: row.status, orderStatus: row.order_status, createdAt: row.created_at, updatedAt: row.updated_at,
@@ -25,14 +26,14 @@ export async function onRequestPost({ request, env, params }) {
     'SELECT t.id, t.access_key_hash, t.status, o.status AS order_status FROM reentry_tickets t JOIN orders o ON o.id = t.order_id WHERE t.id = ?'
   ).bind(params.id).first();
   if (!row || await sha256Hex(key) !== row.access_key_hash) return fail('Tiket tidak ditemukan atau tautan akses tidak valid.', 404);
-  if (row.status !== 'ACTIVE' || row.order_status !== 'COMPLETED') {
+  if (row.order_status !== 'COMPLETED' || row.status !== 'ACTIVE') {
     if (row.status === 'PENDING') return json({ ok: true, status: 'PENDING' });
     return fail('Tiket belum aktif atau sudah digunakan. Tiket hanya bisa diajukan saat statusnya Aktif.', 409);
   }
   const now = new Date().toISOString();
   const result = await env.DB.prepare(
-    "UPDATE reentry_tickets SET status = 'PENDING', submitted_at = ?, updated_at = ? WHERE id = ? AND status = 'ACTIVE'"
+    "UPDATE reentry_tickets SET status = 'PENDING', submitted_at = ?, updated_at = ? WHERE id = ? AND status = 'ACTIVE' AND submitted_at IS NULL"
   ).bind(now, now, params.id).run();
-  if (!result.meta?.changes) return fail('Tiket baru saja berubah status. Muat ulang halaman.', 409);
+  if (!result.meta?.changes) return fail('Tiket baru saja berubah status atau sudah diajukan. Muat ulang halaman.', 409);
   return json({ ok: true, status: 'PENDING' });
 }
