@@ -4,6 +4,25 @@ function safeLinkError(error) {
   return String(error?.message || error || 'Link belum dapat dibuat.').replace(/[\r\n]/g, ' ').slice(0, 240);
 }
 
+export function buildPaidTicketWhatsAppMessage(order, ticketLinks) {
+  const playerName = String(order?.minecraft_name || 'pemain');
+  const productName = String(order?.product_name || order?.product_id || 'pesanan SLF');
+  const ticketSections = (Array.isArray(ticketLinks) ? ticketLinks : []).map((ticket, index) => [
+    '🎫 Tiket ' + (index + 1) + ' (' + String(ticket?.id || '') + '):',
+    String(ticket?.url || '')
+  ].join('\n'));
+
+  return [
+    'Halo ' + playerName + ', pembayaran untuk pesanan ' + String(order?.id || '') + ' (' + productName + ') telah berhasil!',
+    '',
+    'Berikut adalah link tiket pribadi kamu (1 link berlaku untuk 1 kali pemakaian tiket):',
+    '',
+    ...ticketSections,
+    '',
+    'Gunakan salah satu link di atas saat kamu ingin mengajukan pemakaian tiket.'
+  ].join('\n');
+}
+
 export async function onRequestPost({ request, env }) {
   // Admin authentication remains mandatory. Ticket/product/link validation is
   // intentionally not allowed to block the payment-state write.
@@ -92,20 +111,15 @@ export async function onRequestPost({ request, env }) {
   const productName = String(order.product_name || order.product_id || 'pesanan SLF');
   let message;
   if (isTicketProduct && links.ticket_links.length) {
-    const ticketSections = links.ticket_links.map((ticket, index) =>
-      '🎫 Tiket ' + (index + 1) + ' (' + ticket.id + '):\\n' + ticket.url
-    );
-    message = 'Halo ' + playerName + ', pembayaran untuk pesanan ' + order.id + ' (' + productName + ') telah berhasil!\\n' +
-      'Berikut adalah link tiket pribadi kamu (1 link berlaku untuk 1 kali pemakaian tiket):\\n' +
-      ticketSections.join('\\n\\n') +
-      '\\nGunakan salah satu link di atas saat kamu ingin mengajukan pemakaian tiket.';
+    message = buildPaidTicketWhatsAppMessage(order, links.ticket_links);
   } else if (isTicketProduct) {
     message = 'Halo ' + playerName + ', pembayaran untuk pesanan ' + order.id + ' (' + productName + ') telah berhasil kami terima. Status pesanan sudah tercatat. Link tiket pribadi akan dikirimkan secara terpisah setelah data tiket selesai diperiksa Admin SLF.';
   } else {
     message = 'Halo ' + playerName + ', pembayaran untuk pesanan ' + order.id + ' (' + productName + ') telah berhasil kami terima!\nProduk kamu saat ini sedang diproses. Harap segera login ke dalam server sekarang untuk proses penyerahan produk.';
   }
   const phone = String(order.whatsapp || '').replace(/\D/g, '');
-  const encodedMessage = encodeURIComponent(message);
+  const normalizedMessage = String(message ?? '').replace(/\\n/g, '\n');
+  const encodedMessage = encodeURIComponent(normalizedMessage);
   const whatsappUrl = phone
     ? 'https://wa.me/' + phone + '?text=' + encodedMessage
     : 'https://wa.me/?text=' + encodedMessage;
