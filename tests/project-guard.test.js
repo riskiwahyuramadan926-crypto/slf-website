@@ -179,20 +179,20 @@ test('Admin payment and ticket status updates survive optional link-generation f
   assert.match(orders, /return json\(\{ orders, stats/);
 
   const paymentWrite = payment.indexOf("UPDATE orders SET status='PAID'");
-  const paymentLinkBuild = payment.indexOf('buildOrderLinks');
+  const paymentLinkBuild = payment.indexOf('await buildOrderLinks');
   assert.ok(paymentWrite >= 0 && paymentLinkBuild > paymentWrite, 'PAID must be persisted before creating secure links');
   assert.match(payment, /status:\s*order\.status/);
   assert.match(payment, /link_error:\s*linkError/);
   assert.match(payment, /return json\(/);
 
   const completionWrite = complete.indexOf("UPDATE orders SET status='COMPLETED'");
-  const completionLinkBuild = complete.indexOf('buildOrderLinks');
+  const completionLinkBuild = complete.indexOf('await buildOrderLinks');
   assert.ok(completionWrite >= 0 && completionLinkBuild > completionWrite, 'COMPLETED must be persisted before creating review links');
   assert.match(complete, /link_error:\s*linkError/);
   assert.match(complete, /return json\(/);
 
   const acceptWrite = ticketStatus.indexOf("UPDATE reentry_tickets SET status='ACTIVE'");
-  const acceptLinkBuild = ticketStatus.indexOf('buildOrderLinks');
+  const acceptLinkBuild = ticketStatus.indexOf('await buildOrderLinks');
   const completeWrite = ticketStatus.indexOf("UPDATE reentry_tickets SET status='COMPLETED'");
   assert.ok(acceptWrite >= 0 && acceptLinkBuild > acceptWrite, 'ACCEPTED must be persisted before creating ticket links');
   assert.ok(completeWrite > acceptLinkBuild, 'ticket completion state update must remain present');
