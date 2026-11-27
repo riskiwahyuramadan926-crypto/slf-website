@@ -24,7 +24,7 @@
       'Mohon bantu periksa status atau kendala pada pesanan ini.',
       'Terima kasih.'
     ].join('\n');
-    $('contact-admin').href='https://wa.me/'+phone+'?text='+encodeURIComponent(contactMessage);
+    $('contact-admin').href='https://wa.me/'+phone+'?text='+encodeURIComponent(String(contactMessage ?? '').replace(/\\n/g, '\n'));
     $('contact-admin').textContent='Hubungi admin via WhatsApp';
     }
     $('admin-missing').hidden=true;
