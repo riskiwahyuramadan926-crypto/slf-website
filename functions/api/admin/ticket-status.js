@@ -1,7 +1,22 @@
-import { json, fail, readJson, requireAdmin, logAdminActivity, buildOrderLinks, buildWhatsAppUrl } from '../../_lib/common.js';
+import { json, fail, readJson, requireAdmin, logAdminActivity, buildWhatsAppUrl, randomHex, sha256Hex, encryptOrderAccessKey, decryptOrderAccessKey } from '../../_lib/common.js';
 
 function safeLinkError(error) {
   return String(error?.message || error || 'Link belum dapat dibuat.').replace(/[\r\n]/g, ' ').slice(0, 240);
+}
+
+async function ensureTicketReviewLink(db, ticket, origin, env) {
+  let key = await decryptOrderAccessKey(ticket.review_key_encrypted, env);
+  if (!key || await sha256Hex(key) !== ticket.review_key_hash) {
+    key = randomHex(64);
+    const encrypted = await encryptOrderAccessKey(key, env);
+    if (!encrypted) throw new Error('ORDER_LINK_SECRET atau OWNER_SECRET belum valid untuk membuat tautan ulasan layanan.');
+    await db.prepare('UPDATE reentry_tickets SET review_key_hash=?,review_key_encrypted=?,updated_at=? WHERE id=?')
+      .bind(await sha256Hex(key), encrypted, new Date().toISOString(), ticket.id).run();
+  }
+  const url = new URL('/store/review.html', origin);
+  url.searchParams.set('ticket', ticket.id);
+  url.searchParams.set('key', key);
+  return url.toString();
 }
 
 export async function onRequestPost({ request, env }) {
@@ -13,7 +28,7 @@ export async function onRequestPost({ request, env }) {
   if (!id || !['ACTIVE', 'COMPLETED'].includes(status)) return fail('Data status tiket tidak valid.');
 
   const row = await env.DB.prepare(
-    'SELECT t.id, t.order_id, t.status, t.submitted_at, t.minecraft_name, t.product_name, o.status AS order_status, o.access_key_hash, o.access_key_encrypted, o.product_id, o.whatsapp FROM reentry_tickets t JOIN orders o ON o.id=t.order_id WHERE t.id=?'
+    'SELECT t.id, t.order_id, t.status, t.submitted_at, t.minecraft_name, t.product_name, t.review_key_hash, t.review_key_encrypted, o.status AS order_status, o.whatsapp, o.product_id, o.access_key_hash, o.access_key_encrypted FROM reentry_tickets t JOIN orders o ON o.id=t.order_id WHERE t.id=?'
   ).bind(id).first();
   if (!row) return fail('Tiket tidak ditemukan.', 404);
   if (row.order_status !== 'COMPLETED') {
@@ -63,21 +78,20 @@ export async function onRequestPost({ request, env }) {
       await logAdminActivity(env.DB, 'reentry_ticket_completed', 'reentry_ticket', id, { status: 'COMPLETED' });
     }
 
-    const links = { ticket_link: '', ticket_links: [], review_link: '' };
+    let ticketReviewLink = '';
     let whatsappUrl = '';
     let linkError = '';
     try {
-      const generated = await buildOrderLinks(env.DB, orderForLinks, new URL(request.url).origin, env);
-      Object.assign(links, generated);
-      if (!links.review_link) throw new Error('Link ulasan belum tersedia.');
-      const message = 'Halo ' + row.minecraft_name + ', penggunaan tiket ' + row.id + ' telah selesai diproses. Selamat bermain kembali!\nJangan lupa berikan ulasan layanan kami di sini:\n' + links.review_link;
+      ticketReviewLink = await ensureTicketReviewLink(env.DB, row, new URL(request.url).origin, env);
+      const message = 'Halo ' + row.minecraft_name + ', penggunaan tiket ' + row.id +
+        ' telah selesai diproses. Selamat bermain kembali!\nMohon nilai layanan pemakaian tiket dan bantuan Admin SLF melalui link terpisah berikut:\n' + ticketReviewLink;
       whatsappUrl = buildWhatsAppUrl(row.whatsapp, message);
       if (!whatsappUrl) throw new Error('Nomor WhatsApp member tidak valid.');
     } catch (error) {
       linkError = safeLinkError(error);
-      console.error('Ticket review link preparation failed after status update:', linkError);
+      console.error('Ticket service review link preparation failed after ticket completion:', linkError);
     }
-    return json({ ok: true, status: 'COMPLETED', ...links, whatsappUrl, link_error: linkError });
+    return json({ ok: true, status: 'COMPLETED', ticket_review_link: ticketReviewLink, whatsappUrl, link_error: linkError });
   }
 
   // Reopening is an administrative correction, not a member notification.

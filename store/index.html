@@ -6,10 +6,10 @@
   <meta name="theme-color" content="#100c18">
   <meta name="description" content="Katalog produk resmi Survival Legacy Frontier.">
   <title>Store | Survival Legacy Frontier</title>
-  <link rel="stylesheet" href="/assets/css/store.css?v=20261127-catalog-rebuild">
+  <link rel="stylesheet" href="/assets/css/store.css?v=20261128-review-split1">
   <link rel="stylesheet" href="/assets/css/frontier-theme.css">
   <script src="/assets/js/store-config.js" defer></script>
-  <script src="/assets/js/store.js?v=20261127-catalog-rebuild" defer></script>
+  <script src="/assets/js/store.js?v=20261128-review-split1" defer></script>
 </head>
 <body>
   <div class="topline"><b>SURVIVAL LEGACY FRONTIER</b> · STORE RESMI</div>
@@ -25,6 +25,23 @@
         <div class="section-head"><div class="eyebrow">SLF STORE</div><h1>Pilih Produk.</h1><p>Pilih produk untuk melihat detail atau melanjutkan ke formulir pemesanan.</p></div>
         <div class="notice" id="catalog-message" role="status" hidden></div>
         <div id="products" class="products" aria-live="polite"></div>
+      </div>
+    </section>
+    <section class="section reviews-section" id="ulasan">
+      <div class="wrap">
+        <div class="section-head"><div class="eyebrow">PENGALAMAN PEMAIN</div><h2>Ulasan Pembeli.</h2><p>Penilaian dari pemain yang telah menyelesaikan pembelian atau menggunakan layanan tiket re-entry.</p></div>
+        <div class="review-overview">
+          <div class="review-score-panel">
+            <strong class="review-score" id="review-average">—</strong>
+            <div class="review-score-stars" id="review-stars">☆☆☆☆☆</div>
+            <div class="review-score-count" id="review-count">0 ulasan</div>
+          </div>
+          <div class="review-distribution" id="review-distribution" aria-label="Distribusi rating bintang"></div>
+        </div>
+        <div class="public-reviews" id="public-reviews" aria-live="polite"></div>
+        <div class="empty" id="reviews-empty" hidden>Belum ada ulasan. Jadilah pemain pertama yang membagikan pengalamanmu!</div>
+        <div class="notice" id="reviews-error" role="status" hidden></div>
+        <div class="review-more-wrap"><button class="btn btn-quiet" id="reviews-more" type="button" hidden>Muat Lebih Banyak</button></div>
       </div>
     </section>
   </main>

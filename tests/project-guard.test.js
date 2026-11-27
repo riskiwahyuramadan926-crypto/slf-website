@@ -194,7 +194,7 @@ test('Admin mobile payment flow persists PAID before optional links and opens Wh
   assert.match(payment, /return json\(/);
 
   const completionWrite = complete.indexOf("UPDATE orders SET status='COMPLETED'");
-  const completionLinkBuild = complete.indexOf('await buildOrderLinks');
+  const completionLinkBuild = complete.indexOf('await buildOrderReviewLink');
   assert.ok(completionWrite >= 0 && completionLinkBuild > completionWrite, 'COMPLETED must be persisted before creating review links');
   assert.match(complete, /link_error:\s*linkError/);
   assert.match(complete, /return json\(/);
@@ -212,5 +212,68 @@ test('Admin mobile payment flow persists PAID before optional links and opens Wh
   assert.match(admin, /function applyOrderActionResult/);
   assert.match(admin, /HTTP '\+res\.status/);
   assert.match(admin, /Konfirmasi pembayaran gagal:/);
-  assert.match(adminHtml, /admin\.js\?v=20261127-mobile-payment-fix2/);
+  assert.match(adminHtml, /admin\.js\?v=20261128-review-split1/);
+})
+
+test('Purchase and ticket-service reviews use independent one-time D1 slots', async () => {
+  const schema = await read('functions/_lib/store-schema.js');
+  const sqlSchema = await read('schema.sql');
+  const common = await read('functions/_lib/common.js');
+  const complete = await read('functions/api/admin/complete.js');
+  const ticketStatus = await read('functions/api/admin/ticket-status.js');
+  const reviews = await read('functions/api/reviews.js');
+  const orderApi = await read('functions/api/orders/[id].js');
+  const adminReviews = await read('functions/api/admin/reviews.js');
+  const reviewPage = await read('assets/js/review.js');
+  const reviewHtml = await read('store/review.html');
+  const catalog = await read('store/index.html');
+  const catalogJs = await read('assets/js/store.js');
+  const adminJs = await read('assets/js/admin.js');
+
+  assert.match(schema, /CREATE TABLE IF NOT EXISTS ticket_reviews/);
+  assert.match(schema, /review_key_hash TEXT/);
+  assert.match(schema, /review_key_encrypted TEXT/);
+  assert.match(schema, /ticket_reviews: \{ ticket_id:/);
+  assert.match(schema, /review_key_hash: 'TEXT'/);
+  assert.match(sqlSchema, /CREATE TABLE IF NOT EXISTS ticket_reviews/);
+  assert.match(sqlSchema, /review_key_encrypted TEXT/);
+
+  assert.match(common, /export async function buildOrderReviewLink/);
+  const ensureKey = common.slice(common.indexOf('export async function ensureOrderAccessKey'), common.indexOf('export async function buildOrderReviewLink'));
+  assert.doesNotMatch(ensureKey, /reentry_tickets|TICKET_LINK_SECRET/, 'purchase review key must not depend on ticket rows or ticket secret');
+
+  assert.match(complete, /buildOrderReviewLink/);
+  assert.match(complete, /review_link: reviewLink/);
+  assert.doesNotMatch(complete, /buildOrderLinks/);
+  assert.match(ticketStatus, /ensureTicketReviewLink/);
+  assert.match(ticketStatus, /review_key_hash/);
+  assert.match(ticketStatus, /ticket_review_link: ticketReviewLink/);
+  assert.doesNotMatch(ticketStatus.slice(ticketStatus.indexOf("if (status === 'COMPLETED'")), /buildOrderReviewLink|buildOrderLinks/);
+
+  assert.match(orderApi, /if \(row\.status === 'COMPLETED' && !row\.rated_at\)/);
+  assert.doesNotMatch(orderApi.slice(orderApi.indexOf("if (row.status === 'COMPLETED' && !row.rated_at)")), /completedTicket/);
+
+  assert.match(reviews, /INSERT INTO ticket_reviews/);
+  assert.match(reviews, /INSERT INTO reviews/);
+  assert.match(reviews, /Boolean\(orderId\) === Boolean\(ticketId\)/);
+  assert.match(reviews, /comment = safeText\(data\.comment, 10000\)/);
+  assert.match(reviews, /UNION ALL/);
+  assert.match(reviews, /hasMore:/);
+  assert.match(adminReviews, /ticket_reviews/);
+  assert.match(adminReviews, /review_type/);
+
+  assert.match(reviewPage, /params\.get\('ticket'\)/);
+  assert.match(reviewPage, /payload\.ticketId=ticketId/);
+  assert.match(reviewPage, /payload\.orderId=id/);
+  assert.doesNotMatch(reviewHtml, /maxlength=/);
+
+  assert.match(catalog, /id="review-average"/);
+  assert.match(catalog, /id="review-distribution"/);
+  assert.match(catalog, /id="reviews-more"/);
+  assert.match(catalogJs, /limit=6/);
+  assert.match(catalogJs, /Lihat selengkapnya/);
+  assert.match(catalogJs, /Lebih sedikit/);
+  assert.match(catalogJs, /reviewType==='ticket_service'/);
+  assert.match(adminJs, /ticket_review_link/);
 });
+;

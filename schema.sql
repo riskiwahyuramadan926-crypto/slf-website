@@ -51,10 +51,18 @@ CREATE TABLE IF NOT EXISTS reentry_tickets (
   season_id TEXT NOT NULL DEFAULT 'season-1',
   status TEXT NOT NULL DEFAULT 'WAITING_PAYMENT'
     CHECK (status IN ('WAITING_PAYMENT','ACTIVE','PENDING','COMPLETED','CANCELLED')),
-  created_at TEXT NOT NULL, updated_at TEXT NOT NULL, submitted_at TEXT, completed_at TEXT
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL, submitted_at TEXT, completed_at TEXT,
+  review_key_hash TEXT, review_key_encrypted TEXT, reviewed_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_reentry_tickets_order ON reentry_tickets(order_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_reentry_tickets_status ON reentry_tickets(status, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS ticket_reviews (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, ticket_id TEXT NOT NULL UNIQUE REFERENCES reentry_tickets(id),
+  player_name TEXT NOT NULL, rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5),
+  comment TEXT, created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_ticket_reviews_created_at ON ticket_reviews(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_reentry_tickets_season_player ON reentry_tickets(season_id, minecraft_name, created_at);
 
 CREATE TABLE IF NOT EXISTS support_tickets (
