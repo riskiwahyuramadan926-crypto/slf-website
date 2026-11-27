@@ -1,4 +1,4 @@
-import { json, fail, readJson, requireAdmin, logAdminActivity, buildOrderLinks, buildWhatsAppUrl } from '../../_lib/common.js';
+import { json, fail, readJson, requireAdmin, logAdminActivity, buildOrderReviewLink, buildWhatsAppUrl } from '../../_lib/common.js';
 
 const TICKET_PRODUCTS = new Set(['REENTRY_1','REENTRY_2','REENTRY_3']);
 
@@ -52,31 +52,25 @@ export async function onRequestPost({ request, env }) {
     }
   }
 
-  const links = { ticket_link: '', ticket_links: [], review_link: '' };
+  let reviewLink = '';
   let whatsappUrl = '';
   let linkError = '';
   try {
-    const generated = await buildOrderLinks(env.DB, order, new URL(request.url).origin, env);
-    Object.assign(links, generated);
-    if (!links.review_link) throw new Error('Link ulasan belum tersedia.');
-    const ticketFlow = TICKET_PRODUCTS.has(order.product_id);
-    const detail = ticketFlow
-      ? 'pesanan tiket re-entry kamu sudah selesai diproses dan tiket siap diajukan.'
-      : 'pesanan ' + order.product_name + ' kamu sudah selesai diserahkan. Terima kasih telah berdonasi di SLF!';
-    const message = 'Halo ' + order.minecraft_name + ', ' + detail +
-      '\nMohon berikan ulasan layanan kami melalui link berikut:\n' + links.review_link;
+    reviewLink = await buildOrderReviewLink(env.DB, order, new URL(request.url).origin, env);
+    const message = 'Halo ' + order.minecraft_name + ', pembelian ' + (order.product_name || 'produk SLF') +
+      ' kamu sudah selesai diproses.\nMohon nilai pengalaman pembelian dan produk melalui link ulasan berikut:\n' + reviewLink;
     whatsappUrl = buildWhatsAppUrl(order.whatsapp, message);
     if (!whatsappUrl) throw new Error('Nomor WhatsApp pembeli tidak valid.');
   } catch (error) {
     linkError = safeLinkError(error);
-    console.error('Completion link preparation failed after status update:', linkError);
+    console.error('Purchase review link preparation failed after order completion:', linkError);
   }
 
   return json({
     ok: true,
     status: 'COMPLETED',
     completed_at: order.completed_at || null,
-    ...links,
+    review_link: reviewLink,
     whatsappUrl,
     ticketFlow: TICKET_PRODUCTS.has(order.product_id),
     link_error: linkError
