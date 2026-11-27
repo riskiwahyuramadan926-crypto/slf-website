@@ -19,9 +19,48 @@
     link.textContent=label;
     actions.append(link);
   }
-  function redirectWhatsApp(waWindow, whatsappUrl) {
-    if(waWindow&&!waWindow.closed)waWindow.location.href=whatsappUrl;
-    else window.location.href=whatsappUrl;
+  function openWhatsAppTab() {
+    try { return window.open('about:blank','_blank'); }
+    catch (error) { console.warn('WhatsApp tab could not be reserved:',error?.message||error); return null; }
+  }
+  function closeWhatsAppTab(waTab) {
+    try { if(waTab&&!waTab.closed)waTab.close(); } catch {}
+  }
+  function redirectWhatsApp(waTab, whatsappUrl) {
+    try {
+      if(waTab&&!waTab.closed) {
+        waTab.location.href=whatsappUrl;
+        return;
+      }
+    } catch (error) {
+      console.warn('Reserved WhatsApp tab navigation failed:',error?.message||error);
+    }
+    window.location.href=whatsappUrl;
+  }
+  function applyOrderActionResult(orderId, result, fallbackStatus) {
+    const order=allOrders.find(item=>item.id===orderId);
+    if(!order)return;
+    order.status=result.status||fallbackStatus;
+    if(result.paid_at)order.paid_at=result.paid_at;
+    else if(order.status==='PAID'&&!order.paid_at)order.paid_at=new Date().toISOString();
+    if(result.completed_at)order.completed_at=result.completed_at;
+    else if(order.status==='COMPLETED'&&!order.completed_at)order.completed_at=new Date().toISOString();
+    if(typeof result.ticket_link==='string')order.ticket_link=result.ticket_link;
+    if(Array.isArray(result.ticket_links))order.ticket_links=result.ticket_links;
+    if(typeof result.review_link==='string')order.review_link=result.review_link;
+    order.link_error=result.link_error||'';
+    renderOrders();
+  }
+  function applyTicketActionResult(ticketId, result, fallbackStatus) {
+    const ticket=allTickets.find(item=>item.id===ticketId);
+    if(!ticket)return;
+    ticket.status=result.status||fallbackStatus;
+    if(result.ticket_link)ticket.ticket_link=result.ticket_link;
+    if(result.review_link)ticket.review_link=result.review_link;
+    if(ticket.status==='ACTIVE'&&result.whatsappUrl)ticket.accept_whatsapp_url=result.whatsappUrl;
+    if(ticket.status==='COMPLETED'&&result.whatsappUrl)ticket.review_whatsapp_url=result.whatsappUrl;
+    if(ticket.status==='COMPLETED'&&!ticket.completed_at)ticket.completed_at=new Date().toISOString();
+    renderTickets();
   }
   $('logout').addEventListener('click',()=>{sessionStorage.removeItem(secretKey);location.href='/admin/';});
   $('check-db-health').addEventListener('click',async()=>{
@@ -129,9 +168,25 @@
     const secret=sessionStorage.getItem(secretKey)||'';
     const headers={...(init.headers||{}),authorization:'Bearer '+secret};
     if(init.body && !(init.body instanceof FormData))headers['content-type']='application/json';
-    const res=await fetch(path,{...init,headers,cache:'no-store'});
-    const data=await res.json().catch(()=>({}));
-    if(!res.ok){if(res.status===401){sessionStorage.removeItem(secretKey);currentRole='';$('login-panel').hidden=false;$('dashboard').hidden=true;$('role-pill').textContent='Belum masuk';}const error=new Error(data.error||'Permintaan gagal ('+res.status+').');error.status=res.status;error.payload=data;throw error;}
+    let res;
+    try {
+      res=await fetch(path,{...init,headers,cache:'no-store'});
+    } catch (cause) {
+      const error=new Error('Gagal menghubungi '+path+': '+(cause?.message||'periksa koneksi internet.'));
+      error.cause=cause;
+      throw error;
+    }
+    const raw=await res.text().catch(()=> '');
+    let data={};
+    try { data=raw?JSON.parse(raw):{}; } catch { data={error:raw.slice(0,500)}; }
+    if(!res.ok){
+      if(res.status===401){sessionStorage.removeItem(secretKey);currentRole='';$('login-panel').hidden=false;$('dashboard').hidden=true;$('role-pill').textContent='Belum masuk';}
+      const detail=data.error||data.message||'Server tidak mengirim detail kesalahan.';
+      const error=new Error('HTTP '+res.status+' — '+detail);
+      error.status=res.status;
+      error.payload=data;
+      throw error;
+    }
     return data;
   }
   window.SLFAdminApi = api;
@@ -214,7 +269,7 @@
         const reviewMessage='Halo '+o.minecraft_name+', '+detail+'\nMohon berikan ulasan layanan kami melalui link berikut:\n'+o.review_link;
         appendWhatsAppFallback(actions,phone,'Kirim WA Link Ulasan',reviewMessage);
       }
-      if(o.status==='PENDING_PAYMENT'){const b=document.createElement('button');b.type='button';b.className='btn btn-gold';b.textContent='Konfirmasi pembayaran';b.addEventListener('click',async()=>{const waWindow=window.open('about:blank','_blank');if(!confirm('Cocokkan nominal dan transaksi masuk di DANA terlebih dahulu. Screenshot saja tidak cukup. Konfirmasi '+o.id+'?')){if(waWindow&&!waWindow.closed)waWindow.close();return;}b.disabled=true;try{const result=await api('/api/admin/verify-payment',{method:'POST',body:JSON.stringify({orderId:o.id})});if(result.whatsappUrl){redirectWhatsApp(waWindow,result.whatsappUrl);}else{if(waWindow&&!waWindow.closed)waWindow.close();throw new Error('Status tersimpan, tetapi server tidak mengembalikan tautan WhatsApp.');}await loadOrders();showToast('Pembayaran terverifikasi. WhatsApp pembeli dibuka.');}catch(e){if(waWindow&&!waWindow.closed)waWindow.close();showAdminError(e.message);b.disabled=false;}});actions.append(b);}
+      if(o.status==='PENDING_PAYMENT'){const b=document.createElement('button');b.type='button';b.className='btn btn-gold';b.textContent='Konfirmasi pembayaran';b.addEventListener('click',async()=>{const waTab=openWhatsAppTab();if(!confirm('Cocokkan nominal dan transaksi masuk di DANA terlebih dahulu. Screenshot saja tidak cukup. Konfirmasi '+o.id+'?')){closeWhatsAppTab(waTab);return;}b.disabled=true;try{const result=await api('/api/admin/verify-payment',{method:'POST',body:JSON.stringify({orderId:o.id})});if(!result.ok||!['PAID','PROCESSING','COMPLETED'].includes(result.status))throw new Error('Server tidak mengonfirmasi perubahan status pesanan.');applyOrderActionResult(o.id,result,'PAID');if(result.whatsappUrl)redirectWhatsApp(waTab,result.whatsappUrl);else{closeWhatsAppTab(waTab);showAdminError('Status pembayaran berhasil disimpan, tetapi link WhatsApp belum dibuat. '+(result.link_error||'Periksa konfigurasi secret link tiket/ulasan.'));}showToast('Status pembayaran diperbarui menjadi '+(statusLabels[result.status]||result.status)+'.');}catch(e){closeWhatsAppTab(waTab);showAdminError('Konfirmasi pembayaran gagal: '+(e?.message||String(e)));b.disabled=false;}});actions.append(b);}
       if(o.status==='PENDING_PAYMENT'){const cancel=document.createElement('button');cancel.type='button';cancel.className='btn btn-quiet';cancel.textContent='Batalkan transaksi';cancel.addEventListener('click',async()=>{if(!confirm('Batalkan transaksi '+o.id+'? Pastikan pembeli belum membayar. Tiket re-entry yang terkait juga akan dibatalkan.'))return;cancel.disabled=true;try{await api('/api/admin/cancel',{method:'POST',body:JSON.stringify({orderId:o.id})});await loadOrders();showToast('Transaksi dibatalkan.');}catch(e){showAdminError(e.message);cancel.disabled=false;}});actions.append(cancel);}
       if(o.status==='PAID'){const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='Mulai proses';b.addEventListener('click',async()=>{b.disabled=true;try{await api('/api/admin/process',{method:'POST',body:JSON.stringify({orderId:o.id})});await loadOrders();}catch(e){showAdminError(e.message);b.disabled=false;}});actions.append(b);}
       if(['PAID','PROCESSING'].includes(o.status)){const b=document.createElement('button');b.type='button';b.className='btn btn-gold';b.textContent='Tandai selesai';b.addEventListener('click',async()=>{const waWindow=window.open('about:blank','_blank');if(!confirm('Produk atau tiket sudah benar-benar selesai diproses untuk '+o.minecraft_name+'?')){if(waWindow&&!waWindow.closed)waWindow.close();return;}b.disabled=true;try{const result=await api('/api/admin/complete',{method:'POST',body:JSON.stringify({orderId:o.id})});if(result.whatsappUrl)redirectWhatsApp(waWindow,result.whatsappUrl);else{if(waWindow&&!waWindow.closed)waWindow.close();throw new Error('Status tersimpan, tetapi server tidak mengembalikan tautan WhatsApp ulasan.');}await loadOrders();showToast('Pesanan selesai. WhatsApp dengan link ulasan dibuka.');}catch(e){if(waWindow&&!waWindow.closed)waWindow.close();showAdminError(e.message);b.disabled=false;}});actions.append(b);}
@@ -264,27 +319,31 @@
       }
       if(t.status==='PENDING'){
         const accept=document.createElement('button');accept.type='button';accept.className='btn btn-gold';accept.textContent='Terima Ajuan';accept.addEventListener('click',async()=>{
-          const waWindow=window.open('about:blank','_blank');
-          if(!confirm('Terima pengajuan tiket '+t.id+' dan minta member menunggu di lobby?')){if(waWindow&&!waWindow.closed)waWindow.close();return;}
+          const waTab=openWhatsAppTab();
+          if(!confirm('Terima pengajuan tiket '+t.id+' dan minta member menunggu di lobby?')){closeWhatsAppTab(waTab);return;}
           accept.disabled=true;
           try{
             const result=await api('/api/admin/ticket-status',{method:'POST',body:JSON.stringify({ticketId:t.id,status:'ACTIVE'})});
-            if(result.whatsappUrl){redirectWhatsApp(waWindow,result.whatsappUrl);}
-            else{if(waWindow&&!waWindow.closed)waWindow.close();throw new Error('Ajuan diterima, tetapi tautan WhatsApp member tidak tersedia.');}
-            await loadTickets();showToast('Ajuan diterima. WhatsApp member dibuka.');
-          }catch(e){if(waWindow&&!waWindow.closed)waWindow.close();showAdminError(e.message);accept.disabled=false;}
+            if(result.status!=='ACTIVE')throw new Error('Status ajuan tidak berubah di database.');
+            applyTicketActionResult(t.id,result,'ACTIVE');
+            if(result.whatsappUrl)redirectWhatsApp(waTab,result.whatsappUrl);
+            else{closeWhatsAppTab(waTab);showAdminError('Ajuan tiket berhasil diterima, tetapi WhatsApp belum dibuat. '+(result.link_error||'Periksa konfigurasi secret link tiket.'));}
+            showToast('Status ajuan tiket diperbarui.');
+          }catch(e){closeWhatsAppTab(waTab);showAdminError('Gagal menerima ajuan tiket: '+(e?.message||String(e)));accept.disabled=false;}
         });actions.append(accept);
       } else if(t.status==='ACTIVE'&&t.submitted_at){
         const done=document.createElement('button');done.type='button';done.className='btn btn-gold';done.textContent='Selesai';done.addEventListener('click',async()=>{
-          const waWindow=window.open('about:blank','_blank');
-          if(!confirm('Penggunaan tiket '+t.id+' sudah benar-benar selesai diproses?')){if(waWindow&&!waWindow.closed)waWindow.close();return;}
+          const waTab=openWhatsAppTab();
+          if(!confirm('Penggunaan tiket '+t.id+' sudah benar-benar selesai diproses?')){closeWhatsAppTab(waTab);return;}
           done.disabled=true;
           try{
             const result=await api('/api/admin/ticket-status',{method:'POST',body:JSON.stringify({ticketId:t.id,status:'COMPLETED'})});
-            if(result.whatsappUrl){redirectWhatsApp(waWindow,result.whatsappUrl);}
-            else{if(waWindow&&!waWindow.closed)waWindow.close();throw new Error('Tiket selesai, tetapi tautan ulasan WhatsApp tidak tersedia.');}
-            await loadTickets();showToast('Tiket selesai. WhatsApp ulasan dibuka.');
-          }catch(e){if(waWindow&&!waWindow.closed)waWindow.close();showAdminError(e.message);done.disabled=false;}
+            if(result.status!=='COMPLETED')throw new Error('Status tiket tidak berubah di database.');
+            applyTicketActionResult(t.id,result,'COMPLETED');
+            if(result.whatsappUrl)redirectWhatsApp(waTab,result.whatsappUrl);
+            else{closeWhatsAppTab(waTab);showAdminError('Status tiket selesai disimpan, tetapi link ulasan WhatsApp belum dibuat. '+(result.link_error||'Periksa konfigurasi secret link.'));}
+            showToast('Status tiket diperbarui menjadi selesai.');
+          }catch(e){closeWhatsAppTab(waTab);showAdminError('Gagal menyelesaikan tiket: '+(e?.message||String(e)));done.disabled=false;}
         });actions.append(done);
       } else if(t.status==='COMPLETED'){
         const reopen=document.createElement('button');reopen.type='button';reopen.className='btn btn-quiet';reopen.textContent='Pulihkan ke aktif';reopen.addEventListener('click',async()=>{if(!confirm('Pulihkan tiket yang sudah selesai ke status Aktif? Gunakan hanya jika status sebelumnya keliru.'))return;reopen.disabled=true;try{await api('/api/admin/ticket-status',{method:'POST',body:JSON.stringify({ticketId:t.id,status:'ACTIVE'})});await loadTickets();showToast('Tiket dipulihkan.');}catch(e){showAdminError(e.message);reopen.disabled=false;}});actions.append(reopen);
