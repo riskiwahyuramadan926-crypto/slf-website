@@ -35,16 +35,10 @@ export async function onRequestGet({ request, env, params }) {
     }));
   }
   if (row.status === 'COMPLETED' && !row.rated_at) {
-    let reviewReady = true;
-    if (String(row.product_id || '').startsWith('REENTRY_')) {
-      const completedTicket = await env.DB.prepare("SELECT COUNT(*) AS total FROM reentry_tickets WHERE order_id = ? AND status = 'COMPLETED'").bind(id).first();
-      reviewReady = Number(completedTicket?.total || 0) > 0;
-    }
-    if (reviewReady) {
     const reviewUrl = new URL('/store/review.html', url.origin);
-    reviewUrl.searchParams.set('id', id); reviewUrl.searchParams.set('key', key);
+    reviewUrl.searchParams.set('id', id);
+    reviewUrl.searchParams.set('key', key);
     order.reviewUrl = reviewUrl.toString();
-    }
   }
   return json({order});
 }
