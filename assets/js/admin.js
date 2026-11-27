@@ -79,7 +79,7 @@
       else if(data.schema==='ready')parts.push('Skema tabel siap.');
       if(data.ownerSecretSource||data.adminSecretSource)parts.push('Nama variabel yang terbaca: Owner='+String(data.ownerSecretSource||'missing')+', Admin='+String(data.adminSecretSource||'missing')+'. Nilainya tidak ditampilkan.');
       if(!data.adminReady)parts.push('Kode Owner/Admin belum terbaca dengan benar, belum 32+ karakter, atau nilainya sama. Nama yang didukung termasuk OWNER_SECRET/OWNER_CODE/OWNER_LOGIN_CODE dan ADMIN_SECRET/ADMIN_CODE/ADMIN_LOGIN_CODE.');
-      if(!data.reentryReady)parts.push('Tautan tiket pribadi belum siap: TICKET_LINK_SECRET/TICKET_SECRET/TICKET_CODE harus minimal 32 karakter dan berbeda dari kode Owner/Admin. Ini hanya memengaruhi pembuatan tautan tiket/checkout tiket baru, bukan login Admin.');
+      if(!data.reentryReady)parts.push('Tautan tiket pribadi belum siap: TICKET_LINK_SECRET/TIKET_LINK_SRCRET/TICKET_SECRET/TICKET_CODE harus minimal 32 karakter dan berbeda dari kode Owner/Admin. Ini hanya memengaruhi pembuatan tautan tiket/checkout tiket baru, bukan login Admin.');
       if(!data.error&&data.ok&&data.adminReady){
         parts.push('Database dan akses Admin siap.');
         if(data.reentryReady)parts.push('Pembuatan tautan tiket pribadi juga siap.');
@@ -249,6 +249,7 @@
       const head=document.createElement('div');head.className='admin-order-head';
       const title=document.createElement('div');const h=document.createElement('h3');h.textContent=o.product_name+' · '+o.id;const date=document.createElement('p');date.className='subtle';date.textContent=new Date(o.created_at).toLocaleString('id-ID');title.append(h,date);
       const badge=document.createElement('span');badge.className='status-pill '+(['PAID','PROCESSING','COMPLETED'].includes(o.status)?'paid':(['EXPIRED','CANCELLED'].includes(o.status)?'expired':''));badge.textContent=statusLabels[o.status]||o.status;head.append(title,badge);card.append(head);
+      if(o.link_error){const warning=document.createElement('p');warning.className='admin-muted';warning.textContent='Link tiket/ulasan belum tersedia: '+o.link_error;card.append(warning);}
       const d=o.details||{}, entries=[['Pemain',o.minecraft_name+' ('+o.platform+')'],['WhatsApp',o.whatsapp],['Email',o.email||'—'],['Subtotal',idr(o.subtotal)],['Diskon',idr(o.discount)],['Total',idr(o.total)],['Promo',o.promo_code||'—'],['Waktu bayar',o.paid_at?new Date(o.paid_at).toLocaleString('id-ID'):'—'],['Waktu selesai',o.completed_at?new Date(o.completed_at).toLocaleString('id-ID'):'—']];
       if(['VIP_PLUS','CUSTOM_RANK'].includes(o.product_id)){entries.push(['Nama Custom Rank',d.rankName||'—'],['Warna rank',d.rankColor||'—'],['Gaya tulisan',({normal:'Normal',bold:'Tebal',italic:'Miring',bold_italic:'Tebal + Miring'})[d.rankStyle]||d.rankStyle||'—']);if(o.product_id==='VIP_PLUS')entries.push(['Catatan VIP+',d.buyerNote||'—']);}
       else entries.push(['Catatan pembeli',d.buyerNote||'—']);
