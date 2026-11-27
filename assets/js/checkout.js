@@ -108,7 +108,7 @@
           data.orderUrl,
           'Mohon kirimkan QRIS pembayarannya. Terima kasih!'
         ].join('\n');
-        const whatsappUrl='https://wa.me/'+adminPhone+'?text='+encodeURIComponent(message);
+        const whatsappUrl='https://wa.me/'+adminPhone+'?text='+encodeURIComponent(String(message ?? '').replace(/\\n/g, '\n'));
         if(popup&&!popup.closed)popup.location.href=whatsappUrl;
         else {
           let opened=null;
