@@ -51,6 +51,8 @@
     const accepted = current.status === 'ACTIVE' && Boolean(current.submittedAt);
     if (accepted) {
       $('ticket-title').textContent = 'Pengajuan tiket diterima';
+      $('ticket-status').textContent = 'Pengajuan diterima';
+      $('ticket-status').className = 'status-pill paid';
       $('ticket-copy').textContent = 'Pengajuanmu sudah diterima Admin. Harap segera login dan tunggu di lobby, lalu nantikan instruksi selanjutnya.';
     }
     button.disabled = current.status !== 'ACTIVE' || current.orderStatus !== 'COMPLETED' || accepted;
