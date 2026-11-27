@@ -3,7 +3,7 @@ import { json, fail, readJson, requireAdmin, logAdminActivity, buildOrderLinks, 
 const TICKET_PRODUCTS = new Set(['REENTRY_1','REENTRY_2','REENTRY_3']);
 
 function safeLinkError(error) {
-  return String(error?.message || error || 'Link belum dapat dibuat.').replace(/[\\r\\n]/g, ' ').slice(0, 240);
+  return String(error?.message || error || 'Link belum dapat dibuat.').replace(/[\r\n]/g, ' ').slice(0, 240);
 }
 
 export async function onRequestPost({ request, env }) {
@@ -64,7 +64,7 @@ export async function onRequestPost({ request, env }) {
       ? 'pesanan tiket re-entry kamu sudah selesai diproses dan tiket siap diajukan.'
       : 'pesanan ' + order.product_name + ' kamu sudah selesai diserahkan. Terima kasih telah berdonasi di SLF!';
     const message = 'Halo ' + order.minecraft_name + ', ' + detail +
-      '\\nMohon berikan ulasan layanan kami melalui link berikut:\\n' + links.review_link;
+      '\nMohon berikan ulasan layanan kami melalui link berikut:\n' + links.review_link;
     whatsappUrl = buildWhatsAppUrl(order.whatsapp, message);
     if (!whatsappUrl) throw new Error('Nomor WhatsApp pembeli tidak valid.');
   } catch (error) {
