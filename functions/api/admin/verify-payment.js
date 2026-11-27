@@ -43,16 +43,46 @@ export async function onRequestPost({ request, env }) {
     return fail('Pesanan tidak menunggu pembayaran atau sudah tidak dapat diverifikasi.', 409);
   }
 
+  // Keep the three-ticket-per-season rule, but evaluate it only after PAID is
+  // durable. An over-limit order remains paid while ticket fulfillment is held
+  // for an Admin review; missing ticket rows never veto the payment update.
+  const isTicketProduct = String(order.product_id || '').startsWith('REENTRY_');
+  let ticketEligibilityError = '';
+  if (isTicketProduct) {
+    try {
+      const { results: groups = [] } = await env.DB.prepare(
+        'SELECT season_id, COUNT(*) AS total FROM reentry_tickets WHERE order_id = ? GROUP BY season_id'
+      ).bind(id).all();
+      for (const group of groups) {
+        const existing = await env.DB.prepare(
+          `SELECT COUNT(*) AS total FROM reentry_tickets t JOIN orders o ON o.id=t.order_id
+           WHERE LOWER(TRIM(t.minecraft_name))=LOWER(TRIM(?)) AND t.season_id=? AND o.id<>?
+           AND o.status NOT IN ('CANCELLED','EXPIRED')`
+        ).bind(order.minecraft_name, group.season_id, id).first();
+        if (Number(existing?.total || 0) + Number(group.total || 0) > 3) {
+          ticketEligibilityError = 'Batas 3 tiket re-entry per pemain per season terlampaui. Pembayaran sudah tercatat; tautan tiket ditahan untuk pemeriksaan Admin SLF.';
+          break;
+        }
+      }
+    } catch (error) {
+      ticketEligibilityError = 'Pemeriksaan batas tiket tidak berhasil: ' + safeLinkError(error);
+    }
+  }
+
   // Secure ticket/review links are best-effort. Their errors are reported but
   // must never change a successfully persisted PAID status into an API failure.
   const links = { ticket_link: '', ticket_links: [], review_link: '' };
-  let linkError = '';
-  try {
-    const generated = await buildOrderLinks(env.DB, order, new URL(request.url).origin, env);
-    Object.assign(links, generated);
-  } catch (error) {
-    linkError = safeLinkError(error);
-    console.error('Payment link preparation failed after status update:', linkError);
+  let linkError = ticketEligibilityError;
+  if (ticketEligibilityError) {
+    console.warn('Payment is PAID but ticket fulfillment requires review:', ticketEligibilityError);
+  } else {
+    try {
+      const generated = await buildOrderLinks(env.DB, order, new URL(request.url).origin, env);
+      Object.assign(links, generated);
+    } catch (error) {
+      linkError = safeLinkError(error);
+      console.error('Payment link preparation failed after status update:', linkError);
+    }
   }
 
   // WhatsApp confirmation does not depend on an access key or the ticket table.
