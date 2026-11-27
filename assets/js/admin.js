@@ -9,7 +9,7 @@
   const idr = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function appendWhatsAppFallback(actions, phone, label, message) {
-    const digits=String(phone||'').replace(/\\D/g,'');
+    const digits=String(phone||'').replace(/\D/g,'');
     if(!digits||!message)return;
     const link=document.createElement('a');
     link.className='btn btn-quiet';
@@ -204,14 +204,14 @@
       const copy=document.createElement('button');copy.type='button';copy.className='btn btn-quiet';copy.textContent='Salin nomor';copy.addEventListener('click',()=>copyText(o.id,'Nomor pesanan tersalin.'));actions.append(copy);
       const copySummary=document.createElement('button');copySummary.type='button';copySummary.className='btn btn-quiet';copySummary.textContent='Salin ringkasan';copySummary.addEventListener('click',()=>copyText(orderSummary(o),'Ringkasan pesanan tersalin.'));actions.append(copySummary);
       if(phone&&String(o.product_id||'').startsWith('REENTRY_')&&['PAID','PROCESSING','COMPLETED'].includes(o.status)&&o.ticket_link){
-        const ticketMessage='Halo '+o.minecraft_name+', pembayaran untuk pesanan '+o.id+' ('+o.product_name+') telah berhasil!\\nGunakan link tiket pribadi di bawah ini saat kamu ingin mengajukan pemakaian tiket:\\n'+o.ticket_link;
+        const ticketMessage='Halo '+o.minecraft_name+', pembayaran untuk pesanan '+o.id+' ('+o.product_name+') telah berhasil!\nGunakan link tiket pribadi di bawah ini saat kamu ingin mengajukan pemakaian tiket:\n'+o.ticket_link;
         appendWhatsAppFallback(actions,phone,'Kirim WA Link Tiket',ticketMessage);
       }
       if(phone&&o.status==='COMPLETED'&&o.review_link){
         const detail=String(o.product_id||'').startsWith('REENTRY_')
           ? 'pesanan tiket re-entry kamu sudah selesai diproses dan tiket siap diajukan.'
           : 'pesanan '+o.product_name+' kamu sudah selesai diserahkan. Terima kasih telah berdonasi di SLF!';
-        const reviewMessage='Halo '+o.minecraft_name+', '+detail+'\\nMohon berikan ulasan layanan kami melalui link berikut:\\n'+o.review_link;
+        const reviewMessage='Halo '+o.minecraft_name+', '+detail+'\nMohon berikan ulasan layanan kami melalui link berikut:\n'+o.review_link;
         appendWhatsAppFallback(actions,phone,'Kirim WA Link Ulasan',reviewMessage);
       }
       if(o.status==='PENDING_PAYMENT'){const b=document.createElement('button');b.type='button';b.className='btn btn-gold';b.textContent='Konfirmasi pembayaran';b.addEventListener('click',async()=>{const waWindow=window.open('about:blank','_blank');if(!confirm('Cocokkan nominal dan transaksi masuk di DANA terlebih dahulu. Screenshot saja tidak cukup. Konfirmasi '+o.id+'?')){if(waWindow&&!waWindow.closed)waWindow.close();return;}b.disabled=true;try{const result=await api('/api/admin/verify-payment',{method:'POST',body:JSON.stringify({orderId:o.id})});if(result.whatsappUrl){redirectWhatsApp(waWindow,result.whatsappUrl);}else{if(waWindow&&!waWindow.closed)waWindow.close();throw new Error('Status tersimpan, tetapi server tidak mengembalikan tautan WhatsApp.');}await loadOrders();showToast('Pembayaran terverifikasi. WhatsApp pembeli dibuka.');}catch(e){if(waWindow&&!waWindow.closed)waWindow.close();showAdminError(e.message);b.disabled=false;}});actions.append(b);}
@@ -254,7 +254,7 @@
       const actions=document.createElement('div');actions.className='admin-inline-actions';
       const copy=document.createElement('button');copy.type='button';copy.className='btn btn-quiet';copy.textContent='Salin ID tiket';copy.addEventListener('click',()=>copyText(t.id,'Nomor tiket tersalin.'));actions.append(copy);
       if(t.ticket_link&&t.order_status!=='PENDING_PAYMENT'){
-        appendWhatsAppFallback(actions,t.whatsapp,'Kirim WA Link Tiket','Halo '+t.minecraft_name+', berikut link tiket pribadi kamu:\\n'+t.ticket_link);
+        appendWhatsAppFallback(actions,t.whatsapp,'Kirim WA Link Tiket','Halo '+t.minecraft_name+', berikut link tiket pribadi kamu:\n'+t.ticket_link);
       }
       if(t.status==='ACTIVE'&&t.submitted_at&&t.accept_whatsapp_url){
         const accepted=document.createElement('a');accepted.className='btn btn-quiet';accepted.href=t.accept_whatsapp_url;accepted.target='_blank';accepted.rel='noopener noreferrer';accepted.textContent='Kirim WA Konfirmasi Ajuan';actions.append(accepted);
