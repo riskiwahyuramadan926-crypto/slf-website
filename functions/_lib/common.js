@@ -274,20 +274,17 @@ export async function ensureOrderAccessKey(db, order, env = {}) {
   key = randomHex(64);
   const encrypted = await encryptOrderAccessKey(key, env);
   if (!encrypted) throw new Error('ORDER_LINK_SECRET atau OWNER_SECRET harus tersedia (minimal 32 karakter) agar tautan pesanan dan ulasan dapat dibuat.');
-  if (String(order.product_id || '').startsWith('REENTRY_')) {
-    const ticketSecret = await getTicketLinkSecret(env);
-    if (!ticketSecret.ready) throw new Error('TICKET_LINK_SECRET belum valid; tautan tiket tidak dapat dibuat.');
-    const { results = [] } = await db.prepare('SELECT id FROM reentry_tickets WHERE order_id = ? ORDER BY created_at, id').bind(order.id).all();
-    if (!results.length) throw new Error('Data tiket re-entry tidak ditemukan untuk pesanan ini.');
-    for (const ticket of results) {
-      const ticketKey = await hmacSha256Hex(ticketSecret.secret, order.id + ':' + ticket.id + ':' + key);
-      await db.prepare('UPDATE reentry_tickets SET access_key_hash = ?, updated_at = ? WHERE id = ? AND order_id = ?')
-        .bind(await sha256Hex(ticketKey), new Date().toISOString(), ticket.id, order.id).run();
-    }
-  }
   await db.prepare('UPDATE orders SET access_key_hash = ?, access_key_encrypted = ?, updated_at = ? WHERE id = ?')
     .bind(await sha256Hex(key), encrypted, new Date().toISOString(), order.id).run();
   return key;
+}
+
+export async function buildOrderReviewLink(db, order, origin, env = {}) {
+  const orderKey = await ensureOrderAccessKey(db, order, env);
+  const reviewUrl = new URL('/store/review.html', origin);
+  reviewUrl.searchParams.set('id', order.id);
+  reviewUrl.searchParams.set('key', orderKey);
+  return reviewUrl.toString();
 }
 
 export async function buildOrderLinks(db, order, origin, env = {}) {
