@@ -151,3 +151,57 @@ test('Obsolete Android Admin source and APK workflow are removed without removin
   await assert.rejects(read('android-admin/README.md'));
   await assert.rejects(read('.github/workflows/android-admin-build.yml'));
 });
+
+
+test('Admin payment and ticket status updates survive optional link-generation failures', async () => {
+  const common = await read('functions/_lib/common.js');
+  const orders = await read('functions/api/admin/orders.js');
+  const payment = await read('functions/api/admin/verify-payment.js');
+  const complete = await read('functions/api/admin/complete.js');
+  const ticketStatus = await read('functions/api/admin/ticket-status.js');
+  const admin = await read('assets/js/admin.js');
+  const schema = await read('functions/_lib/store-schema.js');
+
+  const ticketSecretResolver = common.slice(
+    common.indexOf('export function resolveTicketLinkSecret'),
+    common.indexOf('export function randomHex')
+  );
+  assert.match(ticketSecretResolver, /TIKET_LINK_SRCRET/);
+  assert.doesNotMatch(ticketSecretResolver, /slf-default-fallback-ticket-secret-key/);
+  assert.doesNotMatch(ticketSecretResolver, /env\\.ADMIN_SECRET/);
+
+  assert.match(schema, /access_key_encrypted:\s*'TEXT'/);
+  assert.match(schema, /reentry_tickets:\s*\\{[\\s\\S]*?submitted_at:\s*'TEXT'/);
+
+  assert.match(orders, /ticket_link:\s*''/);
+  assert.match(orders, /review_link:\s*''/);
+  assert.match(orders, /link_error:/);
+  assert.match(orders, /return json\\(\\{ orders, stats/);
+
+  const paymentWrite = payment.indexOf("UPDATE orders SET status='PAID'");
+  const paymentLinkBuild = payment.indexOf('buildOrderLinks');
+  assert.ok(paymentWrite >= 0 && paymentLinkBuild > paymentWrite, 'PAID must be persisted before creating secure links');
+  assert.match(payment, /status:\s*order\\.status/);
+  assert.match(payment, /link_error:\s*linkError/);
+  assert.match(payment, /return json\\(/);
+
+  const completionWrite = complete.indexOf("UPDATE orders SET status='COMPLETED'");
+  const completionLinkBuild = complete.indexOf('buildOrderLinks');
+  assert.ok(completionWrite >= 0 && completionLinkBuild > completionWrite, 'COMPLETED must be persisted before creating review links');
+  assert.match(complete, /link_error:\s*linkError/);
+  assert.match(complete, /return json\\(/);
+
+  const acceptWrite = ticketStatus.indexOf("UPDATE reentry_tickets SET status='ACTIVE'");
+  const acceptLinkBuild = ticketStatus.indexOf('buildOrderLinks');
+  const completeWrite = ticketStatus.indexOf("UPDATE reentry_tickets SET status='COMPLETED'");
+  assert.ok(acceptWrite >= 0 && acceptLinkBuild > acceptWrite, 'ACCEPTED must be persisted before creating ticket links');
+  assert.ok(completeWrite > acceptLinkBuild, 'ticket completion state update must remain present');
+  assert.match(ticketStatus, /link_error:\s*linkError/);
+
+  assert.match(admin, /function openWhatsAppTab\\(\\)/);
+  assert.match(admin, /try \\{ return window\\.open\\('about:blank','_blank'\\); \\}/);
+  assert.match(admin, /function closeWhatsAppTab/);
+  assert.match(admin, /function applyOrderActionResult/);
+  assert.match(admin, /HTTP '\\+res\\.status/);
+  assert.match(admin, /Konfirmasi pembayaran gagal:/);
+});
