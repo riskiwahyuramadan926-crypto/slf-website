@@ -90,7 +90,6 @@ export async function onRequestPost({ request, env }) {
   // in WhatsApp instead of losing the confirmation flow entirely.
   const playerName = String(order.minecraft_name || 'pemain');
   const productName = String(order.product_name || order.product_id || 'pesanan SLF');
-  const isTicketProduct = String(order.product_id || '').startsWith('REENTRY_');
   let message;
   if (isTicketProduct && links.ticket_link) {
     message = 'Halo ' + playerName + ', pembayaran untuk pesanan ' + order.id + ' (' + productName + ') telah berhasil!\nGunakan link tiket pribadi di bawah ini saat kamu ingin mengajukan pemakaian tiket:\n' + links.ticket_link;
