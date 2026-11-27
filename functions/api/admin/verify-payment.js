@@ -91,8 +91,14 @@ export async function onRequestPost({ request, env }) {
   const playerName = String(order.minecraft_name || 'pemain');
   const productName = String(order.product_name || order.product_id || 'pesanan SLF');
   let message;
-  if (isTicketProduct && links.ticket_link) {
-    message = 'Halo ' + playerName + ', pembayaran untuk pesanan ' + order.id + ' (' + productName + ') telah berhasil!\nGunakan link tiket pribadi di bawah ini saat kamu ingin mengajukan pemakaian tiket:\n' + links.ticket_link;
+  if (isTicketProduct && links.ticket_links.length) {
+    const ticketSections = links.ticket_links.map((ticket, index) =>
+      '🎫 Tiket ' + (index + 1) + ' (' + ticket.id + '):\\n' + ticket.url
+    );
+    message = 'Halo ' + playerName + ', pembayaran untuk pesanan ' + order.id + ' (' + productName + ') telah berhasil!\\n' +
+      'Berikut adalah link tiket pribadi kamu (1 link berlaku untuk 1 kali pemakaian tiket):\\n' +
+      ticketSections.join('\\n\\n') +
+      '\\nGunakan salah satu link di atas saat kamu ingin mengajukan pemakaian tiket.';
   } else if (isTicketProduct) {
     message = 'Halo ' + playerName + ', pembayaran untuk pesanan ' + order.id + ' (' + productName + ') telah berhasil kami terima. Status pesanan sudah tercatat. Link tiket pribadi akan dikirimkan secara terpisah setelah data tiket selesai diperiksa Admin SLF.';
   } else {
