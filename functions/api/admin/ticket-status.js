@@ -15,7 +15,7 @@ export async function onRequestPost({ request, env }) {
   if (!id || !['ACTIVE', 'COMPLETED'].includes(status)) return fail('Data status tiket tidak valid.');
 
   const row = await env.DB.prepare(
-    'SELECT t.id, t.order_id, t.status, t.submitted_at, t.minecraft_name, t.product_name, o.status AS order_status, o.access_key_hash, o.access_key_encrypted, o.whatsapp FROM reentry_tickets t JOIN orders o ON o.id=t.order_id WHERE t.id=?'
+    'SELECT t.id, t.order_id, t.status, t.submitted_at, t.minecraft_name, t.product_name, o.status AS order_status, o.access_key_hash, o.access_key_encrypted, o.product_id, o.whatsapp FROM reentry_tickets t JOIN orders o ON o.id=t.order_id WHERE t.id=?'
   ).bind(id).first();
   if (!row) return fail('Tiket tidak ditemukan.',404);
   if (row.order_status !== 'COMPLETED') return fail('Pesanan tiket belum selesai diproses. Selesaikan pesanan di panel Admin terlebih dahulu.',409);
@@ -34,7 +34,7 @@ export async function onRequestPost({ request, env }) {
 
   if (status === 'COMPLETED' && row.status === 'ACTIVE' && row.submitted_at) {
     let orderKey;
-    try { orderKey = await ensureOrderAccessKey(env.DB,{id:row.order_id,access_key_hash:row.access_key_hash,access_key_encrypted:row.access_key_encrypted},env); }
+    try { orderKey = await ensureOrderAccessKey(env.DB,{id:row.order_id,product_id:row.product_id,access_key_hash:row.access_key_hash,access_key_encrypted:row.access_key_encrypted},env); }
     catch (error) { return fail('Tiket selesai, tetapi link ulasan belum dapat dibuat: '+String(error?.message||error),503); }
     let whatsappUrl;
     try {
