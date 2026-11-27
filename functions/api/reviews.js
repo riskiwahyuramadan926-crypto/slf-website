@@ -9,10 +9,14 @@ export async function onRequestPost({ request, env }) {
   if (!env.DB) return fail('Database ulasan belum tersambung.', 503);
   const d = await readJson(request); const orderId = safeText(d.orderId, 40); const key = safeText(d.key, 128); const rating = Number(d.rating); const comment = safeText(d.comment, 500);
   if (!orderId || key.length < 32 || !Number.isInteger(rating) || rating < 1 || rating > 5) return fail('Data rating tidak valid.');
-  const order = await env.DB.prepare('SELECT id, access_key_hash, status, minecraft_name, rated_at FROM orders WHERE id = ?').bind(orderId).first();
+  const order = await env.DB.prepare('SELECT id, access_key_hash, status, product_id, minecraft_name, rated_at FROM orders WHERE id = ?').bind(orderId).first();
   if (!order || (await sha256Hex(key)) !== order.access_key_hash) return fail('Akses rating tidak valid.', 403);
   if (order.status !== 'COMPLETED') return fail('Rating baru terbuka setelah pesanan selesai.', 409);
   if (order.rated_at) return fail('Rating untuk pesanan ini sudah dikirim.', 409);
+  if (String(order.product_id || '').startsWith('REENTRY_')) {
+    const completedTicket = await env.DB.prepare("SELECT COUNT(*) AS total FROM reentry_tickets WHERE order_id = ? AND status = 'COMPLETED'").bind(orderId).first();
+    if (Number(completedTicket?.total || 0) < 1) return fail('Ulasan tiket baru terbuka setelah tiket selesai digunakan.', 409);
+  }
   const now = new Date().toISOString();
   try {
     await env.DB.prepare('INSERT INTO reviews (order_id, player_name, rating, comment, created_at) VALUES (?, ?, ?, ?, ?)').bind(orderId, order.minecraft_name, rating, comment || null, now).run();
