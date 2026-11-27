@@ -90,7 +90,7 @@ export async function onRequestPost({ request, env }) {
   const ticketId = safeText(data.ticketId, 80);
   const key = safeText(data.key, 128);
   const rating = Number(data.rating);
-  const comment = safeText(data.comment, 10000);
+  const comment = typeof data.comment === 'string' ? data.comment.trim() : '';
   if (Boolean(orderId) === Boolean(ticketId) || key.length < 32 || !Number.isInteger(rating) || rating < 1 || rating > 5) {
     return fail('Data ulasan tidak valid.');
   }
